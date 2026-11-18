@@ -22,13 +22,9 @@ pnpm --filter @stonks/server start   # http://localhost:3000
 
 ## Déploiement sur le NAS
 
-Chaque merge sur `main` publie l'image `ghcr.io/rycrem/stonks-valley:latest` (amd64 et arm64).
+Guide pas à pas : [docs/04-deploiement.md](docs/04-deploiement.md).
 
-1. Ajouter le bloc de `docker-compose.example.yml` au `docker-compose.yml` du NAS (`/volume1/docker`).
-2. `docker compose pull stonks-valley && docker compose up -d stonks-valley`
-3. Dans le tunnel Cloudflare `nas-maison` : Routes > Add route > Published application, Subdomain `jeu`, Domain `tortuebox.fr`, Service `http://localhost:8090`.
-
-Mise à jour : relancer l'étape 2.
+Chaque merge sur `main` publie l'image `ghcr.io/rycrem/stonks-valley:latest` (amd64 et arm64). Au démarrage, le conteneur récupère aussi la dernière version de `main` depuis GitHub et la construit (`AUTO_UPDATE=1`, voir `scripts/start.sh`) : un `docker compose restart stonks-valley` suffit pour mettre à jour.
 
 ### Variables d'environnement
 
@@ -37,4 +33,6 @@ Mise à jour : relancer l'étape 2.
 | `ADMIN_PASSWORD` | Mot de passe du compte admin. Le pseudo admin (`ADMIN_USER`, par défaut `Rycrem`) ne peut être créé qu'avec ce mot de passe. Sans cette variable, le pseudo reste réservé. |
 | `PUBLIC_URL` | Adresse du site, utilisée dans les liens de réinitialisation (`https://jeu.tortuebox.fr`) |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM` | Envoi des e-mails "mot de passe oublié". Facultatif : sans SMTP, l'admin réinitialise les mots de passe à la main. |
+| `AUTO_UPDATE` | `1` (défaut) : mise à jour depuis git au démarrage ; `0` : version de l'image |
+| `GIT_REPO`, `GIT_BRANCH` | Source de la mise à jour (défaut : ce dépôt, `main`) |
 | `DATA_DIR` | Dossier des profils (`/data` dans l'image) |
