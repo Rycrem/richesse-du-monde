@@ -4,8 +4,10 @@ import { companyById, money, PLAYER_COLORS } from "./format";
 import { useStore } from "./store";
 
 export function GamePanel({ game }: { game: GameState }) {
-  const { dispatch, error, clearError, quit } = useStore();
+  const { dispatch, error, clearError, quit, you, room } = useStore();
   const me = currentPlayer(game);
+  const canAct = (id: string) => you === null || you === id;
+  const myTurn = canAct(me.id);
   const cell = board[me.position]!;
   const colorOf = (id: string) => PLAYER_COLORS[game.players.findIndex((p) => p.id === id)]!;
   const nameOf = (id: string) => game.players.find((p) => p.id === id)!.name;
@@ -36,11 +38,12 @@ export function GamePanel({ game }: { game: GameState }) {
         </div>
       )}
 
-      {game.phase === "roll" && (
+      {game.phase === "roll" && myTurn && (
         <button className="primary" onClick={() => dispatch({ type: "ROLL", playerId: me.id })}>
           Lancer les dés
         </button>
       )}
+      {!myTurn && game.phase !== "auction" && !game.offer && <p className="muted">En attente de {me.name}...</p>}
 
       {game.phase !== "roll" && (
         <div className="card">
@@ -51,7 +54,7 @@ export function GamePanel({ game }: { game: GameState }) {
 
       {game.phase === "auction" && <AuctionPanel game={game} nameOf={nameOf} />}
 
-      {game.phase === "act" && !game.offer && (
+      {game.phase === "act" && !game.offer && myTurn && (
         <>
           {game.buyScope && <BuyPanel game={game} />}
           {game.canBuyAtout && (
@@ -75,7 +78,7 @@ export function GamePanel({ game }: { game: GameState }) {
         ))}
       </div>
 
-      {game.mode === "chrono" && (
+      {game.mode === "chrono" && (you === null || you === room?.hostId) && (
         <button className="ghost" onClick={() => dispatch({ type: "END_GAME" })}>
           Arrêter la partie (le plus riche gagne)
         </button>
@@ -85,6 +88,8 @@ export function GamePanel({ game }: { game: GameState }) {
 }
 
 function Players({ game, colorOf }: { game: GameState; colorOf: (id: string) => string }) {
+  const room = useStore((s) => s.room);
+  const offline = new Set(room?.players.filter((p) => !p.connected).map((p) => p.id));
   return (
     <div className="players">
       {game.players.map((p) => (
@@ -92,6 +97,7 @@ function Players({ game, colorOf }: { game: GameState; colorOf: (id: string) => 
           <div className="row">
             <span className="dot" style={{ background: colorOf(p.id) }} />
             <strong>{p.name}</strong>
+            {offline.has(p.id) && <span className="offline">déconnecté</span>}
             <span className="spacer" />
             {p.bankrupt ? "en faillite" : money(p.cash)}
           </div>
@@ -197,7 +203,7 @@ function OfferForm({ game }: { game: GameState }) {
 }
 
 function OfferPanel({ game, nameOf }: { game: GameState; nameOf: (id: string) => string }) {
-  const dispatch = useStore((s) => s.dispatch);
+  const { dispatch, you } = useStore();
   const o = game.offer!;
   const [counter, setCounter] = useState(o.price);
   useEffect(() => setCounter(o.price), [o.price]);
@@ -210,6 +216,9 @@ function OfferPanel({ game, nameOf }: { game: GameState; nameOf: (id: string) =>
       <p>
         Réponse attendue de <strong>{nameOf(o.awaiting)}</strong>
       </p>
+      <Countdown />
+      {(you === null || you === o.awaiting) && (
+      <>
       <div className="row">
         <button className="primary" onClick={() => dispatch({ type: "RESPOND_OFFER", playerId: o.awaiting, accept: true })}>
           Accepter
@@ -220,6 +229,8 @@ function OfferPanel({ game, nameOf }: { game: GameState; nameOf: (id: string) =>
         <input type="number" min={0} step={100} value={counter} onChange={(e) => setCounter(Number(e.target.value))} />
         <button onClick={() => dispatch({ type: "RESPOND_OFFER", playerId: o.awaiting, accept: false, counterPrice: counter })}>Contre-offre</button>
       </div>
+      </>
+      )}
     </div>
   );
 }
@@ -250,10 +261,10 @@ function SellForm({ game }: { game: GameState }) {
 }
 
 function AuctionPanel({ game, nameOf }: { game: GameState; nameOf: (id: string) => string }) {
-  const dispatch = useStore((s) => s.dispatch);
+  const { dispatch, you, online } = useStore();
   const a = game.auction!;
   const seller = game.players.find((p) => p.id === a.sellerId)!;
-  const bidders = game.players.filter((p) => !p.bankrupt && p.id !== a.sellerId);
+  const bidders = game.players.filter((p) => !p.bankrupt && p.id !== a.sellerId && (you === null || p.id === you));
   const [bidderId, setBidderId] = useState(bidders[0]?.id ?? "");
   const min = a.highestBidderId ? a.highestBid + config.minBidIncrement : a.startPrice;
   const [amount, setAmount] = useState(min);
@@ -261,15 +272,15 @@ function AuctionPanel({ game, nameOf }: { game: GameState; nameOf: (id: string) 
   useEffect(() => setAmount(min), [min]);
 
   useEffect(() => {
-    if (!a.company) return;
+    if (!a.company || online) return;
     setRemaining(config.auctionTimeoutSeconds);
     const id = setInterval(() => setRemaining((r) => r - 1), 1000);
     return () => clearInterval(id);
   }, [a.company, a.highestBid]);
 
   useEffect(() => {
-    if (a.company && remaining <= 0) dispatch({ type: "AUCTION_CLOSE" });
-  }, [remaining, a.company, dispatch]);
+    if (!online && a.company && remaining <= 0) dispatch({ type: "AUCTION_CLOSE" });
+  }, [online, remaining, a.company, dispatch]);
 
   if (!a.company) {
     return (
@@ -278,6 +289,7 @@ function AuctionPanel({ game, nameOf }: { game: GameState; nameOf: (id: string) 
         <p>
           {seller.name} doit mettre aux enchères {a.percentToSell} % d'une entreprise.
         </p>
+        {(you === null || you === seller.id) && (
         <div className="chips">
           {Object.entries(seller.holdings).map(([c, pct]) => (
             <button key={c} className="chip" style={{ background: companyById.get(c)!.color }} onClick={() => dispatch({ type: "AUCTION_CHOOSE", playerId: seller.id, company: c })}>
@@ -285,7 +297,8 @@ function AuctionPanel({ game, nameOf }: { game: GameState; nameOf: (id: string) 
             </button>
           ))}
         </div>
-        {seller.atouts > 0 && <button onClick={() => dispatch({ type: "USE_ATOUT", playerId: seller.id })}>Utiliser un Atout</button>}
+        )}
+        {seller.atouts > 0 && (you === null || you === seller.id) && <button onClick={() => dispatch({ type: "USE_ATOUT", playerId: seller.id })}>Utiliser un Atout</button>}
       </div>
     );
   }
@@ -299,7 +312,8 @@ function AuctionPanel({ game, nameOf }: { game: GameState; nameOf: (id: string) 
         Mise à prix {money(a.startPrice)}.{" "}
         {a.highestBidderId ? `Meilleure offre : ${money(a.highestBid)} (${nameOf(a.highestBidderId)})` : "Aucune offre."}
       </p>
-      <p className="timer">Adjugé dans {Math.max(0, remaining)} s</p>
+      {online ? <Countdown prefix="Adjugé dans" /> : <p className="timer">Adjugé dans {Math.max(0, remaining)} s</p>}
+      {bidders.length > 0 && (
       <div className="row">
         <select value={bidderId} onChange={(e) => setBidderId(e.target.value)}>
           {bidders.map((p) => (
@@ -313,6 +327,22 @@ function AuctionPanel({ game, nameOf }: { game: GameState; nameOf: (id: string) 
           Enchérir
         </button>
       </div>
+      )}
     </div>
+  );
+}
+
+function Countdown({ prefix = "Expire dans" }: { prefix?: string }) {
+  const deadline = useStore((s) => s.room?.deadline ?? null);
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 250);
+    return () => clearInterval(id);
+  }, []);
+  if (!deadline) return null;
+  return (
+    <p className="timer">
+      {prefix} {Math.max(0, Math.ceil((deadline - now) / 1000))} s
+    </p>
   );
 }
