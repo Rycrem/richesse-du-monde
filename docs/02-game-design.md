@@ -26,7 +26,9 @@ Les mécaniques suivent le livret de "Richesses du Monde" fourni par Emeric (red
 | Recherche / pub | Google | Gogol |
 | Réseaux sociaux | Meta | Méto |
 | Voitures électriques | Tesla | Tesler |
-| Consoles / électronique | Son## Parts en pourcentage (pas de cartes)
+| Consoles / électronique | Sony | Sonyx |
+
+## Parts en pourcentage (pas de cartes)
 
 - Chaque entreprise vaut **100 %**. Il n'y a pas de cartes : un joueur détient simplement un pourcentage de chaque entreprise (ex. 35 % d'AMB, 10 % de Nvidio).
 - Les 100 % de chaque entreprise sont **répartis entre les régions, puis entre les villes** de ces régions.
@@ -101,8 +103,6 @@ Toute la répartition (quelle région et quelle ville détient combien de % de c
 - Payer la banque sur un double.
 - L'Association entre joueurs : peut revenir plus tard comme variante.
 - Le délai de 7 secondes pour réclamer ses redevances : remplacé par un paiement automatique.
-
-utomatique.
 
 ## Noms et logos des entreprises
 
