@@ -85,10 +85,10 @@ Chaque jalon = une branche + une PR, testée avant de passer au suivant.
 |---|---|---|---|
 | 0 | Socle | Monorepo, lint, Vitest, CI GitHub Actions | `pnpm test` vert en CI |
 | 1 | Données | Plateau 40 cases (entreprise attribuée à chaque hub), 12 entreprises avec noms et logos parodiques SVG, 96 cartes de parts, cartes Actu Tech et Atout en JSON | Données validées par des tests (chaque entreprise = 100 %) |
-| 2 | Moteur | Déplacement, achat libre, paiement au plus gros détenteur, rachat entre joueurs, faillite, victoire | Tests unitaires + partie simulée complète par des bots |
+| 2 | Moteur | Déplacement, achat (max 6), jetons de redevance aléatoires, paiement par paliers au plus gros détenteur, cases de choix, trusts indivisibles, rachat entre joueurs, faillite, victoire | Tests unitaires + partie simulée complète par des bots |
 | 3 | Jeu local | Plateau isométrique (tuiles, bâtiments par hub, pions animés, caméra zoom/glisser), panneau joueur avec ses parts par entreprise, achat des cartes de la case, plusieurs joueurs sur un même écran | Une partie jouable de bout en bout dans un onglet |
 | 4 | En ligne | Serveur, salles avec code, lobby, synchro, reconnexion | 2 navigateurs jouent ensemble, test Playwright |
-| 5 | Interactions | Offres de rachat du joueur actif avec contre-offre, cartes Actu Tech et Atout | Toutes les règles du game design jouables en ligne |
+| 5 | Interactions | Enchères en direct (minuteur 7 s), offres de rachat du joueur actif avec contre-offre, cartes Actu Tech et Atout | Toutes les règles du game design jouables en ligne |
 | 6 | Finition | Animations, sons libres de droits, mobile, journal de partie, règles intégrées | Jouable confortablement sur téléphone |
 | 7 | Mise en ligne | Dockerfile, service à ajouter au `docker-compose.yml` du NAS, route Cloudflare `jeu.tortuebox.fr` | Partie jouable sur `https://jeu.tortuebox.fr` |
 

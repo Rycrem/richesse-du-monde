@@ -38,9 +38,9 @@ Synthèse de ce qu'on trouve publiquement sur le jeu de référence. Elle sert u
 - Édition 1975 : par élimination, le dernier joueur non ruiné gagne.
 - Réédition : le joueur le plus riche (variante limitée dans le temps).
 
-## Ce qu'on n'a pas pu vérifier
+## Livret de règles
 
-Le livret de règles complet n'est pas accessible en ligne (la page regles2jeux.fr bloque la lecture automatique). Les montants exacts, la disposition des cases et le texte des cartes ne sont pas connus. Ce n'est pas bloquant : nous concevons nos propres valeurs, cases et cartes.
+Emeric a fourni le livret original (non versionné dans le dépôt). Ses mécaniques sont reprises et adaptées dans `02-game-design.md` ; montants, textes et visuels restent les nôtres.
 
 ## Sources
 
