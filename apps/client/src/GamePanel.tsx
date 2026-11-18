@@ -1,4 +1,4 @@
-import { board, buyableStock, config, currentPlayer, netWorth, type GameState } from "@stonks/engine";
+import { board, buyableStock, config, currentPlayer, netWorth, ranking, type GameState } from "@stonks/engine";
 import { useEffect, useState } from "react";
 import { companyById, money, PLAYER_COLORS } from "./format";
 import { useStore } from "./store";
@@ -17,6 +17,19 @@ export function GamePanel({ game }: { game: GameState }) {
       <aside className="panel">
         <h2>Partie terminée</h2>
         <p className="big">{nameOf(game.winner!)} gagne !</p>
+        {room?.rewards && (
+          <div className="card rewards">
+            <h3>Points gagnés</h3>
+            {ranking(game).map((id, i) => (
+              <div className="row" key={id}>
+                <span>{i + 1}.</span>
+                <strong>{nameOf(id)}</strong>
+                <span className="spacer" />
+                <span className="points">+{room.rewards![id]} pts</span>
+              </div>
+            ))}
+          </div>
+        )}
         <Players game={game} colorOf={colorOf} />
         <button className="primary" onClick={quit}>
           Nouvelle partie

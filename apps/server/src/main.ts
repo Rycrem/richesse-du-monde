@@ -4,6 +4,7 @@ import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { ClientToServer, ServerToClient } from "@stonks/shared";
 import { Server } from "socket.io";
+import { Profiles } from "./profiles";
 import { Rooms } from "./rooms";
 
 const PORT = Number(process.env.PORT ?? 3000);
@@ -35,7 +36,8 @@ const http = createServer(async (req, res) => {
 });
 
 const io = new Server<ClientToServer, ServerToClient>(http, { cors: { origin: true } });
-const rooms = new Rooms((room) => io.to(room.code).emit("room:state", rooms.view(room)));
+const profiles = new Profiles(process.env.DATA_DIR ?? fileURLToPath(new URL("../data", import.meta.url)));
+const rooms = new Rooms(profiles, (room) => io.to(room.code).emit("room:state", rooms.view(room)));
 
 io.on("connection", (socket) => {
   let session: { code: string; playerId: string } | null = null;
@@ -48,14 +50,14 @@ io.on("connection", (socket) => {
     if (room) socket.emit("room:state", rooms.view(room));
   };
 
-  socket.on("room:create", (name, ack) => {
-    const r = rooms.create(String(name ?? ""));
+  socket.on("room:create", (name, profileToken, ack) => {
+    const r = rooms.create(String(name ?? ""), String(profileToken ?? ""));
     if (r.ok) enter(r.data.code, r.data.playerId);
     ack(r);
   });
 
-  socket.on("room:join", (code, name, ack) => {
-    const r = rooms.join(String(code ?? ""), String(name ?? ""));
+  socket.on("room:join", (code, name, profileToken, ack) => {
+    const r = rooms.join(String(code ?? ""), String(name ?? ""), String(profileToken ?? ""));
     if (r.ok) enter(r.data.code, r.data.playerId);
     ack(r);
   });
@@ -74,6 +76,18 @@ io.on("connection", (socket) => {
   socket.on("game:action", (action, ack) => {
     if (!session) return ack({ ok: false, error: "Pas dans une partie" });
     ack(rooms.act(session.code, session.playerId, action));
+  });
+
+  socket.on("profile:get", (token, ack) => ack(profiles.fetch(String(token ?? ""))));
+  socket.on("profile:buy", (token, itemId, ack) => {
+    const r = profiles.buy(String(token ?? ""), String(itemId ?? ""));
+    if (r.ok) rooms.refreshLook(String(token));
+    ack(r);
+  });
+  socket.on("profile:equip", (token, slot, itemId, ack) => {
+    const r = profiles.equip(String(token ?? ""), slot, String(itemId ?? ""));
+    if (r.ok) rooms.refreshLook(String(token));
+    ack(r);
   });
 
   const leave = () => {

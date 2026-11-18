@@ -1,9 +1,26 @@
 import { applyAction, createGame, type Action, type GameMode, type GameState } from "@stonks/engine";
-import type { ClientToServer, RoomView, ServerToClient, Session } from "@stonks/shared";
+import { DEFAULT_LOOK, STARTER_ITEMS, type ClientToServer, type Look, type ProfileView, type RoomView, type ServerToClient, type Session, type Slot } from "@stonks/shared";
 import { io, type Socket } from "socket.io-client";
 import { create } from "zustand";
 
 const SESSION_KEY = "stonks-session";
+const PROFILE_KEY = "stonks-profile";
+
+function profileToken(): string {
+  try {
+    return localStorage.getItem(PROFILE_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+function saveProfileToken(token: string) {
+  try {
+    localStorage.setItem(PROFILE_KEY, token);
+  } catch {
+    // storage unavailable: the profile only lives for this visit
+  }
+}
 
 function saveSession(s: Session | null) {
   try {
@@ -31,6 +48,10 @@ interface Store {
   room: RoomView | null;
   game: GameState | null;
   error: string | null;
+  profile: ProfileView;
+  loadProfile: () => void;
+  buy: (itemId: string) => void;
+  equip: (slot: Slot, itemId: string) => void;
   startLocal: (names: string[], mode: GameMode) => void;
   createRoom: (name: string) => void;
   joinRoom: (code: string, name: string) => void;
@@ -45,7 +66,10 @@ export const useStore = create<Store>((set, get) => {
   function connect(): Socket<ServerToClient, ClientToServer> {
     if (socket) return socket;
     socket = io({ autoConnect: true });
-    socket.on("room:state", (room) => set({ room, game: room.game }));
+    socket.on("room:state", (room) => {
+      // ignore late updates from a room we just left
+      if (get().online) set({ room, game: room.game });
+    });
     socket.on("connect", () => {
       // after a network drop, take our seat back automatically
       const s = loadSession();
@@ -54,10 +78,15 @@ export const useStore = create<Store>((set, get) => {
     return socket;
   }
 
+  const onProfile = (res: { ok: true; data: ProfileView } | { ok: false; error: string }) => {
+    if (res.ok) set({ profile: { name: res.data.name, points: res.data.points, owned: res.data.owned, look: res.data.look }, error: null });
+    else set({ error: res.error });
+  };
+
   const onSession = (res: { ok: true; data: Session } | { ok: false; error: string }) => {
     if (!res.ok) {
       if (res.error === "Session expirée") saveSession(null);
-      return set({ error: res.error });
+      return set({ online: false, error: res.error });
     }
     saveSession(res.data);
     set({ online: true, you: res.data.playerId, error: null });
@@ -69,6 +98,14 @@ export const useStore = create<Store>((set, get) => {
     room: null,
     game: null,
     error: null,
+    profile: { name: "", points: 0, owned: STARTER_ITEMS, look: DEFAULT_LOOK as Look },
+    loadProfile: () =>
+      connect().emit("profile:get", profileToken(), (res) => {
+        if (res.ok) saveProfileToken(res.data.token);
+        onProfile(res);
+      }),
+    buy: (itemId) => connect().emit("profile:buy", profileToken(), itemId, onProfile),
+    equip: (slot, itemId) => connect().emit("profile:equip", profileToken(), slot, itemId, onProfile),
     startLocal: (names, mode) =>
       set({
         online: false,
@@ -81,11 +118,19 @@ export const useStore = create<Store>((set, get) => {
         ),
         error: null,
       }),
-    createRoom: (name) => connect().emit("room:create", name, onSession),
-    joinRoom: (code, name) => connect().emit("room:join", code.trim().toUpperCase(), name, onSession),
+    createRoom: (name) => {
+      set({ online: true });
+      connect().emit("room:create", name, profileToken(), onSession);
+    },
+    joinRoom: (code, name) => {
+      set({ online: true });
+      connect().emit("room:join", code.trim().toUpperCase(), name, profileToken(), onSession);
+    },
     resume: () => {
       const s = loadSession();
-      if (s) connect().emit("room:rejoin", s.code, s.token, onSession);
+      if (!s) return;
+      set({ online: true });
+      connect().emit("room:rejoin", s.code, s.token, onSession);
     },
     startOnline: (mode) =>
       socket?.emit("room:start", mode, (res) => {

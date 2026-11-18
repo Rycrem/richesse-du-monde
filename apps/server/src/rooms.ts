@@ -1,9 +1,11 @@
 import { randomBytes, randomUUID } from "node:crypto";
-import { applyAction, config, createGame, type Action, type GameMode, type GameState } from "@stonks/engine";
-import { SYSTEM_ACTIONS, type LobbyPlayer, type RoomView, type Session } from "@stonks/shared";
+import { applyAction, config, createGame, ranking, type Action, type GameMode, type GameState } from "@stonks/engine";
+import { pointsForRank, SYSTEM_ACTIONS, type LobbyPlayer, type RoomView, type Session } from "@stonks/shared";
+import type { Profiles } from "./profiles";
 
 interface Member extends LobbyPlayer {
   token: string;
+  profileToken: string;
 }
 
 export interface Room {
@@ -14,6 +16,7 @@ export interface Room {
   timer: ReturnType<typeof setTimeout> | null;
   timerKey: string | null;
   deadline: number | null;
+  rewards: Record<string, number> | null;
 }
 
 type Result<T> = { ok: true; data: T } | { ok: false; error: string };
@@ -40,7 +43,10 @@ function afkAction(room: Room): Action | null {
 export class Rooms {
   private rooms = new Map<string, Room>();
 
-  constructor(private onChange: (room: Room) => void) {}
+  constructor(
+    private profiles: Profiles,
+    private onChange: (room: Room) => void,
+  ) {}
 
   get(code: string): Room | undefined {
     return this.rooms.get(code.toUpperCase());
@@ -53,26 +59,30 @@ export class Rooms {
     return code;
   }
 
-  private addMember(room: Room, name: string): Session {
-    const member: Member = { id: `p${room.members.length + 1}`, name: name.trim().slice(0, 20), connected: true, token: randomUUID() };
+  private addMember(room: Room, name: string, profileToken: string): Session {
+    const profile = this.profiles.get(profileToken);
+    const clean = name.trim().slice(0, 20);
+    this.profiles.setName(profile.token, clean);
+    const id = `p${Math.max(0, ...room.members.map((m) => Number(m.id.slice(1)))) + 1}`;
+    const member: Member = { id, name: clean, connected: true, token: randomUUID(), profileToken: profile.token, look: profile.look };
     room.members.push(member);
     return { code: room.code, playerId: member.id, token: member.token };
   }
 
-  create(name: string): Result<Session> {
+  create(name: string, profileToken: string): Result<Session> {
     if (!name.trim()) return { ok: false, error: "Pseudo requis" };
-    const room: Room = { code: this.newCode(), hostId: "p1", members: [], game: null, timer: null, timerKey: null, deadline: null };
+    const room: Room = { code: this.newCode(), hostId: "p1", members: [], game: null, timer: null, timerKey: null, deadline: null, rewards: null };
     this.rooms.set(room.code, room);
-    return { ok: true, data: this.addMember(room, name) };
+    return { ok: true, data: this.addMember(room, name, profileToken) };
   }
 
-  join(code: string, name: string): Result<Session> {
+  join(code: string, name: string, profileToken: string): Result<Session> {
     const room = this.get(code);
     if (!room) return { ok: false, error: "Partie introuvable" };
     if (room.game) return { ok: false, error: "La partie a déjà commencé" };
     if (!name.trim()) return { ok: false, error: "Pseudo requis" };
     if (room.members.length >= config.maxPlayers) return { ok: false, error: "Partie complète" };
-    const session = this.addMember(room, name);
+    const session = this.addMember(room, name, profileToken);
     this.onChange(room);
     return { ok: true, data: session };
   }
@@ -139,6 +149,7 @@ export class Rooms {
     const r = applyAction(room.game!, action);
     if (!r.ok) return { ok: false, error: r.error };
     room.game = r.state;
+    if (room.game.phase === "gameOver" && !room.rewards) this.reward(room);
     this.schedule(room);
     this.onChange(room);
     return { ok: true, data: null };
@@ -182,13 +193,35 @@ export class Rooms {
     }, seconds * 1000);
   }
 
+  // Points by final rank, credited once per game to each player's profile
+  private reward(room: Room): void {
+    room.rewards = {};
+    ranking(room.game!).forEach((playerId, rank) => {
+      const member = room.members.find((m) => m.id === playerId);
+      const points = pointsForRank(rank);
+      room.rewards![playerId] = points;
+      if (member) this.profiles.award(member.profileToken, points);
+    });
+  }
+
+  // A player changed their pawn in the lobby
+  refreshLook(profileToken: string): void {
+    for (const room of this.rooms.values()) {
+      const member = room.members.find((m) => m.profileToken === profileToken);
+      if (!member || room.game) continue;
+      member.look = this.profiles.look(profileToken);
+      this.onChange(room);
+    }
+  }
+
   view(room: Room): RoomView {
     return {
       code: room.code,
       hostId: room.hostId,
-      players: room.members.map(({ id, name, connected }) => ({ id, name, connected })),
+      players: room.members.map(({ id, name, connected, look }) => ({ id, name, connected, look })),
       game: room.game,
       deadline: room.deadline,
+      rewards: room.rewards,
     };
   }
 }

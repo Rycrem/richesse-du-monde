@@ -1,15 +1,18 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { config } from "@stonks/engine";
+import { cosmeticById, pointsForRank } from "@stonks/shared";
+import { Profiles } from "./profiles";
 import { AFK_SECONDS, Rooms, type Room } from "./rooms";
 
 function setup() {
   const changes: Room[] = [];
-  const rooms = new Rooms((r) => changes.push(r));
-  const host = rooms.create("Alice");
+  const profiles = new Profiles(null);
+  const rooms = new Rooms(profiles, (r) => changes.push(r));
+  const host = rooms.create("Alice", "tok-a");
   if (!host.ok) throw new Error();
-  const guest = rooms.join(host.data.code, "Bob");
+  const guest = rooms.join(host.data.code, "Bob", "tok-b");
   if (!guest.ok) throw new Error();
-  return { rooms, host: host.data, guest: guest.data, changes };
+  return { rooms, profiles, host: host.data, guest: guest.data, changes };
 }
 
 afterEach(() => vi.useRealTimers());
@@ -25,7 +28,7 @@ describe("rooms", () => {
     const { rooms, host, guest } = setup();
     expect(rooms.start(host.code, guest.playerId, "classique").ok).toBe(false);
     expect(rooms.start(host.code, host.playerId, "classique").ok).toBe(true);
-    expect(rooms.join(host.code, "Chloé").ok).toBe(false);
+    expect(rooms.join(host.code, "Chloé", "tok-c").ok).toBe(false);
   });
 
   it("players can only act for themselves", () => {
@@ -75,5 +78,37 @@ describe("rooms", () => {
     expect(room.game!.lastRoll).not.toBeNull();
     vi.advanceTimersByTime(AFK_SECONDS * 1000 * 3);
     expect(room.game!.players[room.game!.current]!.id).toBe(guest.playerId);
+  });
+
+  it("credits points by rank once at the end of the game", () => {
+    const { rooms, profiles, host } = setup();
+    rooms.start(host.code, host.playerId, "chrono");
+    const room = rooms.get(host.code)!;
+    room.game!.players[1]!.cash = 99999;
+    expect(rooms.act(host.code, host.playerId, { type: "END_GAME" }).ok).toBe(true);
+    expect(room.rewards).toEqual({ p2: pointsForRank(0), p1: pointsForRank(1) });
+    expect(profiles.fetch("tok-b")).toMatchObject({ data: { points: pointsForRank(0) } });
+    expect(profiles.fetch("tok-a")).toMatchObject({ data: { points: pointsForRank(1) } });
+  });
+
+  it("shows a bought cosmetic on the player's pawn in the lobby", () => {
+    const { rooms, profiles, host } = setup();
+    profiles.award("tok-a", 500);
+    expect(profiles.buy("tok-a", "hat-couronne").ok).toBe(true);
+    rooms.refreshLook("tok-a");
+    expect(rooms.view(rooms.get(host.code)!).players[0]!.look.hat).toBe("hat-couronne");
+  });
+});
+
+describe("profiles", () => {
+  it("cannot buy without enough points, nor equip what is not owned", () => {
+    const profiles = new Profiles(null);
+    profiles.get("t");
+    const crown = cosmeticById.get("hat-couronne")!;
+    expect(profiles.buy("t", crown.id)).toMatchObject({ ok: false });
+    expect(profiles.equip("t", "hat", crown.id)).toMatchObject({ ok: false });
+    profiles.award("t", crown.price);
+    expect(profiles.buy("t", crown.id)).toMatchObject({ ok: true, data: { points: 0 } });
+    expect(profiles.equip("t", "hat", "hat-casquette")).toMatchObject({ ok: true, data: { look: { hat: "hat-casquette" } } });
   });
 });
