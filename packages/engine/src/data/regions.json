@@ -1,0 +1,32 @@
+[
+  {
+    "id": "amerique-nord",
+    "name": "Amérique du Nord",
+    "color": "#e4572e"
+  },
+  {
+    "id": "amerique-latine",
+    "name": "Amérique latine",
+    "color": "#f3a712"
+  },
+  {
+    "id": "europe",
+    "name": "Europe",
+    "color": "#4c9f70"
+  },
+  {
+    "id": "asie-est",
+    "name": "Asie de l'Est",
+    "color": "#d1495b"
+  },
+  {
+    "id": "asie-sud",
+    "name": "Asie du Sud et Moyen-Orient",
+    "color": "#8e6c8a"
+  },
+  {
+    "id": "afrique-oceanie",
+    "name": "Afrique et Océanie",
+    "color": "#2e86ab"
+  }
+]

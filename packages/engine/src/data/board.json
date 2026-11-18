@@ -1,0 +1,350 @@
+[
+  {
+    "id": "depart",
+    "type": "depart",
+    "name": "Départ"
+  },
+  {
+    "id": "silicon-valley",
+    "type": "city",
+    "name": "Silicon Valley",
+    "region": "amerique-nord",
+    "stock": {
+      "nvidio": 25,
+      "intol": 20,
+      "appel": 25
+    }
+  },
+  {
+    "id": "seattle",
+    "type": "city",
+    "name": "Seattle",
+    "region": "amerique-nord",
+    "stock": {
+      "amazone": 30,
+      "macrosoft": 25,
+      "meto": 15
+    }
+  },
+  {
+    "id": "actu-1",
+    "type": "actu",
+    "name": "Actu Tech"
+  },
+  {
+    "id": "austin",
+    "type": "city",
+    "name": "Austin",
+    "region": "amerique-nord",
+    "stock": {
+      "nvidio": 15,
+      "amb": 25,
+      "tesler": 25
+    }
+  },
+  {
+    "id": "toronto",
+    "type": "city",
+    "name": "Toronto",
+    "region": "amerique-nord",
+    "stock": {
+      "amb": 15,
+      "macrosoft": 20,
+      "gogol": 15
+    }
+  },
+  {
+    "id": "choix-amerique-nord",
+    "type": "choix-regional",
+    "name": "Choix régional",
+    "region": "amerique-nord"
+  },
+  {
+    "id": "encheres-1",
+    "type": "encheres",
+    "name": "Enchères"
+  },
+  {
+    "id": "mexico",
+    "type": "city",
+    "name": "Mexico",
+    "region": "amerique-latine",
+    "stock": {
+      "intol": 15,
+      "samsong": 15,
+      "amazone": 10
+    }
+  },
+  {
+    "id": "sao-paulo",
+    "type": "city",
+    "name": "São Paulo",
+    "region": "amerique-latine",
+    "stock": {
+      "appel": 15,
+      "meto": 20,
+      "sonyx": 15
+    }
+  },
+  {
+    "id": "levee-1",
+    "type": "levee",
+    "name": "Levée de fonds"
+  },
+  {
+    "id": "buenos-aires",
+    "type": "city",
+    "name": "Buenos Aires",
+    "region": "amerique-latine",
+    "stock": {
+      "samsong": 10,
+      "gogol": 15,
+      "tesler": 15
+    }
+  },
+  {
+    "id": "santiago",
+    "type": "city",
+    "name": "Santiago",
+    "region": "amerique-latine",
+    "stock": {
+      "amb": 20,
+      "intol": 15,
+      "amazone": 10
+    }
+  },
+  {
+    "id": "choix-amerique-latine",
+    "type": "choix-regional",
+    "name": "Choix régional",
+    "region": "amerique-latine"
+  },
+  {
+    "id": "londres",
+    "type": "city",
+    "name": "Londres",
+    "region": "europe",
+    "stock": {
+      "appel": 15,
+      "amazone": 20,
+      "gogol": 20
+    }
+  },
+  {
+    "id": "paris",
+    "type": "city",
+    "name": "Paris",
+    "region": "europe",
+    "stock": {
+      "amb": 10,
+      "amazone": 15,
+      "macrosoft": 15
+    }
+  },
+  {
+    "id": "atout-1",
+    "type": "atout",
+    "name": "Atout"
+  },
+  {
+    "id": "berlin",
+    "type": "city",
+    "name": "Berlin",
+    "region": "europe",
+    "stock": {
+      "nvidio": 10,
+      "amazone": 15,
+      "tesler": 15
+    }
+  },
+  {
+    "id": "amsterdam",
+    "type": "city",
+    "name": "Amsterdam",
+    "region": "europe",
+    "stock": {
+      "intol": 15,
+      "gogol": 20,
+      "meto": 20
+    }
+  },
+  {
+    "id": "choix-europe",
+    "type": "choix-regional",
+    "name": "Choix régional",
+    "region": "europe"
+  },
+  {
+    "id": "mondial-1",
+    "type": "mondial",
+    "name": "Choix mondial"
+  },
+  {
+    "id": "shenzhen",
+    "type": "city",
+    "name": "Shenzhen",
+    "region": "asie-est",
+    "stock": {
+      "amb": 15,
+      "appel": 20,
+      "tesler": 20
+    }
+  },
+  {
+    "id": "taipei",
+    "type": "city",
+    "name": "Taipei",
+    "region": "asie-est",
+    "stock": {
+      "nvidio": 20,
+      "tsmb": 30,
+      "sonyx": 15
+    }
+  },
+  {
+    "id": "actu-2",
+    "type": "actu",
+    "name": "Actu Tech"
+  },
+  {
+    "id": "seoul",
+    "type": "city",
+    "name": "Séoul",
+    "region": "asie-est",
+    "stock": {
+      "samsong": 30,
+      "sonyx": 20
+    }
+  },
+  {
+    "id": "tokyo",
+    "type": "city",
+    "name": "Tokyo",
+    "region": "asie-est",
+    "stock": {
+      "tsmb": 20,
+      "sonyx": 40
+    }
+  },
+  {
+    "id": "choix-asie-est",
+    "type": "choix-regional",
+    "name": "Choix régional",
+    "region": "asie-est"
+  },
+  {
+    "id": "encheres-2",
+    "type": "encheres",
+    "name": "Enchères"
+  },
+  {
+    "id": "bangalore",
+    "type": "city",
+    "name": "Bangalore",
+    "region": "asie-sud",
+    "stock": {
+      "nvidio": 15,
+      "intol": 15,
+      "samsong": 20
+    }
+  },
+  {
+    "id": "singapour",
+    "type": "city",
+    "name": "Singapour",
+    "region": "asie-sud",
+    "stock": {
+      "amb": 15,
+      "tsmb": 20,
+      "meto": 15
+    }
+  },
+  {
+    "id": "levee-2",
+    "type": "levee",
+    "name": "Levée de fonds"
+  },
+  {
+    "id": "dubai",
+    "type": "city",
+    "name": "Dubaï",
+    "region": "asie-sud",
+    "stock": {
+      "tsmb": 15,
+      "macrosoft": 15,
+      "tesler": 15
+    }
+  },
+  {
+    "id": "tel-aviv",
+    "type": "city",
+    "name": "Tel Aviv",
+    "region": "asie-sud",
+    "stock": {
+      "nvidio": 15,
+      "intol": 20,
+      "meto": 15
+    }
+  },
+  {
+    "id": "choix-asie-sud",
+    "type": "choix-regional",
+    "name": "Choix régional",
+    "region": "asie-sud"
+  },
+  {
+    "id": "lagos",
+    "type": "city",
+    "name": "Lagos",
+    "region": "afrique-oceanie",
+    "stock": {
+      "samsong": 15,
+      "gogol": 15,
+      "meto": 15
+    }
+  },
+  {
+    "id": "nairobi",
+    "type": "city",
+    "name": "Nairobi",
+    "region": "afrique-oceanie",
+    "stock": {
+      "samsong": 10,
+      "macrosoft": 15,
+      "sonyx": 10
+    }
+  },
+  {
+    "id": "atout-2",
+    "type": "atout",
+    "name": "Atout"
+  },
+  {
+    "id": "le-cap",
+    "type": "city",
+    "name": "Le Cap",
+    "region": "afrique-oceanie",
+    "stock": {
+      "appel": 10,
+      "macrosoft": 10,
+      "tesler": 10
+    }
+  },
+  {
+    "id": "sydney",
+    "type": "city",
+    "name": "Sydney",
+    "region": "afrique-oceanie",
+    "stock": {
+      "tsmb": 15,
+      "appel": 15,
+      "gogol": 15
+    }
+  },
+  {
+    "id": "choix-afrique-oceanie",
+    "type": "choix-regional",
+    "name": "Choix régional",
+    "region": "afrique-oceanie"
+  }
+]
