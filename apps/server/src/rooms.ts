@@ -32,15 +32,15 @@ const MAX_TEXT = 300;
 // What the server plays for a disconnected player whose turn it is
 function afkAction(room: Room): Action | null {
   const g = room.game!;
-  const actorId = g.phase === "auction" && g.auction && !g.auction.company ? g.auction.sellerId : g.players[g.current]!.id;
+  const actorId = g.phase === "auction" && g.auction && !g.auction.company ? g.auction.chooserId : g.players[g.current]!.id;
   if (room.members.find((m) => m.id === actorId)?.connected !== false) return null;
   const actor = g.players.find((p) => p.id === actorId)!;
   if (g.phase === "roll") return { type: "ROLL", playerId: actorId };
-  if (g.phase === "act") return { type: "END_TURN", playerId: actorId };
+  if (g.phase === "act") return actor.cash < 0 ? { type: "SETTLE_DEBT", playerId: actorId } : { type: "END_TURN", playerId: actorId };
   if (g.phase === "auction" && g.auction && !g.auction.company) {
-    if (actor.atouts > 0) return { type: "USE_ATOUT", playerId: actorId };
-    const smallest = Object.entries(actor.holdings).sort((a, b) => a[1] - b[1])[0]![0];
-    return { type: "AUCTION_CHOOSE", playerId: actorId, company: smallest };
+    const owner = g.players.find((p) => p.id !== actorId && !p.bankrupt && Object.keys(p.holdings).length > 0)!;
+    const smallest = Object.entries(owner.holdings).sort((a, b) => a[1] - b[1])[0]![0];
+    return { type: "AUCTION_CHOOSE", playerId: actorId, ownerId: owner.id, company: smallest };
   }
   return null;
 }
@@ -161,7 +161,7 @@ export class Rooms {
     return { ok: true, data: null };
   }
 
-  // Server-side timers: auction closes after N s without a new bid, offers expire,
+  // Server-side timers: an auction closes N s after the lot is chosen, offers expire,
   // and a disconnected player's turn is played automatically
   private schedule(room: Room): void {
     if (!room.game) return;
@@ -170,7 +170,7 @@ export class Rooms {
     let seconds = 0;
     let action: Action | null = null;
     if (g.phase === "auction" && g.auction?.company) {
-      key = `auction:${g.auction.highestBid}:${g.auction.highestBidderId}`;
+      key = `auction:${g.auction.sellerId}:${g.auction.company}:${g.events.at(-1)?.id}`;
       seconds = config.auctionTimeoutSeconds;
       action = { type: "AUCTION_CLOSE" };
     } else if (g.offer) {

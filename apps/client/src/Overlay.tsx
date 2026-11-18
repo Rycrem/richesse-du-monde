@@ -119,6 +119,28 @@ function Card({ e, nameOf, colorOf }: { e: GameEvent; nameOf: (id: string) => st
     );
   }
   if (e.kind === "win") return null;
+  if (e.kind === "auction")
+    return (
+      <div className="event-card">
+        <div className="head" style={{ background: "#e94f6f" }}>
+          <span className="icon">⚖</span>
+          ENCHÈRES
+        </div>
+        <div className="body">
+          <div className="auction-result">
+            <StockCard company={e.company} percent={e.percent} small />
+            <div className="text">
+              {e.cancelled
+                ? `${nameOf(e.sellerId)} utilise un Atout : l'enchère est annulée.`
+                : e.winnerId
+                  ? `${nameOf(e.winnerId)} remporte ${e.percent} % de ${companyById.get(e.company)!.name}, payés à ${nameOf(e.sellerId)}.`
+                  : `Aucune offre : la banque rachète ${e.percent} % de ${companyById.get(e.company)!.name} à ${nameOf(e.sellerId)}.`}
+            </div>
+          </div>
+          {!e.cancelled && <div className="amount plus">{money(e.price)}</div>}
+        </div>
+      </div>
+    );
   const h = HEAD[e.kind]!;
   return (
     <div className="event-card">

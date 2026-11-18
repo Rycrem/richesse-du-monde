@@ -11,7 +11,8 @@ export type Action =
   | { type: "OFFER"; playerId: PlayerId; ownerId: PlayerId; company: CompanyId; percent: number; price: number }
   | { type: "RESPOND_OFFER"; playerId: PlayerId; accept: boolean; counterPrice?: number }
   | { type: "OFFER_TIMEOUT" }
-  | { type: "AUCTION_CHOOSE"; playerId: PlayerId; company: CompanyId }
+  | { type: "AUCTION_CHOOSE"; playerId: PlayerId; ownerId: PlayerId; company: CompanyId }
+  | { type: "SETTLE_DEBT"; playerId: PlayerId }
   | { type: "USE_ATOUT"; playerId: PlayerId }
   | { type: "BID"; playerId: PlayerId; amount: number }
   | { type: "AUCTION_CLOSE" }
@@ -131,19 +132,27 @@ function removeHolding(p: Player, company: CompanyId, percent: number): void {
   else delete p.holdings[company];
 }
 
-// Pays `amount`; sells holdings to the bank (cheapest first) if cash is short, else goes bankrupt.
-function charge(state: GameState, p: Player, amount: number): void {
-  if (p.cash < amount) {
-    const sellable = Object.keys(p.holdings).sort((a, b) => percentPrice(a, 1) - percentPrice(b, 1));
-    for (const company of sellable) {
-      while (p.cash < amount && (p.holdings[company] ?? 0) > 0) {
-        removeHolding(p, company, 1);
-        returnToStock(state, company, 1);
-        p.cash += bankPrice(company, 1);
-      }
+function liquidation(p: Player): number {
+  return p.cash + Object.entries(p.holdings).reduce((a, [c, pct]) => a + bankPrice(c, pct), 0);
+}
+
+// Sells holdings to the bank, cheapest first, until cash is back to `target`
+function autoSell(state: GameState, p: Player, target: number): void {
+  const sellable = Object.keys(p.holdings).sort((a, b) => percentPrice(a, 1) - percentPrice(b, 1));
+  for (const company of sellable) {
+    while (p.cash < target && (p.holdings[company] ?? 0) > 0) {
+      removeHolding(p, company, 1);
+      returnToStock(state, company, 1);
+      p.cash += bankPrice(company, 1);
     }
   }
-  if (p.cash < amount) {
+}
+
+// Pays `amount`. Short of cash but able to cover it by selling: cash goes negative and the player
+// chooses what to sell before ending the turn. Unable to cover it at all: bankruptcy.
+function charge(state: GameState, p: Player, amount: number): void {
+  if (p.cash < amount && liquidation(p) < amount) {
+    autoSell(state, p, amount);
     bankrupt(state, p);
     return;
   }
@@ -244,18 +253,23 @@ function landOn(state: GameState, p: Player, pips: number): void {
       break;
     }
     case "encheres": {
-      if (p.laps < 1 || Object.keys(p.holdings).length === 0) break;
+      if (!activePlayers(state).some((o) => o.id !== p.id && Object.keys(o.holdings).length > 0)) {
+        state.log.push("Enchères : aucun adversaire n'a d'actions à mettre en vente");
+        break;
+      }
       const [die, next] = rollDie(state.seed);
       state.seed = next;
       state.phase = "auction";
       state.auction = {
-        sellerId: p.id,
+        chooserId: p.id,
+        sellerId: null,
         percentToSell: die * config.auctionPercentPerPip,
         company: null,
         percent: 0,
         startPrice: 0,
         highestBid: 0,
         highestBidderId: null,
+        bids: [],
       };
       break;
     }
@@ -436,9 +450,11 @@ export function applyAction(prev: GameState, action: Action): Result {
 
     case "USE_ATOUT": {
       const a = state.auction;
-      if (state.phase !== "auction" || !a || a.company || a.sellerId !== action.playerId) return { ok: false, error: "Atout inutilisable maintenant" };
-      if (cur.atouts < 1) return { ok: false, error: "Aucun Atout" };
-      cur.atouts -= 1;
+      const seller = a?.sellerId ? player(state, a.sellerId) : undefined;
+      if (state.phase !== "auction" || !a || !seller || seller.id !== action.playerId) return { ok: false, error: "Atout inutilisable maintenant" };
+      if (seller.atouts < 1) return { ok: false, error: "Aucun Atout" };
+      seller.atouts -= 1;
+      emit(state, { kind: "auction", playerId: a.chooserId, sellerId: seller.id, company: a.company!, percent: a.percent, price: 0, winnerId: null, cancelled: true });
       state.auction = null;
       state.phase = "act";
       return { ok: true, state };
@@ -446,9 +462,12 @@ export function applyAction(prev: GameState, action: Action): Result {
 
     case "AUCTION_CHOOSE": {
       const a = state.auction;
-      if (state.phase !== "auction" || !a || a.company || a.sellerId !== action.playerId) return { ok: false, error: "Choix impossible" };
-      const held = cur.holdings[action.company] ?? 0;
-      if (held <= 0) return { ok: false, error: "Vous ne détenez pas cette entreprise" };
+      if (state.phase !== "auction" || !a || a.company || a.chooserId !== action.playerId) return { ok: false, error: "Choix impossible" };
+      const owner = player(state, action.ownerId);
+      if (!owner || owner.bankrupt || owner.id === a.chooserId) return { ok: false, error: "Joueur invalide" };
+      const held = owner.holdings[action.company] ?? 0;
+      if (held <= 0) return { ok: false, error: "Ce joueur ne détient pas cette entreprise" };
+      a.sellerId = owner.id;
       a.company = action.company;
       a.percent = Math.min(held, a.percentToSell);
       a.startPrice = bankPrice(action.company, a.percent);
@@ -465,30 +484,44 @@ export function applyAction(prev: GameState, action: Action): Result {
       if (action.amount > bidder.cash) return { ok: false, error: "Pas assez d'argent" };
       a.highestBid = action.amount;
       a.highestBidderId = bidder.id;
+      a.bids.push({ playerId: bidder.id, amount: action.amount });
       return { ok: true, state };
     }
 
     case "AUCTION_CLOSE": {
       const a = state.auction;
-      if (state.phase !== "auction" || !a || !a.company) return { ok: false, error: "Aucune enchère à clore" };
+      if (state.phase !== "auction" || !a || !a.company || !a.sellerId) return { ok: false, error: "Aucune enchère à clore" };
       const seller = player(state, a.sellerId)!;
-      removeHolding(seller, a.company, a.percent);
-      if (a.highestBidderId) {
-        const winner = player(state, a.highestBidderId)!;
+      // the seller may have sold to the bank meanwhile
+      const percent = Math.min(a.percent, seller.holdings[a.company] ?? 0);
+      const winner = a.highestBidderId ? player(state, a.highestBidderId)! : null;
+      removeHolding(seller, a.company, percent);
+      if (winner && winner.cash >= a.highestBid) {
         winner.cash -= a.highestBid;
         seller.cash += a.highestBid;
-        winner.holdings[a.company] = (winner.holdings[a.company] ?? 0) + a.percent;
+        winner.holdings[a.company] = (winner.holdings[a.company] ?? 0) + percent;
+        emit(state, { kind: "auction", playerId: a.chooserId, sellerId: seller.id, company: a.company, percent, price: a.highestBid, winnerId: winner.id, cancelled: false });
       } else {
-        seller.cash += a.startPrice;
-        returnToStock(state, a.company, a.percent);
+        const price = bankPrice(a.company, percent);
+        seller.cash += price;
+        returnToStock(state, a.company, percent);
+        emit(state, { kind: "auction", playerId: a.chooserId, sellerId: seller.id, company: a.company, percent, price, winnerId: null, cancelled: false });
       }
       state.auction = null;
       state.phase = "act";
       return { ok: true, state };
     }
 
+    case "SETTLE_DEBT": {
+      const p = player(state, action.playerId);
+      if (!p || p.cash >= 0) return { ok: false, error: "Aucune dette" };
+      autoSell(state, p, 0);
+      return { ok: true, state };
+    }
+
     case "END_TURN": {
       if (!isCurrent || state.phase !== "act" || state.offer) return { ok: false, error: "Impossible de finir le tour maintenant" };
+      if (cur.cash < 0) return { ok: false, error: "Vendez des actions pour rembourser votre dette avant de finir le tour" };
       const items = Object.entries(state.turnBuys).map(([company, percent]) => ({ company, percent, total: cur.holdings[company] ?? 0 }));
       if (items.length) emit(state, { kind: "buys", playerId: cur.id, items });
       nextTurn(state);

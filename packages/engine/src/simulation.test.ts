@@ -10,22 +10,24 @@ function step(state: GameState, action: Action): GameState {
   return r.state;
 }
 
-// Simple bot: buys up to 30 % while keeping a cash reserve, auctions its smallest holding, others bid once
+// Simple bot: buys up to 30 % while keeping a cash reserve, auctions an opponent's smallest holding, others bid once
 function botTurn(state: GameState): GameState {
   const me = currentPlayer(state);
   let g = step(state, { type: "ROLL", playerId: me.id });
   if (g.phase === "gameOver" || currentPlayer(g).id !== me.id) return g;
   if (g.phase === "auction") {
     const self = currentPlayer(g);
-    if (self.atouts > 0) g = step(g, { type: "USE_ATOUT", playerId: self.id });
+    const target = activePlayers(g).find((p) => p.id !== self.id && Object.keys(p.holdings).length > 0)!;
+    const smallest = Object.entries(target.holdings).sort((x, y) => x[1] - y[1])[0]![0];
+    g = step(g, { type: "AUCTION_CHOOSE", playerId: self.id, ownerId: target.id, company: smallest });
+    if (target.atouts > 0) g = step(g, { type: "USE_ATOUT", playerId: target.id });
     else {
-      const smallest = Object.entries(self.holdings).sort((x, y) => x[1] - y[1])[0]![0];
-      g = step(g, { type: "AUCTION_CHOOSE", playerId: self.id, company: smallest });
-      const bidder = activePlayers(g).find((p) => p.id !== self.id && p.cash > g.auction!.startPrice * 2);
+      const bidder = activePlayers(g).find((p) => p.id !== target.id && p.cash > g.auction!.startPrice * 2);
       if (bidder) g = step(g, { type: "BID", playerId: bidder.id, amount: g.auction!.startPrice });
       g = step(g, { type: "AUCTION_CLOSE" });
     }
   }
+  if (currentPlayer(g).cash < 0) g = step(g, { type: "SETTLE_DEBT", playerId: currentPlayer(g).id });
   const self = currentPlayer(g);
   let budget = config.maxPurchasePercent;
   for (const [company, available] of Object.entries(buyableStock(g))) {
