@@ -4,6 +4,7 @@ import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { ClientToServer, ServerToClient } from "@stonks/shared";
 import { Server } from "socket.io";
+import { mailEnabled, sendMail } from "./mail";
 import { Profiles } from "./profiles";
 import { Rooms } from "./rooms";
 
@@ -36,7 +37,10 @@ const http = createServer(async (req, res) => {
 });
 
 const io = new Server<ClientToServer, ServerToClient>(http, { cors: { origin: true } });
-const profiles = new Profiles(process.env.DATA_DIR ?? fileURLToPath(new URL("../data", import.meta.url)));
+const profiles = new Profiles(process.env.DATA_DIR ?? fileURLToPath(new URL("../data", import.meta.url)), {
+  name: process.env.ADMIN_USER ?? "Rycrem",
+  password: process.env.ADMIN_PASSWORD,
+});
 const rooms = new Rooms(profiles, (room) => io.to(room.code).emit("room:state", rooms.view(room)));
 
 io.on("connection", (socket) => {
@@ -89,6 +93,31 @@ io.on("connection", (socket) => {
     if (r.ok) rooms.refreshLook(String(token));
     ack(r);
   });
+
+  socket.on("account:login", (name, password, current, ack) =>
+    ack(profiles.login(String(name ?? ""), String(password ?? ""), String(current ?? ""))),
+  );
+  socket.on("account:email", (token, email, ack) => ack(profiles.setEmail(String(token ?? ""), String(email ?? ""))));
+  socket.on("account:forgot", async (name, ack) => {
+    if (!mailEnabled) return ack({ ok: false, error: "L'envoi d'e-mails n'est pas configuré : demande à l'admin de réinitialiser ton mot de passe" });
+    const r = profiles.forgot(String(name ?? ""));
+    const done = "Si ce compte a un e-mail, un lien de réinitialisation vient d'y être envoyé (valable 1 h)";
+    if (!r) return ack({ ok: true, data: done });
+    const base = process.env.PUBLIC_URL ?? socket.handshake.headers.origin ?? `http://localhost:${PORT}`;
+    try {
+      await sendMail(r.email, "Stonks Valley : nouveau mot de passe", `Pour choisir un nouveau mot de passe, ouvre ce lien (valable 1 h) :\n${base}/?reset=${r.token}\n\nSi tu n'as rien demandé, ignore cet e-mail.`);
+      ack({ ok: true, data: done });
+    } catch (e) {
+      console.error("envoi e-mail", e);
+      ack({ ok: false, error: "L'e-mail n'a pas pu être envoyé" });
+    }
+  });
+  socket.on("account:reset", (resetToken, password, ack) => ack(profiles.reset(String(resetToken ?? ""), String(password ?? ""))));
+  socket.on("admin:list", (token, ack) => ack(profiles.accounts(String(token ?? ""))));
+  socket.on("admin:password", (token, name, password, ack) =>
+    ack(profiles.adminPassword(String(token ?? ""), String(name ?? ""), String(password ?? ""))),
+  );
+  socket.on("admin:points", (token, name, points, ack) => ack(profiles.adminPoints(String(token ?? ""), String(name ?? ""), Number(points))));
 
   const leave = () => {
     if (!session) return;

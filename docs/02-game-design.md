@@ -119,3 +119,10 @@ Choix retenu : **noms modifiés** (colonne "Nom parodique" ci-dessus) et **logos
 - Objets de départ gratuits dans chaque catégorie ; objets payants de 120 à 300 points (`packages/shared/src/cosmetics.ts`).
 - Fin de partie en ligne : points selon le classement, 120 / 60 / 40 / 30 / 20 / 15. Tout le monde gagne des points, seul le 1er en gagne assez pour s'offrir un objet tout de suite (le moins cher coûte 120).
 - Les parties "sur cet écran" ne rapportent pas de points.
+
+## Comptes
+
+- Pas d'inscription : pseudo + mot de passe. Au premier passage le pseudo est réservé avec ce mot de passe (et garde les points déjà gagnés dans ce navigateur). Ensuite, le bon mot de passe ramène les points et les objets depuis n'importe quel appareil ; un mauvais affiche "Mauvais mot de passe".
+- Mots de passe hachés (scrypt) côté serveur.
+- E-mail facultatif : il permet de recevoir un lien de réinitialisation valable 1 h (si le serveur a un SMTP).
+- Compte admin `Rycrem` (créable seulement avec `ADMIN_PASSWORD`) : liste des comptes, nouveau mot de passe à la main, modification des points.

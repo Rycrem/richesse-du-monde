@@ -5,6 +5,19 @@ services:
     restart: unless-stopped
     ports:
       - "8090:3000"
+    environment:
+      # valeurs lues dans le .env du NAS
+      ADMIN_PASSWORD: ${STONKS_ADMIN_PASSWORD}
+      PUBLIC_URL: https://jeu.tortuebox.fr
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      MAIL_FROM: ${MAIL_FROM:-}
     volumes:
       # profils des joueurs (points, cosmétiques)
       - ./stonks-valley:/data
+
+# Dans le .env du NAS :
+#   STONKS_ADMIN_PASSWORD=...   mot de passe du compte admin Rycrem (obligatoire pour le créer)
+#   SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, MAIL_FROM : facultatif, pour "mot de passe oublié"

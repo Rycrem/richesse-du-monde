@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { Account, ResetPassword } from "./Account";
+import { Admin } from "./Admin";
 import { PLAYER_COLORS } from "./format";
 import { Garage } from "./Garage";
 import { pawnDataUrl } from "./pawn";
@@ -6,8 +8,9 @@ import { Setup } from "./Setup";
 import { hasSavedSession, useStore } from "./store";
 
 export function Home() {
-  const { createRoom, joinRoom, resume, error, profile, loadProfile } = useStore();
+  const { createRoom, joinRoom, resume, error, notice, profile, loadProfile } = useStore();
   const [garage, setGarage] = useState(false);
+  const [admin, setAdmin] = useState(false);
   useEffect(() => {
     loadProfile();
   }, [loadProfile]);
@@ -15,11 +18,14 @@ export function Home() {
   const [tab, setTab] = useState<"online" | "local">("online");
   const [name, setName] = useState("");
   const [code, setCode] = useState(params.get("code") ?? "");
+  const [resetToken, setResetToken] = useState(params.get("reset"));
   useEffect(() => {
-    if (profile.name && !name) setName(profile.name);
-  }, [profile.name]);
+    if (profile.account) setName(profile.account);
+    else if (profile.name && !name) setName(profile.name);
+  }, [profile.name, profile.account]);
 
   if (garage) return <Garage color={PLAYER_COLORS[0]!} onClose={() => setGarage(false)} />;
+  if (admin && profile.admin) return <Admin onClose={() => setAdmin(false)} />;
 
   return (
     <div className="setup">
@@ -32,6 +38,19 @@ export function Home() {
           <small>{profile.points} pts</small>
         </span>
       </button>
+      {error && <div className="error">{error}</div>}
+      {notice && <div className="notice">{notice}</div>}
+      {resetToken ? (
+        <ResetPassword
+          resetToken={resetToken}
+          onDone={() => {
+            setResetToken(null);
+            history.replaceState(null, "", "/");
+          }}
+        />
+      ) : (
+        <Account onAdmin={() => setAdmin(true)} />
+      )}
       <div className="tabs">
         <button className={tab === "online" ? "primary" : ""} onClick={() => setTab("online")}>
           En ligne
@@ -40,7 +59,6 @@ export function Home() {
           Sur cet écran
         </button>
       </div>
-      {error && <div className="error">{error}</div>}
       {tab === "local" ? (
         <Setup />
       ) : (
@@ -52,7 +70,7 @@ export function Home() {
           )}
           <label>
             Ton pseudo
-            <input value={name} maxLength={20} onChange={(e) => setName(e.target.value)} />
+            <input value={name} maxLength={20} disabled={!!profile.account} onChange={(e) => setName(e.target.value)} />
           </label>
           <button className="primary" disabled={!name.trim()} onClick={() => createRoom(name)}>
             Créer une partie
