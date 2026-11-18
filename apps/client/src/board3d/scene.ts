@@ -305,7 +305,13 @@ export interface BoardScene {
   dispose(): void;
 }
 
-export function createBoardScene(host: HTMLElement): BoardScene {
+export interface BoardEvents {
+  // cell under the mouse (or null), with the mouse position in the page
+  onHover?: (cell: number | null, x: number, y: number) => void;
+  onSelect?: (cell: number) => void;
+}
+
+export function createBoardScene(host: HTMLElement, events: BoardEvents = {}): BoardScene {
   // render only when something changed, so an idle board costs nothing
   let dirty = true;
   const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
@@ -357,11 +363,14 @@ export function createBoardScene(host: HTMLElement): BoardScene {
   // cells
   const side = mat("#d9cfb8", { roughness: 0.7 });
   const decos: THREE.Group[] = [];
+  const cellGroups: THREE.Group[] = [];
   board.forEach((cell, i) => {
     const p = cellPose(i);
     const g = new THREE.Group();
     g.position.set(p.x, p.y, p.z);
     g.rotation.y = p.rot;
+    g.userData.cell = i;
+    cellGroups.push(g);
     scene.add(g);
     let tex: THREE.Texture;
     if (cell.type === "city") {
@@ -666,6 +675,31 @@ export function createBoardScene(host: HTMLElement): BoardScene {
     }
   };
   loop();
+  // hover and click on cells
+  const ray = new THREE.Raycaster();
+  const pick = (e: PointerEvent): number | null => {
+    const r = renderer.domElement.getBoundingClientRect();
+    ray.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), camera);
+    let o: THREE.Object3D | null = ray.intersectObjects(cellGroups, true)[0]?.object ?? null;
+    while (o && o.userData.cell === undefined) o = o.parent;
+    return o ? (o.userData.cell as number) : null;
+  };
+  let downAt: { x: number; y: number } | null = null;
+  const onMove = (e: PointerEvent) => events.onHover?.(downAt ? null : pick(e), e.clientX, e.clientY);
+  const onDown = (e: PointerEvent) => (downAt = { x: e.clientX, y: e.clientY });
+  const onUp = (e: PointerEvent) => {
+    if (downAt && Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) < 5) {
+      const cell = pick(e);
+      if (cell !== null) events.onSelect?.(cell);
+    }
+    downAt = null;
+  };
+  const onLeave = () => events.onHover?.(null, 0, 0);
+  renderer.domElement.addEventListener("pointermove", onMove);
+  renderer.domElement.addEventListener("pointerdown", onDown);
+  renderer.domElement.addEventListener("pointerup", onUp);
+  renderer.domElement.addEventListener("pointerleave", onLeave);
+
   const invalidate = () => (dirty = true);
   controls.addEventListener("change", invalidate);
   controls.addEventListener("start", () => (follow = false));
