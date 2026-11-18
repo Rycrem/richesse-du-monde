@@ -1,0 +1,15 @@
+{
+  "startingCash": 6000,
+  "maxPurchasePercent": 30,
+  "leveeFundsPerPip": 100,
+  "auctionPercentPerPip": 5,
+  "minBidIncrement": 100,
+  "auctionTimeoutSeconds": 7,
+  "offerTimeoutSeconds": 15,
+  "atoutPrice": 1500,
+  "monopolyMultiplier": 2,
+  "bankBuybackRatio": 0.5,
+  "royaltyTokensPerCompany": 2,
+  "minPlayers": 2,
+  "maxPlayers": 6
+}

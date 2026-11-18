@@ -1,0 +1,62 @@
+[
+  {
+    "id": "actu-1",
+    "text": "Une IA génère votre rapport annuel. Prime de productivité.",
+    "amount": 800
+  },
+  {
+    "id": "actu-2",
+    "text": "Panne géante du cloud : vous remboursez vos clients.",
+    "amount": -600
+  },
+  {
+    "id": "actu-3",
+    "text": "Votre startup est rachetée.",
+    "amount": 1500
+  },
+  {
+    "id": "actu-4",
+    "text": "Amende pour abus de position dominante.",
+    "amount": -1000
+  },
+  {
+    "id": "actu-5",
+    "text": "Un influenceur parle de votre portefeuille.",
+    "amount": 500
+  },
+  {
+    "id": "actu-6",
+    "text": "Pénurie de puces : frais de stockage.",
+    "amount": -400
+  },
+  {
+    "id": "actu-7",
+    "text": "Vous gagnez un hackathon.",
+    "amount": 300
+  },
+  {
+    "id": "actu-8",
+    "text": "Fuite de données : frais d'avocats.",
+    "amount": -800
+  },
+  {
+    "id": "actu-9",
+    "text": "Dividende exceptionnel.",
+    "amount": 1000
+  },
+  {
+    "id": "actu-10",
+    "text": "Crypto-krach dans votre trésorerie.",
+    "amount": -700
+  },
+  {
+    "id": "actu-11",
+    "text": "Vous vendez un NFT de votre chat.",
+    "amount": 200
+  },
+  {
+    "id": "actu-12",
+    "text": "Licenciement d'un PDG : indemnités.",
+    "amount": -500
+  }
+]

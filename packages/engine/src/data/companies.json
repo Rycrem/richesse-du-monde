@@ -1,0 +1,98 @@
+[
+  {
+    "id": "nvidio",
+    "name": "Nvidio",
+    "sector": "Cartes graphiques / IA",
+    "color": "#76b900",
+    "pricePerPercent": 150,
+    "royaltyPerPercent": 30
+  },
+  {
+    "id": "appel",
+    "name": "Appel",
+    "sector": "Smartphones",
+    "color": "#a2aaad",
+    "pricePerPercent": 140,
+    "royaltyPerPercent": 28
+  },
+  {
+    "id": "macrosoft",
+    "name": "Macrosoft",
+    "sector": "Logiciels / cloud",
+    "color": "#00a4ef",
+    "pricePerPercent": 130,
+    "royaltyPerPercent": 26
+  },
+  {
+    "id": "gogol",
+    "name": "Gogol",
+    "sector": "Recherche / pub",
+    "color": "#4285f4",
+    "pricePerPercent": 120,
+    "royaltyPerPercent": 24
+  },
+  {
+    "id": "amazone",
+    "name": "Amazone",
+    "sector": "Cloud / e-commerce",
+    "color": "#ff9900",
+    "pricePerPercent": 120,
+    "royaltyPerPercent": 24
+  },
+  {
+    "id": "tsmb",
+    "name": "TSMB",
+    "sector": "Fonderie de puces",
+    "color": "#c4161c",
+    "pricePerPercent": 110,
+    "royaltyPerPercent": 22
+  },
+  {
+    "id": "meto",
+    "name": "Méto",
+    "sector": "Réseaux sociaux",
+    "color": "#0866ff",
+    "pricePerPercent": 100,
+    "royaltyPerPercent": 20
+  },
+  {
+    "id": "tesler",
+    "name": "Tesler",
+    "sector": "Voitures électriques",
+    "color": "#cc0000",
+    "pricePerPercent": 100,
+    "royaltyPerPercent": 20
+  },
+  {
+    "id": "amb",
+    "name": "AMB",
+    "sector": "Processeurs",
+    "color": "#ed1c24",
+    "pricePerPercent": 90,
+    "royaltyPerPercent": 18
+  },
+  {
+    "id": "samsong",
+    "name": "Samsong",
+    "sector": "Smartphones",
+    "color": "#1428a0",
+    "pricePerPercent": 90,
+    "royaltyPerPercent": 18
+  },
+  {
+    "id": "sonyx",
+    "name": "Sonyx",
+    "sector": "Consoles / électronique",
+    "color": "#222222",
+    "pricePerPercent": 80,
+    "royaltyPerPercent": 16
+  },
+  {
+    "id": "intol",
+    "name": "Intol",
+    "sector": "Processeurs",
+    "color": "#0071c5",
+    "pricePerPercent": 70,
+    "royaltyPerPercent": 14
+  }
+]
