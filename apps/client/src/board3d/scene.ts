@@ -46,7 +46,8 @@ export function cellPose(i: number): Pose {
     x: start[0]! + dir[0]! * along - (out[0]! * corner) / 2,
     z: start[1]! + dir[1]! * along - (out[1]! * corner) / 2,
     y: inner ? INNER_Y : 0,
-    rot: [0, -Math.PI / 2, Math.PI, Math.PI / 2][s]!,
+    // the far row is not flipped, so its names read upright and its buildings stand behind them
+    rot: [0, -Math.PI / 2, 0, Math.PI / 2][s]!,
     w: k === 0 ? corner : w,
     d: corner,
     corner: k === 0,
@@ -457,7 +458,7 @@ export function createBoardScene(host: HTMLElement): BoardScene {
       deco.clear();
       const logo = logoTex(company.id);
       const b = !pct ? emptyLot(hub, company.color, logo) : hub ? campus(tierOf(pct), company.color, logo) : skyscraper(tierOf(pct), company.color, logo);
-      b.scale.setScalar(hub ? 1 : 0.9);
+      b.scale.setScalar(hub ? 0.9 : 0.8);
       deco.add(b);
     });
 

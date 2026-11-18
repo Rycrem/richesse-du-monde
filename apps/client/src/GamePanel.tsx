@@ -203,14 +203,20 @@ function BuyPanel({ game }: { game: GameState }) {
       <p className="muted">Encore {left} % achetables ce tour.</p>
       {entries.map(([c, available]) => {
         const company = companyById.get(c)!;
-        const max = Math.min(available, left - total + (wanted[c] ?? 0));
+        const allowed = Math.min(available, left - total + (wanted[c] ?? 0));
         return (
           <div key={c} className="buy-row">
             <span className="chip" style={{ background: company.color }}>
               <img src={`/logos/${c}.svg`} alt="" />
               {company.name}
             </span>
-            <input type="range" min={0} max={max} value={wanted[c] ?? 0} onChange={(e) => setWanted({ ...wanted, [c]: Number(e.target.value) })} />
+            <input
+              type="range"
+              min={0}
+              max={available}
+              value={wanted[c] ?? 0}
+              onChange={(e) => setWanted({ ...wanted, [c]: Math.min(allowed, Number(e.target.value)) })}
+            />
             <span>
               {wanted[c] ?? 0} / {available} %
             </span>
