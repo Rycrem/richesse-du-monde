@@ -11,7 +11,8 @@ Objectif : un jeu de plateau économique sur le thème de la tech (parts d'entre
 | Moteur de jeu | Package `engine` en TS pur, sans dépendance | Testable, déterministe, réutilisé côté serveur et client |
 | Serveur | Node.js + Socket.IO | Salles, reconnexion, temps réel, très répandu |
 | Client | React + Vite | Rapide à développer, bon écosystème |
-| Plateau | SVG généré en code | Net à toutes les tailles, facile à animer, aucun asset copié |
+| Plateau | 2D isométrique avec PixiJS (WebGL), intégré dans React via `@pixi/react` | Rendu rapide de nombreuses tuiles et sprites, animations fluides (pions, dés, pièces), zoom et déplacement de caméra |
+| Interface (menus, panneaux, cartes) | React + CSS par-dessus le canvas | Plus simple à faire en HTML qu'en WebGL, accessible, responsive |
 | État client | Zustand | Léger, suffit pour un état reçu du serveur |
 | Tests | Vitest (moteur), Playwright (parcours multijoueur) | |
 | Persistance | Mémoire au départ, Redis ensuite si besoin de reprise après redémarrage | Pas de base de données au début |
@@ -33,6 +34,15 @@ navigateur (React)  <-- socket.io -->  serveur Node  --> engine (règles)
 - **Tour verrouillé** : seul le joueur actif peut acheter ou faire une offre de rachat. Le serveur refuse ces actions venant des autres joueurs.
 - **Temps réel** : une offre de rachat attend la réponse du propriétaire avec un minuteur côté serveur (refus automatique à expiration). Un joueur absent trop longtemps joue en automatique (passe son tour, refuse les offres).
 - **Info cachée** : les cartes Atout d'un joueur ne sont envoyées qu'à lui (le serveur filtre l'état par joueur).
+
+## Rendu isométrique
+
+- Le plateau reste un anneau de 40 cases, posé sur une grille isométrique (projection 2:1, tuiles losanges de 128 x 64 px).
+- Chaque hub est une tuile avec un petit bâtiment aux couleurs et au logo parodique de son entreprise, et une étiquette lisible au survol.
+- Le centre du plateau sert de décor (carte du monde stylisée) et affiche le dé et les événements.
+- Le tri en profondeur des sprites se fait par `x + y` de la grille pour que pions et bâtiments se superposent correctement.
+- Les sprites sont dessinés en SVG puis convertis en images (atlas) au build, pour garder des visuels maison nets sur écran haute densité.
+- Le moteur de jeu ne connaît que des numéros de case : le rendu isométrique est une couche à part, remplaçable sans toucher aux règles.
 
 ## Structure du dépôt
 
@@ -56,7 +66,7 @@ Chaque jalon = une branche + une PR, testée avant de passer au suivant.
 | 0 | Socle | Monorepo, lint, Vitest, CI GitHub Actions | `pnpm test` vert en CI |
 | 1 | Données | Plateau 40 cases (entreprise attribuée à chaque hub), 12 entreprises avec noms et logos parodiques SVG, 96 cartes de parts, cartes Actu Tech et Atout en JSON | Données validées par des tests (chaque entreprise = 100 %) |
 | 2 | Moteur | Déplacement, achat libre, paiement au plus gros détenteur, rachat entre joueurs, faillite, victoire | Tests unitaires + partie simulée complète par des bots |
-| 3 | Jeu local | Plateau SVG, panneau joueur avec ses parts par entreprise, achat des cartes de la case, plusieurs joueurs sur un même écran | Une partie jouable de bout en bout dans un onglet |
+| 3 | Jeu local | Plateau isométrique (tuiles, bâtiments par hub, pions animés, caméra zoom/glisser), panneau joueur avec ses parts par entreprise, achat des cartes de la case, plusieurs joueurs sur un même écran | Une partie jouable de bout en bout dans un onglet |
 | 4 | En ligne | Serveur, salles avec code, lobby, synchro, reconnexion | 2 navigateurs jouent ensemble, test Playwright |
 | 5 | Interactions | Offres de rachat du joueur actif avec contre-offre, cartes Actu Tech et Atout | Toutes les règles du game design jouables en ligne |
 | 6 | Finition | Animations, sons libres de droits, mobile, journal de partie, règles intégrées | Jouable confortablement sur téléphone |
