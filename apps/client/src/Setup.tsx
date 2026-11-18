@@ -3,9 +3,10 @@ import { useState } from "react";
 import { PLAYER_COLORS } from "./format";
 import { useStore } from "./store";
 
-export function Setup() {
+export function Setup({ solo = false }: { solo?: boolean }) {
   const startLocal = useStore((s) => s.startLocal);
-  const [names, setNames] = useState(["Joueur 1", "Joueur 2"]);
+  const me = useStore((s) => s.profile.account || s.profile.name || "Toi");
+  const [names, setNames] = useState(solo ? [me, "Bot 1", "Bot 2"] : ["Joueur 1", "Joueur 2"]);
   const [mode, setMode] = useState<GameMode>("classique");
 
   return (
@@ -15,7 +16,8 @@ export function Setup() {
         <div className="row" key={i}>
           <span className="dot" style={{ background: PLAYER_COLORS[i] }} />
           <input value={n} onChange={(e) => setNames(names.map((x, j) => (j === i ? e.target.value : x)))} />
-          {names.length > config.minPlayers && (
+          {solo && i > 0 && <span className="chip bot">Bot</span>}
+          {names.length > config.minPlayers && (!solo || i > 0) && (
             <button className="ghost" onClick={() => setNames(names.filter((_, j) => j !== i))}>
               Retirer
             </button>
@@ -23,8 +25,8 @@ export function Setup() {
         </div>
       ))}
       {names.length < config.maxPlayers && (
-        <button className="ghost" onClick={() => setNames([...names, `Joueur ${names.length + 1}`])}>
-          + Ajouter un joueur
+        <button className="ghost" onClick={() => setNames([...names, solo ? `Bot ${names.length}` : `Joueur ${names.length + 1}`])}>
+          {solo ? "+ Ajouter un bot" : "+ Ajouter un joueur"}
         </button>
       )}
       <h2>Victoire</h2>
@@ -36,7 +38,7 @@ export function Setup() {
         <input type="radio" checked={mode === "chrono"} onChange={() => setMode("chrono")} />
         Chrono : le plus riche gagne quand on arrête la partie
       </label>
-      <button className="primary" disabled={names.some((n) => !n.trim())} onClick={() => startLocal(names.map((n) => n.trim()), mode)}>
+      <button className="primary" disabled={names.some((n) => !n.trim())} onClick={() => startLocal(names.map((n) => n.trim()), mode, names.map((_, i) => solo && i > 0))}>
         Lancer la partie
       </button>
     </div>

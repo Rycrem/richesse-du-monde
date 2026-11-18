@@ -95,7 +95,7 @@ export function GamePanel({ game }: { game: GameState }) {
         ))}
       </div>
 
-      {game.mode === "chrono" && (you === null || you === room?.hostId) && (
+      {game.mode === "chrono" && (!room || you === room.hostId) && (
         <button className="ghost" onClick={() => dispatch({ type: "END_GAME" })}>
           Arrêter la partie (le plus riche gagne)
         </button>

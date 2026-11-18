@@ -61,7 +61,8 @@ interface Store {
   adminPoints: (name: string, points: number) => Promise<boolean>;
   buy: (itemId: string) => void;
   equip: (slot: Slot, itemId: string) => void;
-  startLocal: (names: string[], mode: GameMode) => void;
+  bots: string[];
+  startLocal: (names: string[], mode: GameMode, bots?: boolean[]) => void;
   createRoom: (name: string) => void;
   joinRoom: (code: string, name: string) => void;
   resume: () => void;
@@ -160,10 +161,13 @@ export const useStore = create<Store>((set, get) => {
     adminPoints: async (name, points) => (await adminCall<null>((s, done) => s.emit("admin:points", profileToken(), name, points, done))).ok,
     buy: (itemId) => connect().emit("profile:buy", profileToken(), itemId, onProfile),
     equip: (slot, itemId) => connect().emit("profile:equip", profileToken(), slot, itemId, onProfile),
-    startLocal: (names, mode) =>
+    bots: [],
+    startLocal: (names, mode, bots = []) =>
       set({
         online: false,
-        you: null,
+        // solo: the screen belongs to the only human, bots play the other seats
+        you: bots.some(Boolean) ? "p1" : null,
+        bots: names.flatMap((_, i) => (bots[i] ? [`p${i + 1}`] : [])),
         room: null,
         game: rollTurnOrder(
           createGame(
@@ -231,7 +235,7 @@ export const useStore = create<Store>((set, get) => {
         socket?.emit("room:leave");
         saveSession(null);
       }
-      set({ online: false, you: null, room: null, game: null, error: null });
+      set({ online: false, you: null, room: null, game: null, error: null, bots: [] });
     },
   };
 });

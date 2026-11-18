@@ -1,5 +1,6 @@
 import { board, type GameEvent, type GameState } from "@stonks/engine";
 import { useEffect, useRef, useState } from "react";
+import { play, steps, type Sfx } from "./audio";
 import { companyById, money, PLAYER_COLORS } from "./format";
 
 const WALK_DELAY = 1.5;
@@ -16,10 +17,20 @@ const HEAD: Record<string, { color: string; icon: string; title: string }> = {
   bankrupt: { color: "#3a3f4b", icon: "💸", title: "FAILLITE" },
 };
 
+function sound(e: GameEvent) {
+  if (e.kind === "roll") {
+    play("dice");
+    return steps((e.to - e.from + board.length) % board.length, WALK_DELAY, STEP);
+  }
+  const map: Partial<Record<GameEvent["kind"], Sfx>> = { order: "dice", krach: "loss", royalty: "coin", buys: "buy", auction: "bid", bankrupt: "bankrupt", win: "win" };
+  const amount = "amount" in e ? e.amount : 0;
+  play(map[e.kind] ?? (e.kind === "atout" ? "buy" : amount >= 0 ? "coin" : "loss"));
+}
+
 // how long a card stays, then how long to wait before the next one (the pawn walk after a roll)
 function timing(e: GameEvent): [number, number] {
   if (e.kind === "roll") return [WALK_DELAY * 1000 - LEAVE_MS, ((e.to - e.from + board.length) % board.length) * STEP * 1000 + 150];
-  if (e.kind === "order") return [1500 + e.rolls.length * 600, 0];
+  if (e.kind === "order") return [2000 + e.rolls.length * 700, 0];
   if (e.kind === "buys") return [3200 + e.deals.length * 600, 0];
   if (e.kind === "royalty") return [2400, 0];
   return [2800, 0];
@@ -242,10 +253,12 @@ export function EventOverlay({ game }: { game: GameState }) {
 
   useEffect(() => {
     const max = Math.max(0, ...game.events.map((e) => e.id));
-    if (seen.current === null) {
+    // joining a game in progress skips its past events; a brand new game shows its turn order
+    if (seen.current === null && game.lastRoll !== null) {
       seen.current = max;
       return;
     }
+    seen.current ??= 0;
     const fresh = game.events.filter((e) => e.id > seen.current!);
     if (!fresh.length) return;
     seen.current = max;
@@ -256,6 +269,7 @@ export function EventOverlay({ game }: { game: GameState }) {
     if (current || !queue.length) return;
     const [e, ...rest] = queue;
     setQueue(rest);
+    sound(e!);
     if (e!.kind === "win") {
       setWinner({ id: e!.playerId, leaving: false });
       return;

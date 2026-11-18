@@ -220,7 +220,7 @@ button.link:disabled { opacity: 0.5; cursor: default; }
 .hover-tip img { width: 26px; height: 26px; border-radius: 6px; background: #fff; padding: 2px; }
 .hover-tip div { display: flex; flex-direction: column; line-height: 1.15; }
 .hover-tip small { color: #9aa7c2; font-size: 11px; }
-.inspect { position: absolute; z-index: 25; top: 16px; left: 16px; width: 320px; max-height: calc(100% - 32px); display: flex; flex-direction: column; background: var(--card); border-radius: 14px; overflow: hidden; box-shadow: 0 12px 40px #0008; animation: slide-in 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.2); }
+.inspect { position: absolute; z-index: 25; top: 66px; left: 16px; width: 320px; max-height: calc(100% - 82px); display: flex; flex-direction: column; background: var(--card); border-radius: 14px; overflow: hidden; box-shadow: 0 12px 40px #0008; animation: slide-in 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.2); }
 .inspect.leaving { animation: slide-out 0.3s ease-in forwards; }
 .inspect header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; color: #fff; text-shadow: 0 1px 2px #0008; }
 .inspect header div { display: flex; flex-direction: column; }
@@ -258,3 +258,10 @@ button.link:disabled { opacity: 0.5; cursor: default; }
 .deals-title { margin-top: 12px; }
 .tray-item.deal { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .tray-item.deal small { color: #fff; font-size: 12px; }
+.chip.bot { background: #9b5de5; }
+.options { position: fixed; left: 14px; top: 14px; z-index: 60; display: flex; flex-direction: column-reverse; align-items: flex-start; gap: 8px; }
+.options-btn { width: 42px; height: 42px; border-radius: 999px; font-size: 20px; padding: 0; background: #1b2438ee; box-shadow: 0 4px 14px #0006; }
+.options-panel { background: var(--card); border-radius: 14px; padding: 12px 14px; width: 230px; box-shadow: 0 12px 30px #0008; display: flex; flex-direction: column; gap: 10px; animation: rise 0.25s ease-out; }
+.options-panel h3 { margin: 0; }
+.options-panel label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+.options-panel label.row { flex-direction: row; align-items: center; }
