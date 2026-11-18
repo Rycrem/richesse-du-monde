@@ -1,0 +1,558 @@
+import { allianceOf, board, regions, type Cell, type GameState } from "@stonks/engine";
+import type { Look } from "@stonks/shared";
+import * as THREE from "three";
+import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { companyById, PLAYER_COLORS } from "../format";
+import { pawnDataUrl } from "../pawn";
+import { campus, emptyLot, skyscraper, tierOf } from "./buildings";
+
+// Outer ring: 4 corners + 11 cells per side; inner raised ring of hubs: 4 corners + 7 per side.
+const W = 1.1, CORNER = 1.6, N = 11;
+const HALF = (N * W + 2 * CORNER) / 2;
+const IW = 1.1, ICORNER = 1.3, IN = 7;
+const IHALF = (IN * IW + 2 * ICORNER) / 2;
+const INNER_Y = 0.35;
+const OUTER_COUNT = 4 * (N + 1);
+const MOAT = (HALF - CORNER + IHALF) / 2;
+
+const regionColor = new Map(regions.map((r) => [r.id, r.color]));
+const SPECIAL: Record<string, { color: string; label: string }> = {
+  depart: { color: "#f6efe0", label: "DÉPART" },
+  encheres: { color: "#e94f6f", label: "ENCHÈRES" },
+  mondial: { color: "#7b3fc4", label: "CHOIX MONDIAL" },
+  levee: { color: "#17c3a5", label: "LEVÉE DE FONDS" },
+  actu: { color: "#2a9fd6", label: "ACTU TECH" },
+  atout: { color: "#ffcf4a", label: "ATOUT" },
+  ipo: { color: "#d4a72c", label: "INTRO EN BOURSE" },
+  krach: { color: "#5a2a3a", label: "KRACH" },
+};
+
+interface Pose { x: number; y: number; z: number; rot: number; w: number; d: number; corner: boolean; inner: boolean }
+
+// The game walks the outer ring, then the inner ring in the opposite direction so the two passages never cross
+export function cellPose(i: number): Pose {
+  const inner = i >= OUTER_COUNT;
+  const [half, corner, w, n] = inner ? [IHALF, ICORNER, IW, IN] : [HALF, CORNER, W, N];
+  const r = inner ? (4 * (IN + 1) - (i - OUTER_COUNT)) % (4 * (IN + 1)) : i;
+  const s = Math.floor(r / (n + 1));
+  const k = r % (n + 1);
+  const dir = [[-1, 0], [0, -1], [1, 0], [0, 1]][s]!;
+  const out = [[0, 1], [-1, 0], [0, -1], [1, 0]][s]!;
+  const start = [[half, half], [-half, half], [-half, -half], [half, -half]][s]!;
+  const along = k === 0 ? corner / 2 : corner + w * (k - 1) + w / 2;
+  return {
+    x: start[0]! + dir[0]! * along - (out[0]! * corner) / 2,
+    z: start[1]! + dir[1]! * along - (out[1]! * corner) / 2,
+    y: inner ? INNER_Y : 0,
+    rot: [0, -Math.PI / 2, Math.PI, Math.PI / 2][s]!,
+    w: k === 0 ? corner : w,
+    d: corner,
+    corner: k === 0,
+    inner,
+  };
+}
+
+function canvasTexture(w: number, h: number, draw: (g: CanvasRenderingContext2D) => void) {
+  const c = document.createElement("canvas");
+  c.width = w;
+  c.height = h;
+  draw(c.getContext("2d")!);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 8;
+  return t;
+}
+
+function wrap(g: CanvasRenderingContext2D, text: string, max: number) {
+  const out: string[] = [];
+  let line = "";
+  for (const wd of text.split(" ")) {
+    const t = line ? `${line} ${wd}` : wd;
+    if (g.measureText(t).width > max && line) {
+      out.push(line);
+      line = wd;
+    } else line = t;
+  }
+  out.push(line);
+  return out;
+}
+
+function labelTexture(lines: [string, number, string?][], band: string) {
+  return canvasTexture(256, 384, (g) => {
+    g.fillStyle = "#f4ecd8";
+    g.fillRect(0, 0, 256, 384);
+    g.fillStyle = band;
+    g.fillRect(0, 0, 256, 92);
+    g.textAlign = "center";
+    let y = 254;
+    for (const [text, size, color] of lines) {
+      g.font = `800 ${size}px Inter, Arial, sans-serif`;
+      g.fillStyle = color ?? "#1b2433";
+      for (const l of wrap(g, text, 225)) {
+        g.fillText(l, 128, y);
+        y += size * 1.1;
+      }
+      y += size * 0.3;
+    }
+  });
+}
+
+function solidTexture(color: string, text: string, w: number, h: number) {
+  return canvasTexture(w, h, (g) => {
+    g.fillStyle = color;
+    g.fillRect(0, 0, w, h);
+    g.strokeStyle = "rgba(255,255,255,.35)";
+    g.lineWidth = 10;
+    g.strokeRect(14, 14, w - 28, h - 28);
+    g.fillStyle = ["#f6efe0", "#ffcf4a", "#d4a72c"].includes(color) ? "#1b2433" : "#ffffff";
+    g.textAlign = "center";
+    const words = text.split(" ");
+    let size = 48;
+    g.font = `900 ${size}px Inter, Arial, sans-serif`;
+    while (Math.max(...words.map((wd) => g.measureText(wd).width)) > w * 0.84) {
+      size -= 2;
+      g.font = `900 ${size}px Inter, Arial, sans-serif`;
+    }
+    const y0 = h * 0.68 - (words.length - 1) * size * 0.5;
+    words.forEach((wd, i) => g.fillText(wd, w / 2, y0 + i * size * 1.05));
+  });
+}
+
+const mat = (color: THREE.ColorRepresentation, o: THREE.MeshStandardMaterialParameters = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.4, ...o });
+
+function add(group: THREE.Object3D, mesh: THREE.Mesh, x = 0, y = 0, z = 0) {
+  mesh.position.set(x, y, z);
+  mesh.castShadow = true;
+  group.add(mesh);
+  return mesh;
+}
+
+function icon(group: THREE.Group, kind: Cell["type"]) {
+  if (kind === "encheres") {
+    add(group, new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.42, 16), mat("#8b5a2b")), 0, 0.42, 0).rotation.z = Math.PI / 2;
+    add(group, new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.5, 8), mat("#a0703c")), 0, 0.2, 0);
+    add(group, new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.25, 0.08, 20), mat("#5b3a1c")), 0.25, 0.04, 0.2);
+  } else if (kind === "levee" || kind === "ipo") {
+    for (let i = 0; i < 5; i++) add(group, new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.06, 24), mat("#e8b93a", { metalness: 0.9, roughness: 0.25 })), (i % 2) * 0.03, 0.04 + i * 0.065, 0);
+    if (kind === "ipo") add(group, new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.3, 4), mat("#3fd17b", { emissive: "#1a7a40", emissiveIntensity: 0.6 })), 0.3, 0.5, 0);
+  } else if (kind === "atout") {
+    add(group, new THREE.Mesh(new RoundedBoxGeometry(0.42, 0.04, 0.6, 2, 0.02), mat("#fff7e0")), 0, 0.3, 0).rotation.x = -0.9;
+    add(group, new THREE.Mesh(new THREE.OctahedronGeometry(0.12), mat("#ffcf4a", { metalness: 0.7, roughness: 0.2, emissive: "#8a6a10", emissiveIntensity: 0.4 })), 0, 0.6, 0);
+  } else if (kind === "actu") {
+    add(group, new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.05, 0.38), mat("#ffffff")), 0, 0.08, 0).rotation.y = 0.3;
+    add(group, new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.05, 0.38), mat("#e5e5e5")), 0.05, 0.13, 0.03).rotation.y = 0.1;
+    add(group, new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.32, 0.06), mat("#2a9fd6")), -0.2, 0.3, -0.12);
+  } else if (kind === "choix-regional" || kind === "mondial") {
+    add(group, new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.7, 8), mat("#8b5a2b")), 0, 0.35, 0);
+    add(group, new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.12, 0.03), mat("#ffffff")), 0.12, 0.6, 0).rotation.y = 0.4;
+    add(group, new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.12, 0.03), mat("#ffcf4a")), -0.1, 0.44, 0).rotation.y = -0.6;
+    if (kind === "mondial") add(group, new THREE.Mesh(new THREE.SphereGeometry(0.28, 32, 16), mat("#2e86ab", { emissive: "#0e3a5a", emissiveIntensity: 0.5 })), 0.35, 0.3, 0.3);
+  } else if (kind === "krach") {
+    [0.5, 0.38, 0.24, 0.1].forEach((h, i) => add(group, new THREE.Mesh(new THREE.BoxGeometry(0.1, h, 0.1), mat("#ff4d6d", { emissive: "#7a1020", emissiveIntensity: 0.5 })), -0.2 + i * 0.13, h / 2, 0));
+  } else if (kind === "depart") {
+    const arrow = add(group, new THREE.Mesh(new THREE.ConeGeometry(0.25, 0.5, 3), mat("#17c3a5")), 0, 0.12, 0);
+    arrow.rotation.x = Math.PI / 2;
+    arrow.rotation.z = Math.PI / 2;
+  }
+}
+
+function floorLabel(scene: THREE.Scene, text: string, color: string, x: number, z: number, rot: number) {
+  const tex = canvasTexture(768, 96, (g) => {
+    g.fillStyle = color;
+    g.font = "900 64px Inter, Arial";
+    g.textAlign = "center";
+    g.textBaseline = "middle";
+    g.fillText(text, 384, 48);
+  });
+  const sign = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 0.3), new THREE.MeshBasicMaterial({ map: tex, transparent: true }));
+  sign.rotation.set(-Math.PI / 2, 0, rot);
+  sign.position.set(x, 0.03, z);
+  scene.add(sign);
+}
+
+// Glowing stepping-stone staircase along a smooth curve, with an arch at the arrival
+function passage(scene: THREE.Scene, points: [number, number, number][], color: string) {
+  const curve = new THREE.CatmullRomCurve3(points.map(([x, y, z]) => new THREE.Vector3(x, y, z)));
+  const n = Math.max(4, Math.round(curve.getLength() / 0.36));
+  const stone = mat("#2a3b55", { metalness: 0.3 });
+  const glow = mat(color, { emissive: color, emissiveIntensity: 0.55, roughness: 0.3 });
+  const chev = mat("#1b2433");
+  for (let i = 0; i < n; i++) {
+    const t = (i + 0.5) / n;
+    const p = curve.getPointAt(t);
+    const tan = curve.getTangentAt(t);
+    const g = new THREE.Group();
+    g.position.set(p.x, 0, p.z);
+    g.rotation.y = Math.atan2(tan.x, tan.z);
+    scene.add(g);
+    const h = Math.max(0.05, p.y);
+    add(g, new THREE.Mesh(new RoundedBoxGeometry(0.3, h, 0.26, 2, 0.04), stone), 0, h / 2, 0).receiveShadow = true;
+    g.add(new THREE.Mesh(new RoundedBoxGeometry(0.32, 0.04, 0.28, 2, 0.015), glow)).position.y = h + 0.01;
+    const c = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.18, 3), chev);
+    c.rotation.x = Math.PI / 2;
+    c.scale.y = 0.35;
+    c.position.y = h + 0.04;
+    g.add(c);
+  }
+  const end = curve.getPointAt(1);
+  const tan = curve.getTangentAt(1);
+  const arch = new THREE.Group();
+  arch.position.set(end.x, end.y + 0.04, end.z);
+  arch.rotation.y = Math.atan2(tan.x, tan.z) + Math.PI / 2;
+  scene.add(arch);
+  add(arch, new THREE.Mesh(new THREE.TorusGeometry(0.28, 0.035, 12, 32, Math.PI), glow));
+  for (const x of [-0.28, 0.28]) add(arch, new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 0.06, 12), mat("#c9a23a", { metalness: 0.8, roughness: 0.3 })), x, 0.01, 0);
+}
+
+function pipTexture(n: number) {
+  const P: Record<number, [number, number][]> = {
+    1: [[64, 64]],
+    2: [[34, 34], [94, 94]],
+    3: [[30, 30], [64, 64], [98, 98]],
+    4: [[34, 34], [94, 34], [34, 94], [94, 94]],
+    5: [[30, 30], [98, 30], [64, 64], [30, 98], [98, 98]],
+    6: [[34, 28], [94, 28], [34, 64], [94, 64], [34, 100], [94, 100]],
+  };
+  return canvasTexture(128, 128, (g) => {
+    g.fillStyle = "#fbfbf7";
+    g.fillRect(0, 0, 128, 128);
+    g.fillStyle = "#c4161c";
+    for (const [x, y] of P[n]!) {
+      g.beginPath();
+      g.arc(x, y, 12, 0, 7);
+      g.fill();
+    }
+  });
+}
+
+function center(scene: THREE.Scene) {
+  const c = new THREE.Group();
+  c.position.y = INNER_Y;
+  scene.add(c);
+  add(c, new THREE.Mesh(new THREE.CylinderGeometry(2.6, 2.8, 0.12, 64), mat("#2c3d58", { metalness: 0.2 })), 0, 0.06, 0).receiveShadow = true;
+  add(c, new THREE.Mesh(new THREE.TorusGeometry(2.62, 0.05, 8, 96), mat("#5ad7ff", { emissive: "#2aa7ff", emissiveIntensity: 0.9 })), 0, 0.12, 0).rotation.x = Math.PI / 2;
+  const titleTex = canvasTexture(1024, 1024, (g) => {
+    g.translate(512, 512);
+    g.fillStyle = "#e8c45a";
+    g.font = "900 70px Inter, Arial";
+    g.textAlign = "center";
+    const t = "STONKS VALLEY · STONKS VALLEY · ";
+    for (let i = 0; i < t.length; i++) {
+      g.save();
+      g.rotate((i / t.length) * Math.PI * 2);
+      g.fillText(t[i]!, 0, -430);
+      g.restore();
+    }
+  });
+  const title = new THREE.Mesh(new THREE.CircleGeometry(2.55, 64), new THREE.MeshStandardMaterial({ map: titleTex, transparent: true }));
+  title.rotation.x = -Math.PI / 2;
+  title.position.y = 0.125;
+  c.add(title);
+  for (let i = 0; i < 16; i++) {
+    const ang = (i / 16) * Math.PI * 2;
+    const h = 0.25 + i * 0.09;
+    const up = i > 11;
+    add(c, new THREE.Mesh(new RoundedBoxGeometry(0.22, h, 0.22, 2, 0.04), mat(up ? "#3fd17b" : "#17c3a5", { emissive: up ? "#1a7a40" : "#0a5a4a", emissiveIntensity: 0.4, roughness: 0.3 })), Math.cos(ang) * 1.85, 0.12 + h / 2, Math.sin(ang) * 1.85);
+  }
+  const tower = mat("#a9d4ff", { metalness: 0.8, roughness: 0.12, emissive: "#1f4f7f", emissiveIntensity: 0.35 });
+  let ty = 0.12;
+  for (const [w, h] of [[0.9, 1.0], [0.7, 0.9], [0.5, 0.8], [0.32, 0.6]] as const) {
+    add(c, new THREE.Mesh(new RoundedBoxGeometry(w, h, w, 2, 0.05), tower), 0, ty + h / 2, 0);
+    ty += h;
+  }
+  add(c, new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.7, 4), mat("#e8c45a", { metalness: 0.9, roughness: 0.2 })), 0, ty + 0.35, 0);
+  const tickTex = canvasTexture(2048, 96, (g) => {
+    g.fillStyle = "#081018";
+    g.fillRect(0, 0, 2048, 96);
+    g.font = "800 52px Inter, Arial";
+    let x = 20;
+    for (const it of ["NVDO ▲ 4,2 %", "APPL ▲ 1,1 %", "GOGL ▼ 0,8 %", "TSLR ▲ 9,6 %", "AMZN ▲ 2,3 %", "MSFT ▲ 0,4 %", "METO ▼ 3,1 %", "SNYX ▲ 0,9 %"]) {
+      g.fillStyle = it.includes("▼") ? "#ff4d6d" : "#3fd17b";
+      g.fillText(it, x, 66);
+      x += g.measureText(it).width + 60;
+    }
+  });
+  const ticker = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.62, 0.22, 64, 1, true), new THREE.MeshStandardMaterial({ map: tickTex, emissive: "#ffffff", emissiveMap: tickTex, emissiveIntensity: 0.8, side: THREE.DoubleSide }));
+  ticker.position.y = 1.55;
+  ticker.rotation.y = -0.6;
+  c.add(ticker);
+  const pts = [[-1.6, 0.6, 1.2], [-0.9, 1.1, 1.3], [-0.5, 0.9, 1.35], [0.3, 1.7, 1.3], [0.7, 1.5, 1.25], [1.5, 2.5, 1.0]].map(([x, y, z]) => new THREE.Vector3(x, y, z));
+  const green = mat("#3fd17b", { emissive: "#2fbf6b", emissiveIntensity: 0.9 });
+  add(c, new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts, false, "catmullrom", 0.1), 80, 0.07, 10), green));
+  const head = add(c, new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.42, 16), green), pts[5]!.x, pts[5]!.y, pts[5]!.z);
+  head.lookAt(new THREE.Vector3(2.5, 4.0, 0.6));
+  head.rotateX(Math.PI / 2);
+  return c;
+}
+
+function disposeTree(o: THREE.Object3D) {
+  o.traverse((x) => {
+    if (!(x instanceof THREE.Mesh || x instanceof THREE.Sprite)) return;
+    x.geometry.dispose();
+    for (const m of ([] as THREE.Material[]).concat(x.material)) {
+      for (const v of Object.values(m)) if (v instanceof THREE.Texture) v.dispose();
+      m.dispose();
+    }
+  });
+}
+
+export interface BoardScene {
+  update(game: GameState, looks: Look[]): void;
+  recenter(): void;
+  dispose(): void;
+}
+
+export function createBoardScene(host: HTMLElement): BoardScene {
+  // render only when something changed, so an idle board costs nothing
+  let dirty = true;
+  const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+  renderer.setPixelRatio(Math.min(2, window.devicePixelRatio));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.3;
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  host.appendChild(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  const env = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+  scene.environment = env;
+  scene.environmentIntensity = 0.45;
+  scene.background = new THREE.Color("#0d1724");
+  scene.add(new THREE.HemisphereLight("#cfe3ff", "#1b2433", 1.1));
+  const sun = new THREE.DirectionalLight("#fff3dc", 3.2);
+  sun.position.set(-10, 22, 12);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
+  Object.assign(sun.shadow.camera, { left: -12, right: 12, top: 12, bottom: -12, near: 1, far: 60 });
+  sun.shadow.bias = -0.0005;
+  scene.add(sun);
+  const rim = new THREE.DirectionalLight("#7fb8ff", 0.6);
+  rim.position.set(12, 8, -14);
+  scene.add(rim);
+
+  const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 200);
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.maxPolarAngle = 1.3;
+  controls.minDistance = 5;
+  controls.maxDistance = 45;
+
+  // table, slab and raised inner plateau
+  const table = new THREE.Mesh(new THREE.CircleGeometry(60, 64), mat("#16202e", { roughness: 0.95 }));
+  table.rotation.x = -Math.PI / 2;
+  table.position.y = -0.42;
+  table.receiveShadow = true;
+  scene.add(table);
+  add(scene, new THREE.Mesh(new RoundedBoxGeometry(HALF * 2 + 0.9, 0.5, HALF * 2 + 0.9, 4, 0.18), mat("#1d2a3e", { roughness: 0.6, metalness: 0.1 })), 0, -0.25, 0).receiveShadow = true;
+  add(scene, new THREE.Mesh(new RoundedBoxGeometry(HALF * 2 + 1.05, 0.3, HALF * 2 + 1.05, 4, 0.12), mat("#c9a23a", { roughness: 0.35, metalness: 0.8 })), 0, -0.32, 0);
+  add(scene, new THREE.Mesh(new THREE.BoxGeometry((HALF - CORNER) * 2, 0.02, (HALF - CORNER) * 2), mat("#14304a", { roughness: 0.2, metalness: 0.3, emissive: "#0a2a44", emissiveIntensity: 0.6 })));
+  add(scene, new THREE.Mesh(new RoundedBoxGeometry(IHALF * 2 + 0.3, 0.35, IHALF * 2 + 0.3, 4, 0.1), mat("#24324a", { roughness: 0.5 })), 0, 0.17, 0).receiveShadow = true;
+  add(scene, new THREE.Mesh(new RoundedBoxGeometry(IHALF * 2 + 0.42, 0.2, IHALF * 2 + 0.42, 4, 0.08), mat("#c9a23a", { roughness: 0.35, metalness: 0.8 })), 0, 0.1, 0);
+
+  // cells
+  const side = mat("#d9cfb8", { roughness: 0.7 });
+  const decos: THREE.Group[] = [];
+  board.forEach((cell, i) => {
+    const p = cellPose(i);
+    const g = new THREE.Group();
+    g.position.set(p.x, p.y, p.z);
+    g.rotation.y = p.rot;
+    scene.add(g);
+    let tex: THREE.Texture;
+    if (cell.type === "city") {
+      const hub = cell.region === "hubs";
+      tex = labelTexture([[cell.name.toUpperCase(), cell.name.length > 10 ? 34 : 40], [hub ? "HUB TECH" : "", 24, "#9a7a2a"]], regionColor.get(cell.region)!);
+    } else if (cell.type === "choix-regional") {
+      tex = labelTexture([["CHOIX", 40], ["RÉGIONAL", 34]], regionColor.get(cell.region)!);
+    } else {
+      const sp = SPECIAL[cell.type]!;
+      tex = p.corner ? solidTexture(sp.color, cell.name.toUpperCase(), 384, 384) : solidTexture(sp.color, sp.label, 256, 384);
+    }
+    const top = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.65 });
+    const tile = new THREE.Mesh(new RoundedBoxGeometry(p.w - 0.06, 0.16, p.d - 0.06, 3, 0.04), [side, side, top, side, side, side]);
+    tile.position.y = 0.08;
+    tile.receiveShadow = tile.castShadow = true;
+    g.add(tile);
+    const deco = new THREE.Group();
+    deco.position.set(0, 0.16, -p.d * 0.2);
+    g.add(deco);
+    decos.push(deco);
+    if (cell.type !== "city") icon(deco, cell.type);
+  });
+
+  // spiral passages: end of the outer ring -> into the hubs; end of the hubs -> back to Départ
+  passage(scene, [[HALF - CORNER - 0.05, 0.16, HALF - CORNER - 0.75], [MOAT, 0.2, HALF - CORNER - 1.15], [IHALF + 0.05, 0.5, IHALF - ICORNER + 0.35]], "#3fd17b");
+  passage(scene, [[IHALF - ICORNER - IW / 2, 0.5, IHALF + 0.05], [IHALF - ICORNER, 0.25, MOAT], [IHALF + 0.15, 0.12, MOAT + 0.1], [HALF - CORNER + 0.35, 0.16, HALF - CORNER - 0.05]], "#ffcf4a");
+  floorLabel(scene, "VERS LES HUBS", "#3fd17b", MOAT, 2.4, Math.PI / 2);
+  floorLabel(scene, "RETOUR AU DÉPART", "#ffcf4a", 1.2, MOAT, 0);
+
+  const mid = center(scene);
+  const diceMats = new Map<number, THREE.MeshStandardMaterial>();
+  const dieMat = (n: number) => diceMats.get(n) ?? diceMats.set(n, new THREE.MeshStandardMaterial({ map: pipTexture(n), roughness: 0.3 })).get(n)!;
+  const dice = [[1.2, 1.9, 0.5], [1.75, 1.55, 1.1]].map(([x, z, r]) => {
+    const d = add(mid, new THREE.Mesh(new RoundedBoxGeometry(0.36, 0.36, 0.36, 3, 0.06), [1, 6, 5, 2, 4, 3].map(dieMat)), x, 0.3, z);
+    d.rotation.y = r!;
+    return d;
+  });
+
+  const marker = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.34, 4), mat("#ffffff", { emissive: "#ffffff", emissiveIntensity: 0.5 }));
+  marker.rotation.x = Math.PI;
+  scene.add(marker);
+
+  // logos are rasterized SVGs on a white rounded square
+  const logos = new Map<string, THREE.CanvasTexture>();
+  const logoTex = (id: string) => {
+    let t = logos.get(id);
+    if (t) return t;
+    const c = document.createElement("canvas");
+    c.width = c.height = 160;
+    t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace;
+    logos.set(id, t);
+    const img = new Image();
+    img.onload = () => {
+      const g = c.getContext("2d")!;
+      g.fillStyle = "#ffffff";
+      g.beginPath();
+      g.roundRect(4, 4, 152, 152, 30);
+      g.fill();
+      g.drawImage(img, 22, 22, 116, 116);
+      t!.needsUpdate = true;
+      dirty = true;
+    };
+    img.src = `/logos/${id}.svg`;
+    return t;
+  };
+
+  const built = new Map<number, string>();
+  const pawnTex = new Map<string, THREE.Texture>();
+  const pawns = new THREE.Group();
+  scene.add(pawns);
+
+  function biggestHolding(game: GameState, company: string) {
+    const groups = new Map<string, number>();
+    for (const p of game.players) {
+      if (p.bankrupt || !p.holdings[company]) continue;
+      const key = allianceOf(game, p.id)?.id ?? p.id;
+      groups.set(key, (groups.get(key) ?? 0) + p.holdings[company]!);
+    }
+    return Math.max(0, ...groups.values());
+  }
+
+  function update(game: GameState, looks: Look[]) {
+    board.forEach((cell, i) => {
+      if (cell.type !== "city") return;
+      const company = companyById.get(game.royalties[cell.id]!)!;
+      const pct = biggestHolding(game, company.id);
+      const hub = cell.region === "hubs";
+      const key = `${company.id}:${pct ? tierOf(pct) : -1}`;
+      if (built.get(i) === key) return;
+      built.set(i, key);
+      const deco = decos[i]!;
+      deco.children.forEach(disposeTree);
+      deco.clear();
+      const logo = logoTex(company.id);
+      const b = !pct ? emptyLot(hub, company.color, logo) : hub ? campus(tierOf(pct), company.color, logo) : skyscraper(tierOf(pct), company.color, logo);
+      b.scale.setScalar(hub ? 1 : 0.9);
+      deco.add(b);
+    });
+
+    pawns.clear();
+    const byCell = new Map<number, number>();
+    game.players.forEach((p, idx) => {
+      if (p.bankrupt) return;
+      const look = looks[idx]!;
+      const key = `${idx}:${JSON.stringify(look)}`;
+      let tex = pawnTex.get(key);
+      if (!tex) {
+        const img = new Image();
+        img.src = pawnDataUrl(look, PLAYER_COLORS[idx]!, 120);
+        tex = new THREE.Texture(img);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        const t = tex;
+        img.onload = () => {
+          t.needsUpdate = true;
+          dirty = true;
+        };
+        pawnTex.set(key, tex);
+      }
+      const slot = byCell.get(p.position) ?? 0;
+      byCell.set(p.position, slot + 1);
+      const pose = cellPose(p.position);
+      const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true }));
+      sprite.center.set(0.5, 0);
+      sprite.scale.set(0.5, 0.8, 1);
+      const v = new THREE.Vector3(-0.28 + (slot % 3) * 0.28, 0, 0.12 + Math.floor(slot / 3) * 0.3).applyAxisAngle(new THREE.Vector3(0, 1, 0), pose.rot);
+      sprite.position.set(pose.x + v.x, pose.y + 0.16, pose.z + v.z);
+      pawns.add(sprite);
+    });
+
+    const cur = game.players[game.current]!;
+    const pose = cellPose(cur.position);
+    marker.position.set(pose.x, pose.y + 1.4, pose.z);
+    marker.material.color.set(PLAYER_COLORS[game.current]!);
+    marker.material.emissive.set(PLAYER_COLORS[game.current]!);
+
+    const [a, b] = game.lastRoll ?? [6, 5];
+    [a, b].forEach((n, k) => {
+      const m = dice[k]!.material as THREE.Material[];
+      m[2] = dieMat(n);
+    });
+    dirty = true;
+  }
+
+  function recenter() {
+    const aspect = host.clientWidth / Math.max(1, host.clientHeight);
+    const k = Math.max(0.9, 1.2 / aspect);
+    controls.target.set(0, 0, 0.9);
+    camera.position.set(0, 21 * k, 16.5 * k);
+    controls.update();
+    dirty = true;
+  }
+
+  const resize = () => {
+    renderer.setSize(host.clientWidth, host.clientHeight, false);
+    renderer.domElement.style.width = "100%";
+    renderer.domElement.style.height = "100%";
+    camera.aspect = host.clientWidth / Math.max(1, host.clientHeight);
+    camera.updateProjectionMatrix();
+  };
+  const ro = new ResizeObserver(() => {
+    resize();
+    dirty = true;
+  });
+  resize();
+  recenter();
+
+  let frame = 0;
+  const loop = () => {
+    frame = requestAnimationFrame(loop);
+    if (controls.update() || dirty) {
+      dirty = false;
+      renderer.render(scene, camera);
+    }
+  };
+  loop();
+  const invalidate = () => (dirty = true);
+  controls.addEventListener("change", invalidate);
+  ro.observe(host);
+
+  return {
+    update,
+    recenter,
+    dispose() {
+      cancelAnimationFrame(frame);
+      ro.disconnect();
+      controls.dispose();
+      disposeTree(scene);
+      for (const t of [...pawnTex.values(), ...logos.values(), env]) t.dispose();
+      pmrem.dispose();
+      renderer.dispose();
+      renderer.domElement.remove();
+    },
+  };
+}

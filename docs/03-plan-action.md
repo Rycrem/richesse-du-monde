@@ -11,7 +11,7 @@ Objectif : un jeu de plateau économique sur le thème de la tech (parts d'entre
 | Moteur de jeu | Package `engine` en TS pur, sans dépendance | Testable, déterministe, réutilisé côté serveur et client |
 | Serveur | Node.js + Socket.IO | Salles, reconnexion, temps réel, très répandu |
 | Client | React + Vite | Rapide à développer, bon écosystème |
-| Plateau | 2D isométrique avec PixiJS (WebGL), intégré dans React via `@pixi/react` | Rendu rapide de nombreuses tuiles et sprites, animations fluides (pions, dés, pièces), zoom et déplacement de caméra |
+| Plateau | 3D avec Three.js (WebGL) | Plateau en relief sur deux anneaux, bâtiments qui grandissent, caméra libre (rotation, zoom) |
 | Interface (menus, panneaux, achat de %) | React + CSS par-dessus le canvas | Plus simple à faire en HTML qu'en WebGL, accessible, responsive |
 | État client | Zustand | Léger, suffit pour un état reçu du serveur |
 | Tests | Vitest (moteur), Playwright (parcours multijoueur) | |
@@ -35,13 +35,12 @@ navigateur (React)  <-- socket.io -->  serveur Node  --> engine (règles)
 - **Temps réel** : une offre de rachat attend la réponse du propriétaire avec un minuteur côté serveur (refus automatique à expiration). Un joueur absent trop longtemps joue en automatique (passe son tour, refuse les offres).
 - **Info cachée** : les cartes Atout d'un joueur ne sont envoyées qu'à lui (le serveur filtre l'état par joueur).
 
-## Rendu isométrique
+## Rendu 3D
 
-- Le plateau reste un anneau de 40 cases, posé sur une grille isométrique (projection 2:1, tuiles losanges de 128 x 64 px).
-- Chaque hub est une tuile avec un petit bâtiment aux couleurs et au logo parodique de son entreprise, et une étiquette lisible au survol.
-- Le centre du plateau sert de décor (carte du monde stylisée) et affiche le dé et les événements.
-- Le tri en profondeur des sprites se fait par `x + y` de la grille pour que pions et bâtiments se superposent correctement.
-- Les sprites sont dessinés en SVG puis convertis en images (atlas) au build, pour garder des visuels maison nets sur écran haute densité.
+- Le plateau est une scène Three.js (`apps/client/src/board3d/`) : anneau extérieur de 48 cases, anneau intérieur surélevé de 32 cases, passages lumineux entre les deux, tour de la Bourse au centre.
+- La caméra tourne (clic gauche), se déplace (clic droit), zoome (molette) ; double-clic pour recentrer.
+- Les bâtiments des villes sont recalculés à chaque changement d'état, selon le % du plus gros détenteur de l'entreprise de redevance.
+- Les pions sont les images SVG du garage, posées en sprites sur la case ; un marqueur à la couleur du joueur actif flotte au-dessus de sa case.
 - Le moteur de jeu ne connaît que des numéros de case : le rendu isométrique est une couche à part, remplaçable sans toucher aux règles.
 
 ## Déploiement sur le NAS
