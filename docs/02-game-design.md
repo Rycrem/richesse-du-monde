@@ -45,12 +45,12 @@ Un anneau de 40 cases, en 6 régions de couleur : Amérique du Nord, Amérique l
 |---|---|---|
 | Départ | 1 | Point de départ, pas d'effet |
 | Ville tech | 24 (4 par région) | Paiement + achat (voir "Tour de jeu") |
-| Choix régional | 3 | Achat dans le stock de toutes les villes de la région, seulement d'entreprises dont on détient déjà au moins 1 % |
+| Choix régional | 6 (1 par région) | Achat dans le stock de toutes les villes de la région, seulement d'entreprises dont on détient déjà au moins 1 % |
 | Choix mondial | 1 | Pareil, dans le monde entier. Valable seulement après un premier tour complet |
-| Enchères | 3 | Mise aux enchères forcée (voir "Enchères"). Valable seulement après un premier tour complet |
+| Enchères | 2 | Mise aux enchères forcée (voir "Enchères"). Valable seulement après un premier tour complet |
 | Atout | 2 | On peut acheter une carte Atout |
-| Actu Tech | 3 | On pioche une carte événement : on reçoit ou on paie une somme |
-| Levée de fonds | 3 | On reçoit de la banque (total des dés x un montant fixe) |
+| Actu Tech | 2 | On pioche une carte événement : on reçoit ou on paie une somme |
+| Levée de fonds | 2 | On reçoit de la banque (total des dés x un montant fixe) |
 
 **Villes tech** (villes réelles : Silicon Valley, Seattle, Austin, Shenzhen, Taipei, Séoul, Tokyo, Bangalore, Berlin, Paris...). Chaque ville affiche :
 - son **stock** : les entreprises disponibles et le % restant de chacune (ex. Paris : AMB 20 %, Nvidio 10 %) ;
