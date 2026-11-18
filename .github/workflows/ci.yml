@@ -19,3 +19,20 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          push: false
+          load: true
+          tags: stonks-valley:ci
+      - name: Le conteneur démarre et sert le jeu
+        run: |
+          docker run -d -p 3000:3000 --name sv stonks-valley:ci
+          for i in $(seq 1 30); do curl -sf http://localhost:3000/ | grep -q "Stonks Valley" && exit 0; sleep 1; done
+          docker logs sv
+          exit 1

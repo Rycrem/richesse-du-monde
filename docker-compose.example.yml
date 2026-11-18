@@ -1,0 +1,7 @@
+# Bloc à ajouter dans /volume1/docker/docker-compose.yml sur le NAS
+services:
+  stonks-valley:
+    image: ghcr.io/rycrem/stonks-valley:latest
+    restart: unless-stopped
+    ports:
+      - "8090:3000"
