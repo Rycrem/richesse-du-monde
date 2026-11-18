@@ -5,7 +5,7 @@
     "sector": "Cartes graphiques / IA",
     "color": "#76b900",
     "pricePerPercent": 150,
-    "royaltyPerPercent": 30
+    "royaltyPerPercent": 90
   },
   {
     "id": "appel",
@@ -13,7 +13,7 @@
     "sector": "Smartphones",
     "color": "#a2aaad",
     "pricePerPercent": 140,
-    "royaltyPerPercent": 28
+    "royaltyPerPercent": 84
   },
   {
     "id": "macrosoft",
@@ -21,7 +21,7 @@
     "sector": "Logiciels / cloud",
     "color": "#00a4ef",
     "pricePerPercent": 130,
-    "royaltyPerPercent": 26
+    "royaltyPerPercent": 78
   },
   {
     "id": "gogol",
@@ -29,7 +29,7 @@
     "sector": "Recherche / pub",
     "color": "#4285f4",
     "pricePerPercent": 120,
-    "royaltyPerPercent": 24
+    "royaltyPerPercent": 72
   },
   {
     "id": "amazone",
@@ -37,7 +37,7 @@
     "sector": "Cloud / e-commerce",
     "color": "#ff9900",
     "pricePerPercent": 120,
-    "royaltyPerPercent": 24
+    "royaltyPerPercent": 72
   },
   {
     "id": "tsmb",
@@ -45,7 +45,7 @@
     "sector": "Fonderie de puces",
     "color": "#c4161c",
     "pricePerPercent": 110,
-    "royaltyPerPercent": 22
+    "royaltyPerPercent": 66
   },
   {
     "id": "meto",
@@ -53,7 +53,7 @@
     "sector": "Réseaux sociaux",
     "color": "#0866ff",
     "pricePerPercent": 100,
-    "royaltyPerPercent": 20
+    "royaltyPerPercent": 60
   },
   {
     "id": "tesler",
@@ -61,7 +61,7 @@
     "sector": "Voitures électriques",
     "color": "#cc0000",
     "pricePerPercent": 100,
-    "royaltyPerPercent": 20
+    "royaltyPerPercent": 60
   },
   {
     "id": "amb",
@@ -69,7 +69,7 @@
     "sector": "Processeurs",
     "color": "#ed1c24",
     "pricePerPercent": 90,
-    "royaltyPerPercent": 18
+    "royaltyPerPercent": 54
   },
   {
     "id": "samsong",
@@ -77,7 +77,7 @@
     "sector": "Smartphones",
     "color": "#1428a0",
     "pricePerPercent": 90,
-    "royaltyPerPercent": 18
+    "royaltyPerPercent": 54
   },
   {
     "id": "sonyx",
@@ -85,7 +85,7 @@
     "sector": "Consoles / électronique",
     "color": "#222222",
     "pricePerPercent": 80,
-    "royaltyPerPercent": 16
+    "royaltyPerPercent": 48
   },
   {
     "id": "intol",
@@ -93,6 +93,6 @@
     "sector": "Processeurs",
     "color": "#0071c5",
     "pricePerPercent": 70,
-    "royaltyPerPercent": 14
+    "royaltyPerPercent": 42
   }
 ]

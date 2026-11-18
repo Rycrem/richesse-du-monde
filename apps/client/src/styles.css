@@ -54,7 +54,7 @@ details.card summary { cursor: pointer; font-weight: 600; }
 .tagline { color: var(--muted); }
 @media (max-width: 800px) {
   .layout { flex-direction: column; height: auto; }
-  .board { height: 60vh; flex: none; }
+  .board { height: 50vh; flex: none; }
   .panel { width: 100%; }
 }
 .tabs { display: flex; gap: 8px; margin-bottom: 12px; }
@@ -62,3 +62,5 @@ details.card summary { cursor: pointer; font-weight: 600; }
 label { display: flex; flex-direction: column; gap: 4px; }
 label.row { flex-direction: row; }
 .offline { color: var(--danger); font-size: 12px; }
+.chip { display: inline-flex; align-items: center; gap: 4px; }
+.chip img { width: 16px; height: 16px; border-radius: 3px; }

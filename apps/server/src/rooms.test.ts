@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { config } from "@stonks/engine";
-import { Rooms, type Room } from "./rooms";
+import { AFK_SECONDS, Rooms, type Room } from "./rooms";
 
 function setup() {
   const changes: Room[] = [];
@@ -63,5 +63,17 @@ describe("rooms", () => {
     vi.advanceTimersByTime(config.offerTimeoutSeconds * 1000);
     expect(room.game!.offer).toBeNull();
     expect(room.deadline).toBeNull();
+  });
+
+  it("plays automatically for a disconnected player after a delay", () => {
+    vi.useFakeTimers();
+    const { rooms, host, guest } = setup();
+    rooms.start(host.code, host.playerId, "classique");
+    const room = rooms.get(host.code)!;
+    rooms.setConnected(host.code, host.playerId, false);
+    vi.advanceTimersByTime(AFK_SECONDS * 1000);
+    expect(room.game!.lastRoll).not.toBeNull();
+    vi.advanceTimersByTime(AFK_SECONDS * 1000 * 3);
+    expect(room.game!.players[room.game!.current]!.id).toBe(guest.playerId);
   });
 });
