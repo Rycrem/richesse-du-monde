@@ -1,11 +1,11 @@
-# Game design : notre version originale
+# Stonks Valley : game design
 
 ## Pourquoi une version originale
 
 On reprend le système de gestion des ressources du genre (cartes de parts à pourcentage, achat libre, le plus gros détenteur encaisse), mais on ne recopie pas "Richesses du Monde" : ni son nom, ni son plateau, ni ses illustrations, ni le texte de ses cartes, ni ses montants.
 
 - **Thème** : la tech. Les ressources sont des parts d'entreprises technologiques.
-- **Nom** : titre de travail "Comptoirs du Globe" (à changer librement).
+- **Nom** : "Stonks Valley".
 - **Visuels** : illustrations, pions, icônes, billets et logos parodiques dessinés pour le projet (SVG maison, ou banques libres CC0 avec la licence notée dans `assets/LICENSES.md`).
 - **Chiffres** : prix et paiements équilibrés par nos propres tests.
 

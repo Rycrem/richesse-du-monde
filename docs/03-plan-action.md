@@ -50,7 +50,7 @@ Même infrastructure que Foyer : le NAS (Docker, `/volume1/docker`, `docker-comp
 
 1. Ajouter un service au `docker-compose.yml` du NAS :
    ```yaml
-   comptoirs:
+   stonks-valley:
      image: ghcr.io/rycrem/richesse-du-monde:latest
      restart: unless-stopped
      ports:
@@ -62,7 +62,7 @@ Même infrastructure que Foyer : le NAS (Docker, `/volume1/docker`, `docker-comp
    - Domain : `tortuebox.fr`
    - Service : `http://localhost:8090`
 3. Le WebSocket (Socket.IO) passe par le tunnel sans réglage supplémentaire.
-4. L'image est construite par GitHub Actions et publiée sur GitHub Container Registry à chaque merge sur `main`. Mise à jour sur le NAS : `docker compose pull comptoirs && docker compose up -d comptoirs`.
+4. L'image est construite par GitHub Actions et publiée sur GitHub Container Registry à chaque merge sur `main`. Mise à jour sur le NAS : `docker compose pull stonks-valley && docker compose up -d stonks-valley`.
 
 ## Structure du dépôt
 
@@ -99,10 +99,10 @@ Après le jalon 7, pistes possibles : bots pour compléter une table, classement
 - Aucun élément graphique, nom, logo ou texte du jeu existant n'est réutilisé.
 - Entreprises affichées sous des noms modifiés, avec des logos parodiques redessinés de zéro en SVG (aucun fichier de logo officiel importé ou retouché). Voir `02-game-design.md`.
 - Les visuels sont faits pour le projet (SVG en code) ou pris dans des banques libres (CC0, licence notée dans `assets/LICENSES.md`).
-- Le nom affiché du jeu est un titre original ("Comptoirs du Globe" en attendant mieux).
+- Le nom affiché du jeu est un titre original : "Stonks Valley".
 
 ## Points à valider avant de coder
 
 Décidé : victoire Classique par défaut, hébergement sur le NAS via Cloudflare Tunnel.
 
-Reste à préciser : le nom affiché du jeu (peut attendre).
+Nom du jeu : "Stonks Valley". Plus rien à préciser avant de coder.
