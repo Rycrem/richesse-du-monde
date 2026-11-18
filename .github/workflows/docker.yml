@@ -25,3 +25,4 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: ghcr.io/rycrem/stonks-valley:latest
+          build-args: GIT_SHA=${{ github.sha }}
