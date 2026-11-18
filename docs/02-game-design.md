@@ -62,7 +62,7 @@ On reprend le système de gestion des ressources du genre (cartes de parts à po
 - Montant = `tarif de base de l'entreprise x (part du plus gros détenteur en %) / 10`.
   - Exemple : tarif 20, détenteur à 40 % : le visiteur paie 80.
 - Si un joueur détient **100 %** d'une entreprise : montant doublé.
-- **Égalité** : celui qui a atteint ce pourcentage en premier reste le bénéficiaire (proposition, simple à suivre à l'écran).
+- **Égalité** : le paiement est divisé à parts égales entre les ex aequo (arrondi à l'unité inférieure, le reste va à la banque).
 - Personne ne détient l'entreprise : on ne paie rien.
 
 ## Marché

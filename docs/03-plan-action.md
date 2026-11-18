@@ -74,6 +74,5 @@ Après le jalon 7, pistes possibles : bots pour compléter une table, classement
 ## Points à valider avant de coder
 
 1. Le nom affiché du jeu.
-2. Règle d'égalité entre plus gros détenteurs (proposition : le premier arrivé garde le bénéfice).
-3. Le mode de victoire par défaut (Chrono ou Classique).
-4. L'hébergement visé (VPS, NAS perso, service cloud).
+2. Le mode de victoire par défaut (Chrono ou Classique).
+3. L'hébergement visé (VPS, NAS perso, service cloud).
