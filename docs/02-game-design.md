@@ -11,7 +11,7 @@ Les mécaniques suivent le livret de "Richesses du Monde" fourni par Emeric (red
 
 ## Les entreprises (ressources)
 
-12 entreprises tech, affichées sous leur nom parodique avec un logo parodique (voir "Noms et logos" plus bas). La colonne "Nom réel" sert seulement de référence. Toutes les valeurs sont dans un fichier JSON.
+16 entreprises tech, affichées sous leur nom parodique avec un logo parodique (voir "Noms et logos" plus bas). La colonne "Nom réel" sert seulement de référence. Toutes les valeurs sont dans un fichier JSON.
 
 | Secteur | Nom réel | Nom parodique |
 |---|---|---|
@@ -27,6 +27,10 @@ Les mécaniques suivent le livret de "Richesses du Monde" fourni par Emeric (red
 | Réseaux sociaux | Meta | Méto |
 | Voitures électriques | Tesla | Tesler |
 | Consoles / électronique | Sony | Sonyx |
+| Streaming vidéo | Netflix | Netflox |
+| Bases de données / cloud | Oracle | Oracul |
+| Smartphones / objets connectés | Xiaomi | Xiaomy |
+| Streaming musical | Spotify | Spotifaille |
 
 ## Parts en pourcentage (pas de cartes)
 
@@ -48,7 +52,7 @@ Le plateau a deux anneaux : un anneau extérieur de 48 cases (les 6 régions du 
 |---|---|---|
 | Départ | 1 | Chaque passage par le Départ (fin de la spirale) rapporte une prime de 2 000 k$ |
 | Ville tech | 30 (5 par région, anneau extérieur) | Paiement + achat (voir "Tour de jeu") |
-| Hub tech | 18 (anneau intérieur) | Comme une ville, avec des stocks plus gros (15 à 20 % par entreprise) |
+| Hub tech | 18 (anneau intérieur) | Comme une ville, avec des stocks plus gros (15 à 25 % par entreprise) |
 | Choix régional | 8 (1 par région, 2 pour les hubs) | Achat dans le stock de toutes les villes de la région, n'importe quelle entreprise, dès le premier tour |
 | Choix mondial | 1 | Pareil, dans le monde entier. Valable seulement après un premier tour complet |
 | Enchères | 3 | Mise aux enchères forcée (voir "Enchères"). Valable seulement après un premier tour complet |
@@ -60,7 +64,7 @@ Le plateau a deux anneaux : un anneau extérieur de 48 cases (les 6 régions du 
 
 **Villes tech** (villes réelles : Seattle, Austin, Londres, Paris, Tokyo, Bangalore...) et **hubs tech** (Palo Alto, Cupertino, Shenzhen, Hsinchu, Munich...). Chaque ville affiche :
 - son **stock** : les entreprises disponibles et le % restant de chacune ;
-- son **entreprise de redevance**, visible sur le plateau (logo + couleur du bâtiment). Ces jetons (4 par entreprise, 48 au total) sont **placés au hasard en début de partie**, donc chaque partie a un plateau différent ;
+- son **entreprise de redevance**, visible sur le plateau (logo + couleur du bâtiment). Ces jetons (3 par entreprise, 48 au total) sont **placés au hasard en début de partie**, donc chaque partie a un plateau différent ;
 - un **bâtiment qui grandit** avec le % détenu par le plus gros détenteur de cette entreprise (une alliance compte comme un seul détenteur) : terrain à vendre à 0 %, puis 5 paliers (1-9 %, 10-29 %, 30-59 %, 60-99 %, 100 %). Les villes ont des gratte-ciel (étages, flèche, puis couronne dorée), les hubs des campus (garage, bureaux, siège en verre, campus, puis siège en anneau). À 100 %, un anneau et une étoile dorés marquent le monopole.
 
 Toute la répartition (quelle région et quelle ville détient combien de % de chaque entreprise) est dans un fichier JSON, facile à rééquilibrer.
@@ -85,16 +89,17 @@ Toute la répartition (quelle région et quelle ville détient combien de % de c
 
 ## Enchères
 
-- Le joueur qui tombe sur Enchères lance un dé et doit mettre aux enchères **dé x 5 %** de ses parts (ex. dé à 3 : 15 %), pris dans une seule entreprise de son choix. S'il en a moins, il met tout ce qu'il a de cette entreprise.
-- Mise à prix : **75 % du prix d'achat**. Surenchère minimum fixe.
-- Enchère en temps réel : si personne ne surenchérit pendant **7 secondes**, la dernière offre gagne.
+- Le joueur qui tombe sur Enchères choisit **un adversaire et une de ses entreprises** : jusqu'à **dé x 5 %** de ces parts partent aux enchères (ex. dé à 3 : 15 %). Si l'adversaire en a moins, tout ce qu'il a de cette entreprise part. Si aucun adversaire n'a de parts, il ne se passe rien.
+- Un écran spécial s'ouvre pour tout le monde. Mise à prix : **75 % du prix d'achat**, surenchère minimum fixe.
+- Tout le monde sauf le vendeur peut enchérir pendant **30 secondes**. La meilleure offre gagne et l'argent va au vendeur.
 - Aucune offre : la banque rachète à 75 % du prix, et les % retournent dans le stock des villes.
-- Une carte **Atout** (achetée sur une case Atout) dispense une fois de la mise aux enchères. Elle ne se vend pas et ne s'échange pas.
+- Le vendeur peut annuler la vente avec une carte **Atout** (achetée sur une case Atout). Elle ne se vend pas et ne s'échange pas.
 
 ## Argent
 
 - Chaque joueur commence avec la même somme (valeurs à équilibrer, toutes dans le JSON).
 - Un joueur peut revendre à la banque n'importe quel % à 75 % du prix d'achat. Les % retournent dans le stock des villes d'origine de l'entreprise.
+- Un paiement plus grand que la trésorerie laisse le joueur en dette si ses parts suffisent à la couvrir : il choisit ce qu'il revend avant de finir son tour (ou laisse la vente automatique vendre les moins chères). Sinon, il fait faillite.
 
 ## Alliances
 
