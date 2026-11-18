@@ -190,8 +190,7 @@ function leaveAlliance(state: GameState, playerId: PlayerId): void {
 
 // The biggest holder is a solo player or a whole alliance (members' % added up).
 // Allies never pay each other; inside an alliance the royalty is split by each member's %.
-function payRoyalty(state: GameState, payer: Player, cellId: string): void {
-  const company = state.royalties[cellId]!;
+export function royaltyQuote(state: GameState, company: CompanyId): { winners: Player[][]; max: number; share: number } {
   const groups = new Map<string, Player[]>();
   for (const p of activePlayers(state)) {
     if (!(p.holdings[company] ?? 0)) continue;
@@ -200,11 +199,17 @@ function payRoyalty(state: GameState, payer: Player, cellId: string): void {
   }
   const total = (members: Player[]) => members.reduce((a, p) => a + (p.holdings[company] ?? 0), 0);
   const max = Math.max(0, ...[...groups.values()].map(total));
-  if (max === 0) return;
+  if (max === 0) return { winners: [], max: 0, share: 0 };
   const winners = [...groups.values()].filter((g) => total(g) === max);
   const multiplier = max === 100 ? config.monopolyMultiplier : 1;
   const amount = companyById.get(company)!.royaltyPerPercent * max * multiplier;
-  const share = Math.floor(amount / winners.length);
+  return { winners, max, share: Math.floor(amount / winners.length) };
+}
+
+function payRoyalty(state: GameState, payer: Player, cellId: string): void {
+  const company = state.royalties[cellId]!;
+  const { winners, max, share } = royaltyQuote(state, company);
+  if (max === 0) return;
   const name = companyById.get(company)!.name;
   const payerGroup = allianceOf(state, payer.id)?.id ?? payer.id;
   for (const members of winners) {

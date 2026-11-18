@@ -116,7 +116,7 @@ function AlliancePanel({ game, you, nameOf }: { game: GameState; you: string; na
   const [target, setTarget] = useState("");
   if (game.players.find((p) => p.id === you)?.bankrupt) return null;
   return (
-    <details className="card" open={invites.length > 0}>
+    <details className="card" open={invites.length > 0 || !!mine}>
       <summary>Alliance{mine ? ` : ${mine.members.map(nameOf).join(", ")}` : ""}</summary>
       <p className="muted">Les alliés additionnent leurs % pour être le plus gros détenteur, se partagent la redevance selon leurs % et ne se paient pas entre eux.</p>
       {invites.map((i) => (
@@ -154,8 +154,19 @@ function AlliancePanel({ game, you, nameOf }: { game: GameState; you: string; na
 }
 
 function Players({ game, colorOf }: { game: GameState; colorOf: (id: string) => string }) {
-  const room = useStore((s) => s.room);
+  const { room, you, dispatch, setInspect } = useStore();
   const offline = new Set(room?.players.filter((p) => !p.connected).map((p) => p.id));
+  const alive = activePlayers(game);
+  const mine = you ? allianceOf(game, you) : null;
+  const sent = game.allianceInvites.filter((i) => i.from === you).map((i) => i.to);
+  const canInvite = (id: string) =>
+    you !== null &&
+    id !== you &&
+    !game.players.find((p) => p.id === you)?.bankrupt &&
+    (mine?.members.length ?? 1) + 1 < alive.length &&
+    alive.some((p) => p.id === id) &&
+    !allianceOf(game, id) &&
+    !sent.includes(id);
   return (
     <div className="players">
       {game.players.map((p) => (
@@ -165,6 +176,12 @@ function Players({ game, colorOf }: { game: GameState; colorOf: (id: string) => 
             <strong>{p.name}</strong>
             {offline.has(p.id) && <span className="offline">déconnecté</span>}
             {allianceOf(game, p.id) && <span className="chip alliance">Alliance {allianceOf(game, p.id)!.id.slice(1)}</span>}
+            {sent.includes(p.id) && <small className="muted">invité</small>}
+            {canInvite(p.id) && (
+              <button className="ally-btn" title="Proposer une alliance" onClick={() => dispatch({ type: "ALLIANCE_INVITE", playerId: you!, targetId: p.id })}>
+                Alliance ?
+              </button>
+            )}
             <span className="spacer" />
             {p.bankrupt ? "en faillite" : <AnimatedMoney value={p.cash} />}
           </div>
@@ -172,7 +189,7 @@ function Players({ game, colorOf }: { game: GameState; colorOf: (id: string) => 
             {Object.entries(p.holdings)
               .sort((a, b) => b[1] - a[1])
               .map(([c, pct]) => (
-                <span key={c} className="chip" style={{ background: companyById.get(c)!.color }}>
+                <span key={c} className="chip clickable" style={{ background: companyById.get(c)!.color }} onClick={() => setInspect({ company: c })}>
                   <img src={`/logos/${c}.svg`} alt="" />
                   {companyById.get(c)!.name} {pct} %
                 </span>
@@ -188,6 +205,7 @@ function Players({ game, colorOf }: { game: GameState; colorOf: (id: string) => 
 
 function BuyPanel({ game }: { game: GameState }) {
   const dispatch = useStore((s) => s.dispatch);
+  const inspect = useStore((s) => s.setInspect);
   const me = currentPlayer(game);
   const stock = buyableStock(game);
   const left = config.maxPurchasePercent - game.boughtThisTurn;
@@ -208,7 +226,7 @@ function BuyPanel({ game }: { game: GameState }) {
         const allowed = Math.min(available, left - total + (wanted[c] ?? 0));
         return (
           <div key={c} className="buy-row">
-            <span className="chip" style={{ background: company.color }}>
+            <span className="chip clickable" style={{ background: company.color }} onClick={() => inspect({ company: c })}>
               <img src={`/logos/${c}.svg`} alt="" />
               {company.name}
             </span>
@@ -222,7 +240,12 @@ function BuyPanel({ game }: { game: GameState }) {
             <span>
               {wanted[c] ?? 0} / {available} %
             </span>
-            <small>{money(company.pricePerPercent)} / %</small>
+            <small>
+              {money(company.pricePerPercent)} / % · rapporte {money(company.royaltyPerPercent)} / % à chaque passage
+              {wanted[c]
+                ? ` · avec ${(me.holdings[c] ?? 0) + wanted[c]!} %, tu toucherais ${money(company.royaltyPerPercent * ((me.holdings[c] ?? 0) + wanted[c]!))} par passage en étant le plus gros détenteur`
+                : ""}
+            </small>
           </div>
         );
       })}
