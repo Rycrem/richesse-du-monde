@@ -2,7 +2,7 @@
 
 ## Pourquoi une version originale
 
-Les mécaniques suivent le livret de "Richesses du Monde" fourni par Emeric (achat jusqu'à 6 titres, redevance tirée au hasard par case, cases de choix régional et mondial, enchères forcées, Joker, trusts indivisibles, faillite), adaptées à ses choix (le plus gros détenteur encaisse, rachat par le joueur actif). On ne recopie pas "Richesses du Monde" : ni son nom, ni son plateau, ni ses illustrations, ni le texte de ses cartes, ni ses montants.
+Les mécaniques suivent le livret de "Richesses du Monde" fourni par Emeric (redevance tirée au hasard par case, cases de choix régional et mondial, enchères forcées, Joker, faillite), adaptées à ses choix : pas de cartes, on achète directement des pourcentages ; le plus gros détenteur encaisse ; seul le joueur actif achète. On ne recopie pas "Richesses du Monde" : ni son nom, ni son plateau, ni ses illustrations, ni le texte de ses cartes, ni ses montants.
 
 - **Thème** : la tech. Les ressources sont des parts d'entreprises technologiques.
 - **Nom** : "Stonks Valley".
@@ -26,15 +26,14 @@ Les mécaniques suivent le livret de "Richesses du Monde" fourni par Emeric (ach
 | Recherche / pub | Google | Gogol |
 | Réseaux sociaux | Meta | Méto |
 | Voitures électriques | Tesla | Tesler |
-| Consoles / électronique | Sony | Sonyx |
+| Consoles / électronique | Son## Parts en pourcentage (pas de cartes)
 
-## Cartes de parts
-
-- Chaque entreprise vaut **100 %**, découpés en 8 cartes : 2 x 5 %, 2 x 10 %, 2 x 15 %, 2 x 20 %.
-- Soit **96 cartes** au total.
-- Chaque carte indique : l'entreprise, le hub où elle est vendue, son pourcentage, son prix d'achat.
-- Prix d'achat = cours de l'entreprise x pourcentage. Les entreprises chères (Nvidio, Appel) rapportent plus mais coûtent plus.
-- Les cartes d'une même entreprise détenues par un joueur forment un **trust**. Un trust est **indivisible** : on le vend, l'échange ou le met aux enchères en entier.
+- Chaque entreprise vaut **100 %**. Il n'y a pas de cartes : un joueur détient simplement un pourcentage de chaque entreprise (ex. 35 % d'AMB, 10 % de Nvidio).
+- Les 100 % de chaque entreprise sont **répartis entre les régions, puis entre les villes** de ces régions.
+  - Exemple : l'Europe détient 50 % d'AMB et 30 % de Nvidio, répartis entre ses villes. Paris en a 20 % d'AMB et 10 % de Nvidio.
+- Chaque ville a donc un **stock** : la liste des entreprises qu'on peut y acheter, avec le pourcentage restant de chacune. Le stock baisse au fil des achats.
+- Prix = cours de l'entreprise (prix pour 1 %) x pourcentage acheté. Les entreprises chères (Nvidio, Appel) rapportent plus mais coûtent plus.
+- Achat par tranches de 1 %.
 
 ## Plateau (40 cases)
 
@@ -43,59 +42,67 @@ Un anneau de 40 cases, en 6 régions de couleur : Amérique du Nord, Amérique l
 | Case | Nombre | Effet |
 |---|---|---|
 | Départ | 1 | Point de départ, pas d'effet |
-| Hub tech | 24 (4 par région) | Paiement + achat (voir "Tour de jeu") |
-| Choix régional | 3 | Achat jusqu'à 6 cartes dans toute la région, seulement d'entreprises dont on a déjà au moins une carte |
+| Ville tech | 24 (4 par région) | Paiement + achat (voir "Tour de jeu") |
+| Choix régional | 3 | Achat dans le stock de toutes les villes de la région, seulement d'entreprises dont on détient déjà au moins 1 % |
 | Choix mondial | 1 | Pareil, dans le monde entier. Valable seulement après un premier tour complet |
 | Enchères | 3 | Mise aux enchères forcée (voir "Enchères"). Valable seulement après un premier tour complet |
 | Atout | 2 | On peut acheter une carte Atout |
 | Actu Tech | 3 | On pioche une carte événement : on reçoit ou on paie une somme |
 | Levée de fonds | 3 | On reçoit de la banque (total des dés x un montant fixe) |
 
-**Hubs tech** (villes réelles : Silicon Valley, Seattle, Austin, Shenzhen, Taipei, Séoul, Tokyo, Bangalore, Berlin, Paris...) :
-- chaque hub **vend 4 cartes** de parts, d'entreprises différentes (24 hubs x 4 = 96 cartes) ;
-- chaque hub porte **une entreprise de redevance, visible sur le plateau** (logo + couleur sur la case). Ces jetons (2 par entreprise, 24 au total) sont **placés au hasard en début de partie**, donc chaque partie a un plateau différent.
+**Villes tech** (villes réelles : Silicon Valley, Seattle, Austin, Shenzhen, Taipei, Séoul, Tokyo, Bangalore, Berlin, Paris...). Chaque ville affiche :
+- son **stock** : les entreprises disponibles et le % restant de chacune (ex. Paris : AMB 20 %, Nvidio 10 %) ;
+- son **entreprise de redevance**, visible sur le plateau (logo + couleur sur la case). Ces jetons (2 par entreprise, 24 au total) sont **placés au hasard en début de partie**, donc chaque partie a un plateau différent.
+
+Toute la répartition (quelle région et quelle ville détient combien de % de chaque entreprise) est dans un fichier JSON, facile à rééquilibrer.
 
 ## Tour de jeu
 
 1. **Dés** : le joueur actif lance 2 dés et avance. Les doubles n'ont pas d'effet particulier.
-2. **Paiement** (hub) : il paie le plus gros détenteur de l'entreprise de redevance de la case (voir "Paiements").
+2. **Paiement** (ville) : il paie le plus gros détenteur de l'entreprise de redevance de la case (voir "Paiements").
 3. **Achats** : le joueur actif, et **lui seul** :
-   - achète à la banque **jusqu'à 6 cartes** parmi celles vendues sur la case (ou dans la région / le monde sur les cases de choix) ;
-   - peut proposer de racheter un trust à **n'importe quel autre joueur**. Le propriétaire accepte, refuse ou fait une contre-offre (délai de 15 s). Les autres joueurs ne peuvent ni acheter ni lancer de transaction pendant ce tour.
+   - voit le stock de la case (ex. "Paris : AMB 20 %, Nvidio 10 %") et choisit combien de % il achète de chaque entreprise, **au maximum 30 % cumulés** par achat (ex. 20 % d'AMB + 10 % de Nvidio, ou 15 % + 5 %...) ;
+   - peut proposer de racheter un pourcentage à **n'importe quel autre joueur** (ex. 10 % de ses Nvidio pour 3 M). Le propriétaire accepte, refuse ou fait une contre-offre (délai de 15 s). Les autres joueurs ne peuvent ni acheter ni lancer de transaction pendant ce tour.
 4. **Fin du tour** : on passe au joueur suivant.
 
 ## Paiements
 
-- On ne touche des redevances qu'à partir de **30 %** d'une entreprise (comme dans le livret).
+- **Pas de seuil** : dès 1 %, on peut être payé.
 - Seul **le plus gros détenteur** est payé. Égalité : le paiement est divisé à parts égales (arrondi à l'unité inférieure, le reste va à la banque).
-- Le montant suit un **barème par paliers** propre à chaque entreprise : 30-49 %, 50-69 %, 70-89 %, 90-99 %, 100 %. Le palier 100 % rapporte nettement plus pour récompenser le monopole.
-- Le paiement est automatique : pas de délai pour réclamer comme sur la table.
+- **Plus on détient de %, plus on est payé** : montant = tarif de l'entreprise x % détenu par le plus gros détenteur.
+  - Exemple : tarif 0,1 M par %, détenteur à 40 % : le visiteur paie 4 M.
+- Bonus monopole : à **100 %**, le montant est doublé.
+- Le paiement est automatique.
 
 ## Enchères
 
-- Le joueur qui tombe sur Enchères lance un dé : il doit mettre aux enchères autant de cartes que le dé indique. Comme un trust est indivisible, s'il n'a que des trusts plus gros, il met le trust entier.
+- Le joueur qui tombe sur Enchères lance un dé et doit mettre aux enchères **dé x 5 %** de ses parts (ex. dé à 3 : 15 %), pris dans une seule entreprise de son choix. S'il en a moins, il met tout ce qu'il a de cette entreprise.
 - Mise à prix : **la moitié du prix d'achat**. Surenchère minimum fixe.
 - Enchère en temps réel : si personne ne surenchérit pendant **7 secondes**, la dernière offre gagne.
-- Aucune offre : la banque rachète à la moitié du prix, et les cartes retournent en vente sur leur hub.
+- Aucune offre : la banque rachète à la moitié du prix, et les % retournent dans le stock des villes.
 - Une carte **Atout** (achetée sur une case Atout) dispense une fois de la mise aux enchères. Elle ne se vend pas et ne s'échange pas.
 - Quand il ne reste que 2 joueurs, Enchères et Atout deviennent des cases de repos.
 
 ## Argent
 
 - Chaque joueur commence avec la même somme (valeurs à équilibrer, toutes dans le JSON).
-- La banque rachète un trust à la moitié de son prix d'achat. Les cartes retournent en vente sur leur hub.
+- Un joueur peut revendre à la banque n'importe quel % à la moitié du prix d'achat. Les % retournent dans le stock des villes d'origine de l'entreprise.
 
 ## Faillite et victoire
 
-- Un joueur qui ne peut pas payer une dette est en faillite : la banque couvre la dette, ses cartes retournent en vente sur leur hub, il est éliminé.
+- Un joueur qui ne peut pas payer une dette est en faillite : la banque couvre la dette, ses parts retournent dans le stock des villes, il est éliminé.
 - **Classique** (par défaut) : le dernier joueur en jeu gagne. Les autres sont classés par ordre d'élimination.
-- **Chrono** (option, 45 à 60 min) : à la fin du temps, le plus grand patrimoine (argent + valeur des cartes) gagne.
+- **Chrono** (option, 45 à 60 min) : à la fin du temps, le plus grand patrimoine (argent + valeur des parts) gagne.
 
 ## Pas repris du livret
 
-- Payer la banque sur un double (à la demande d'Emeric).
+- Les cartes / titres d'exploitation : remplacés par des pourcentages directs.
+- Le seuil de 30 % pour toucher des redevances.
+- Payer la banque sur un double.
 - L'Association entre joueurs : peut revenir plus tard comme variante.
 - Le délai de 7 secondes pour réclamer ses redevances : remplacé par un paiement automatique.
+
+utomatique.
 
 ## Noms et logos des entreprises
 

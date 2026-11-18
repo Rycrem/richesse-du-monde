@@ -12,7 +12,7 @@ Objectif : un jeu de plateau économique sur le thème de la tech (parts d'entre
 | Serveur | Node.js + Socket.IO | Salles, reconnexion, temps réel, très répandu |
 | Client | React + Vite | Rapide à développer, bon écosystème |
 | Plateau | 2D isométrique avec PixiJS (WebGL), intégré dans React via `@pixi/react` | Rendu rapide de nombreuses tuiles et sprites, animations fluides (pions, dés, pièces), zoom et déplacement de caméra |
-| Interface (menus, panneaux, cartes) | React + CSS par-dessus le canvas | Plus simple à faire en HTML qu'en WebGL, accessible, responsive |
+| Interface (menus, panneaux, achat de %) | React + CSS par-dessus le canvas | Plus simple à faire en HTML qu'en WebGL, accessible, responsive |
 | État client | Zustand | Léger, suffit pour un état reçu du serveur |
 | Tests | Vitest (moteur), Playwright (parcours multijoueur) | |
 | Persistance | Mémoire au départ, Redis ensuite si besoin de reprise après redémarrage | Pas de base de données au début |
@@ -71,7 +71,7 @@ apps/
   client/        React + Vite
   server/        Node + Socket.IO
 packages/
-  engine/        règles, types, données JSON (plateau, entreprises, cartes, noms réels/parodiques)
+  engine/        règles, types, données JSON (plateau, entreprises, répartition des % par région et ville, noms parodiques)
   shared/        types des messages réseau
 docs/
 assets/          visuels originaux + LICENSES.md
@@ -84,9 +84,9 @@ Chaque jalon = une branche + une PR, testée avant de passer au suivant.
 | # | Jalon | Contenu | Livrable vérifiable |
 |---|---|---|---|
 | 0 | Socle | Monorepo, lint, Vitest, CI GitHub Actions | `pnpm test` vert en CI |
-| 1 | Données | Plateau 40 cases (entreprise attribuée à chaque hub), 12 entreprises avec noms et logos parodiques SVG, 96 cartes de parts, cartes Actu Tech et Atout en JSON | Données validées par des tests (chaque entreprise = 100 %) |
-| 2 | Moteur | Déplacement, achat (max 6), jetons de redevance aléatoires, paiement par paliers au plus gros détenteur, cases de choix, trusts indivisibles, rachat entre joueurs, faillite, victoire | Tests unitaires + partie simulée complète par des bots |
-| 3 | Jeu local | Plateau isométrique (tuiles, bâtiments par hub, pions animés, caméra zoom/glisser), panneau joueur avec ses parts par entreprise, achat des cartes de la case, plusieurs joueurs sur un même écran | Une partie jouable de bout en bout dans un onglet |
+| 1 | Données | Plateau 40 cases (entreprise attribuée à chaque hub), 12 entreprises avec noms et logos parodiques SVG, répartition des % par région et ville, cartes Actu Tech et Atout en JSON | Données validées par des tests (chaque entreprise = 100 % au total) |
+| 2 | Moteur | Déplacement, achat de % (max 30 % cumulés), stocks par ville, jetons de redevance aléatoires, paiement proportionnel au plus gros détenteur, cases de choix, rachat entre joueurs, enchères, faillite, victoire | Tests unitaires + partie simulée complète par des bots |
+| 3 | Jeu local | Plateau isométrique (tuiles, bâtiments par hub, pions animés, caméra zoom/glisser), panneau joueur avec ses parts par entreprise, fenêtre d'achat avec le stock de la ville et curseurs de % (max 30 % cumulés), plusieurs joueurs sur un même écran | Une partie jouable de bout en bout dans un onglet |
 | 4 | En ligne | Serveur, salles avec code, lobby, synchro, reconnexion | 2 navigateurs jouent ensemble, test Playwright |
 | 5 | Interactions | Enchères en direct (minuteur 7 s), offres de rachat du joueur actif avec contre-offre, cartes Actu Tech et Atout | Toutes les règles du game design jouables en ligne |
 | 6 | Finition | Animations, sons libres de droits, mobile, journal de partie, règles intégrées | Jouable confortablement sur téléphone |
