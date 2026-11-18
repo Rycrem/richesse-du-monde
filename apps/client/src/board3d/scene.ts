@@ -711,6 +711,10 @@ export function createBoardScene(host: HTMLElement, events: BoardEvents = {}): B
     dispose() {
       cancelAnimationFrame(frame);
       ro.disconnect();
+      renderer.domElement.removeEventListener("pointermove", onMove);
+      renderer.domElement.removeEventListener("pointerdown", onDown);
+      renderer.domElement.removeEventListener("pointerup", onUp);
+      renderer.domElement.removeEventListener("pointerleave", onLeave);
       controls.dispose();
       disposeTree(scene);
       for (const t of [...pawnTex.values(), ...logos.values(), env]) t.dispose();

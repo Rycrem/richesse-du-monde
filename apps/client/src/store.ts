@@ -70,6 +70,8 @@ interface Store {
   sendChat: (channel: string, text: string) => void;
   createGroup: (name: string, members: string[]) => Promise<string | null>;
   leaveGroup: (groupId: string) => void;
+  inspect: { cell: number } | { company: string } | null;
+  setInspect: (i: { cell: number } | { company: string } | null) => void;
   clearError: () => void;
   quit: () => void;
 }
@@ -219,6 +221,8 @@ export const useStore = create<Store>((set, get) => {
       socket?.emit("chat:leave", groupId, (res) => {
         if (!res.ok) set({ error: res.error });
       }),
+    inspect: null,
+    setInspect: (inspect) => set({ inspect }),
     clearError: () => set({ error: null, notice: null }),
     quit: () => {
       if (get().online) {

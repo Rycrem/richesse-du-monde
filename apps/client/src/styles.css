@@ -213,3 +213,35 @@ button.link:disabled { opacity: 0.5; cursor: default; }
 .debt { border: 2px solid #ef476f; }
 .debt-row button { padding: 4px 10px; }
 @media (max-width: 700px) { .auction-bid { flex-direction: column; align-items: center; } }
+
+/* cell and company details */
+.board.pointing { cursor: pointer; }
+.hover-tip { position: fixed; z-index: 40; pointer-events: none; display: flex; gap: 8px; align-items: center; background: #1b2438ee; border: 1px solid #ffffff22; border-radius: 10px; padding: 6px 10px; box-shadow: 0 6px 20px #0006; animation: fade-in 0.15s ease-out; }
+.hover-tip img { width: 26px; height: 26px; border-radius: 6px; background: #fff; padding: 2px; }
+.hover-tip div { display: flex; flex-direction: column; line-height: 1.15; }
+.hover-tip small { color: #9aa7c2; font-size: 11px; }
+.inspect { position: absolute; z-index: 25; top: 16px; left: 16px; width: 320px; max-height: calc(100% - 32px); display: flex; flex-direction: column; background: var(--card); border-radius: 14px; overflow: hidden; box-shadow: 0 12px 40px #0008; animation: slide-in 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.2); }
+.inspect.leaving { animation: slide-out 0.3s ease-in forwards; }
+.inspect header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; color: #fff; text-shadow: 0 1px 2px #0008; }
+.inspect header div { display: flex; flex-direction: column; }
+.inspect header strong { font-size: 18px; }
+.inspect header small { opacity: 0.85; }
+.inspect .close { background: #0003; color: #fff; border: none; border-radius: 999px; width: 28px; height: 28px; font-size: 18px; line-height: 1; padding: 0; }
+.inspect-body { padding: 4px 14px 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+.inspect-body > * { animation: rise 0.35s ease-out both; }
+.inspect-body > :nth-child(2) { animation-delay: 0.05s; }
+.inspect-body > :nth-child(3) { animation-delay: 0.1s; }
+.inspect-body > :nth-child(n + 4) { animation-delay: 0.15s; }
+.inspect-body h4 { margin: 8px 0 0; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: #9aa7c2; }
+.inspect-body p { margin: 0; }
+.inspect-company { display: flex; gap: 10px; align-items: center; border-radius: 10px; padding: 8px 10px; color: #fff; text-shadow: 0 1px 2px #0008; }
+.inspect-company img { width: 34px; height: 34px; border-radius: 8px; background: #fff; padding: 3px; }
+.inspect-company div { display: flex; flex-direction: column; }
+.inspect-company small { font-size: 11px; opacity: 0.9; }
+.inspect-holders { display: flex; flex-direction: column; gap: 4px; }
+.chip.clickable { cursor: pointer; transition: transform 0.15s; }
+.chip.clickable:hover { transform: translateY(-2px); }
+.buy-gain { grid-column: 1 / -1; color: #9aa7c2; font-size: 12px; }
+.ally-btn { font-size: 11px; padding: 2px 8px; }
+@keyframes slide-in { from { opacity: 0; transform: translateX(-30px) scale(0.96); } to { opacity: 1; transform: none; } }
+@keyframes slide-out { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateX(-30px) scale(0.96); } }
