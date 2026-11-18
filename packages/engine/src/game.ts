@@ -194,7 +194,6 @@ function landOn(state: GameState, p: Player, pips: number): void {
   state.buyScope = null;
   state.canBuyAtout = false;
   state.phase = "act";
-  const twoLeft = activePlayers(state).length <= 2;
   switch (cell.type) {
     case "city":
       payRoyalty(state, p, cell.id);
@@ -210,7 +209,7 @@ function landOn(state: GameState, p: Player, pips: number): void {
       p.cash += pips * config.leveeFundsPerPip;
       break;
     case "atout":
-      state.canBuyAtout = !twoLeft;
+      state.canBuyAtout = true;
       break;
     case "actu": {
       const id = state.actuDeck.shift()!;
@@ -222,7 +221,7 @@ function landOn(state: GameState, p: Player, pips: number): void {
       break;
     }
     case "encheres": {
-      if (p.laps < 1 || twoLeft || Object.keys(p.holdings).length === 0) break;
+      if (p.laps < 1 || Object.keys(p.holdings).length === 0) break;
       const [die, next] = rollDie(state.seed);
       state.seed = next;
       state.phase = "auction";
@@ -262,7 +261,8 @@ function availableStock(state: GameState, p: Player): Record<CompanyId, { cellId
     if (scope.kind === "region" && cell.region !== scope.region) continue;
     for (const [company, pct] of Object.entries(state.stocks[cell.id]!)) {
       if (pct <= 0) continue;
-      if (scope.kind !== "city" && !(p.holdings[company] ?? 0)) continue;
+      // world choice only tops up companies already held; a regional choice sells anything in the region
+      if (scope.kind === "world" && !(p.holdings[company] ?? 0)) continue;
       (out[company] ??= []).push({ cellId: cell.id, percent: pct });
     }
   }

@@ -49,7 +49,7 @@ Le plateau a deux anneaux : un anneau extérieur de 48 cases (les 6 régions du 
 | Départ | 1 | Point de départ, pas d'effet |
 | Ville tech | 30 (5 par région, anneau extérieur) | Paiement + achat (voir "Tour de jeu") |
 | Hub tech | 18 (anneau intérieur) | Comme une ville, avec des stocks plus gros (15 à 20 % par entreprise) |
-| Choix régional | 8 (1 par région, 2 pour les hubs) | Achat dans le stock de toutes les villes de la région, seulement d'entreprises dont on détient déjà au moins 1 % |
+| Choix régional | 8 (1 par région, 2 pour les hubs) | Achat dans le stock de toutes les villes de la région, n'importe quelle entreprise, dès le premier tour |
 | Choix mondial | 1 | Pareil, dans le monde entier. Valable seulement après un premier tour complet |
 | Enchères | 3 | Mise aux enchères forcée (voir "Enchères"). Valable seulement après un premier tour complet |
 | Atout | 4 | On peut acheter une carte Atout |
@@ -86,16 +86,15 @@ Toute la répartition (quelle région et quelle ville détient combien de % de c
 ## Enchères
 
 - Le joueur qui tombe sur Enchères lance un dé et doit mettre aux enchères **dé x 5 %** de ses parts (ex. dé à 3 : 15 %), pris dans une seule entreprise de son choix. S'il en a moins, il met tout ce qu'il a de cette entreprise.
-- Mise à prix : **la moitié du prix d'achat**. Surenchère minimum fixe.
+- Mise à prix : **75 % du prix d'achat**. Surenchère minimum fixe.
 - Enchère en temps réel : si personne ne surenchérit pendant **7 secondes**, la dernière offre gagne.
-- Aucune offre : la banque rachète à la moitié du prix, et les % retournent dans le stock des villes.
+- Aucune offre : la banque rachète à 75 % du prix, et les % retournent dans le stock des villes.
 - Une carte **Atout** (achetée sur une case Atout) dispense une fois de la mise aux enchères. Elle ne se vend pas et ne s'échange pas.
-- Quand il ne reste que 2 joueurs, Enchères et Atout deviennent des cases de repos.
 
 ## Argent
 
 - Chaque joueur commence avec la même somme (valeurs à équilibrer, toutes dans le JSON).
-- Un joueur peut revendre à la banque n'importe quel % à la moitié du prix d'achat. Les % retournent dans le stock des villes d'origine de l'entreprise.
+- Un joueur peut revendre à la banque n'importe quel % à 75 % du prix d'achat. Les % retournent dans le stock des villes d'origine de l'entreprise.
 
 ## Alliances
 

@@ -112,11 +112,14 @@ describe("buying", () => {
     expect(err(g, { type: "BUY", playerId: "b", purchases: { nvidio: 1 } })).toMatch(/impossible/);
   });
 
-  it("regional choice only sells companies the player already holds", () => {
-    let g = createGame(P, 1);
-    g.players[0]!.holdings = { nvidio: 5 };
-    g = at(g, "choix-europe");
-    expect(buyableStock(g)).toEqual({ nvidio: 10 });
+  it("regional choice sells every company of the region, even on the first lap", () => {
+    const g = at(createGame(P, 1), "choix-europe");
+    expect(buyableStock(g)).toEqual({ sonyx: 10, gogol: 10, intol: 10, amazone: 10, nvidio: 10, tsmb: 10, appel: 10, meto: 10, macrosoft: 10, tesler: 10 });
+  });
+
+  it("an Atout can be bought even with two players left", () => {
+    const g = at(createGame(P.slice(0, 2), 1), "atout-1");
+    expect(g.canBuyAtout).toBe(true);
   });
 
   it("world choice requires a completed lap", () => {
