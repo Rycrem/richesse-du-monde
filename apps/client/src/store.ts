@@ -67,6 +67,9 @@ interface Store {
   resume: () => void;
   startOnline: (mode: GameMode) => void;
   dispatch: (action: Action) => boolean;
+  sendChat: (channel: string, text: string) => void;
+  createGroup: (name: string, members: string[]) => Promise<string | null>;
+  leaveGroup: (groupId: string) => void;
   clearError: () => void;
   quit: () => void;
 }
@@ -200,6 +203,22 @@ export const useStore = create<Store>((set, get) => {
       set({ game: r.state, error: null });
       return true;
     },
+    sendChat: (channel, text) =>
+      socket?.emit("chat:send", channel, text, (res) => {
+        if (!res.ok) set({ error: res.error });
+      }),
+    createGroup: (name, members) =>
+      new Promise((resolve) => {
+        if (!socket) return resolve(null);
+        socket.emit("chat:group", name, members, (res) => {
+          if (!res.ok) set({ error: res.error });
+          resolve(res.ok ? res.data : null);
+        });
+      }),
+    leaveGroup: (groupId) =>
+      socket?.emit("chat:leave", groupId, (res) => {
+        if (!res.ok) set({ error: res.error });
+      }),
     clearError: () => set({ error: null, notice: null }),
     quit: () => {
       if (get().online) {

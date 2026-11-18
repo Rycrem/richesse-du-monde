@@ -36,6 +36,17 @@ function botTurn(state: GameState): GameState {
     budget -= pct;
   }
   if (g.canBuyAtout && currentPlayer(g).cash > config.atoutPrice * 3) g = step(g, { type: "BUY_ATOUT", playerId: self.id });
+  // bots ally with the poorest outsider, accept every invite, and leave alliances now and then
+  const outsider = activePlayers(g).filter((p) => p.id !== self.id && !g.alliances.some((a) => a.members.includes(p.id))).sort((x, y) => x.cash - y.cash)[0];
+  if (outsider && g.log.length % 7 === 0) {
+    const r = applyAction(g, { type: "ALLIANCE_INVITE", playerId: self.id, targetId: outsider.id });
+    if (r.ok) g = r.state;
+  }
+  for (const invite of [...g.allianceInvites]) {
+    const r = applyAction(g, { type: "ALLIANCE_ANSWER", playerId: invite.to, fromId: invite.from, accept: true });
+    if (r.ok) g = r.state;
+  }
+  if (g.log.length % 11 === 0 && g.alliances.some((a) => a.members.includes(self.id))) g = step(g, { type: "ALLIANCE_LEAVE", playerId: self.id });
   return step(g, { type: "END_TURN", playerId: self.id });
 }
 
@@ -46,6 +57,12 @@ function checkInvariants(g: GameState): void {
     expect(held + stock, c.id).toBe(100);
   }
   for (const p of g.players) expect(p.cash).toBeGreaterThanOrEqual(0);
+  const alive = activePlayers(g).length;
+  for (const a of g.alliances) {
+    expect(a.members.length).toBeGreaterThanOrEqual(2);
+    expect(a.members.length).toBeLessThan(alive);
+    for (const m of a.members) expect(g.players.find((p) => p.id === m)!.bankrupt).toBe(false);
+  }
 }
 
 describe("simulated games", () => {

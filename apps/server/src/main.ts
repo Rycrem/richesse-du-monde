@@ -41,17 +41,20 @@ const profiles = new Profiles(process.env.DATA_DIR ?? fileURLToPath(new URL("../
   name: process.env.ADMIN_USER ?? "Rycrem",
   password: process.env.ADMIN_PASSWORD,
 });
-const rooms = new Rooms(profiles, (room) => io.to(room.code).emit("room:state", rooms.view(room)));
+// each player gets their own view (private messages and groups are filtered)
+const rooms = new Rooms(profiles, (room) => {
+  for (const m of room.members) io.to(`${room.code}:${m.id}`).emit("room:state", rooms.view(room, m.id));
+});
 
 io.on("connection", (socket) => {
   let session: { code: string; playerId: string } | null = null;
 
   const enter = (code: string, playerId: string) => {
-    if (session) socket.leave(session.code);
+    if (session) socket.leave(`${session.code}:${session.playerId}`);
     session = { code, playerId };
-    socket.join(code);
+    socket.join(`${code}:${playerId}`);
     const room = rooms.get(code);
-    if (room) socket.emit("room:state", rooms.view(room));
+    if (room) socket.emit("room:state", rooms.view(room, playerId));
   };
 
   socket.on("room:create", (name, profileToken, ack) => {
@@ -80,6 +83,19 @@ io.on("connection", (socket) => {
   socket.on("game:action", (action, ack) => {
     if (!session) return ack({ ok: false, error: "Pas dans une partie" });
     ack(rooms.act(session.code, session.playerId, action));
+  });
+
+  socket.on("chat:send", (channel, text, ack) => {
+    if (!session) return ack({ ok: false, error: "Pas dans une partie" });
+    ack(rooms.sendChat(session.code, session.playerId, String(channel ?? ""), String(text ?? "")));
+  });
+  socket.on("chat:group", (name, members, ack) => {
+    if (!session) return ack({ ok: false, error: "Pas dans une partie" });
+    ack(rooms.createGroup(session.code, session.playerId, String(name ?? ""), Array.isArray(members) ? members.map(String) : []));
+  });
+  socket.on("chat:leave", (groupId, ack) => {
+    if (!session) return ack({ ok: false, error: "Pas dans une partie" });
+    ack(rooms.leaveGroup(session.code, session.playerId, String(groupId ?? "")));
   });
 
   socket.on("profile:get", (token, ack) => ack(profiles.fetch(String(token ?? ""))));
@@ -122,7 +138,7 @@ io.on("connection", (socket) => {
   const leave = () => {
     if (!session) return;
     rooms.setConnected(session.code, session.playerId, false);
-    socket.leave(session.code);
+    socket.leave(`${session.code}:${session.playerId}`);
     session = null;
   };
   socket.on("room:leave", leave);

@@ -283,3 +283,68 @@ describe("ranking", () => {
     expect(ranking(g)).toEqual(["a", "c", "b", "d"]);
   });
 });
+
+describe("alliances", () => {
+  const P4 = [{ id: "a", name: "Alice" }, { id: "b", name: "Bob" }, { id: "c", name: "Chloé" }, { id: "d", name: "Dan" }];
+  const allied = (players = P4) => {
+    let g = createGame(players, 1);
+    g = ok(g, { type: "ALLIANCE_INVITE", playerId: "b", targetId: "c" });
+    return ok(g, { type: "ALLIANCE_ANSWER", playerId: "c", fromId: "b", accept: true });
+  };
+
+  it("invite, accept, then leave dissolves a two-player alliance", () => {
+    let g = allied();
+    expect(g.alliances).toEqual([{ id: "a1", members: ["b", "c"] }]);
+    expect(g.allianceInvites).toEqual([]);
+    g = ok(g, { type: "ALLIANCE_LEAVE", playerId: "c" });
+    expect(g.alliances).toEqual([]);
+  });
+
+  it("refusing removes the invite, and someone must stay outside the alliance", () => {
+    let g = createGame(P, 1);
+    g = ok(g, { type: "ALLIANCE_INVITE", playerId: "a", targetId: "b" });
+    g = ok(g, { type: "ALLIANCE_ANSWER", playerId: "b", fromId: "a", accept: false });
+    expect(g.allianceInvites).toEqual([]);
+    expect(g.alliances).toEqual([]);
+    g = ok(g, { type: "ALLIANCE_INVITE", playerId: "a", targetId: "b" });
+    g = ok(g, { type: "ALLIANCE_ANSWER", playerId: "b", fromId: "a", accept: true });
+    expect(err(g, { type: "ALLIANCE_INVITE", playerId: "a", targetId: "c" })).toMatch(/adversaire/);
+    expect(err(g, { type: "ALLIANCE_INVITE", playerId: "c", targetId: "a" })).toMatch(/déjà dans une alliance/);
+  });
+
+  it("allies add up their % to beat a bigger solo holder and split the royalty by %", () => {
+    let g = allied();
+    g.royalties.berlin = "nvidio";
+    g.players[1]!.holdings = { nvidio: 20 };
+    g.players[2]!.holdings = { nvidio: 10 };
+    g.players[3]!.holdings = { nvidio: 25 };
+    g = at(g, "berlin");
+    const share = 30 * royalty("nvidio");
+    expect(g.players[0]!.cash).toBe(config.startingCash - share);
+    expect(g.players[1]!.cash).toBe(config.startingCash + Math.floor((share * 20) / 30));
+    expect(g.players[2]!.cash).toBe(config.startingCash + Math.floor((share * 10) / 30));
+    expect(g.players[3]!.cash).toBe(config.startingCash);
+  });
+
+  it("allies do not pay each other", () => {
+    let g = allied();
+    g = ok(g, { type: "ALLIANCE_INVITE", playerId: "a", targetId: "d" });
+    g.royalties.berlin = "nvidio";
+    g.alliances[0]!.members = ["a", "b"];
+    g.players[1]!.holdings = { nvidio: 30 };
+    g = at(g, "berlin");
+    expect(g.players[0]!.cash).toBe(config.startingCash);
+    expect(g.players[1]!.cash).toBe(config.startingCash);
+  });
+
+  it("the alliance ends when a bankruptcy leaves it covering every player", () => {
+    let g = allied(P);
+    expect(g.alliances).toHaveLength(1);
+    g.royalties.berlin = "intol";
+    g.players[1]!.holdings = { intol: 100 };
+    g.players[0]!.cash = 0;
+    g = at(g, "berlin");
+    expect(g.players[0]!.bankrupt).toBe(true);
+    expect(g.alliances).toEqual([]);
+  });
+});

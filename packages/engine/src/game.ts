@@ -16,6 +16,9 @@ export type Action =
   | { type: "BID"; playerId: PlayerId; amount: number }
   | { type: "AUCTION_CLOSE" }
   | { type: "END_TURN"; playerId: PlayerId }
+  | { type: "ALLIANCE_INVITE"; playerId: PlayerId; targetId: PlayerId }
+  | { type: "ALLIANCE_ANSWER"; playerId: PlayerId; fromId: PlayerId; accept: boolean }
+  | { type: "ALLIANCE_LEAVE"; playerId: PlayerId }
   | { type: "END_GAME" };
 
 export type Result = { ok: true; state: GameState } | { ok: false; error: string };
@@ -49,6 +52,9 @@ export function createGame(players: { id: PlayerId; name: string }[], seed: numb
     canBuyAtout: false,
     auction: null,
     offer: null,
+    alliances: [],
+    allianceInvites: [],
+    nextAllianceId: 1,
     eliminated: [],
     winner: null,
     log: [],
@@ -131,6 +137,8 @@ function bankrupt(state: GameState, p: Player): void {
   p.holdings = {};
   p.cash = 0;
   p.bankrupt = true;
+  leaveAlliance(state, p.id);
+  state.allianceInvites = state.allianceInvites.filter((i) => i.from !== p.id && i.to !== p.id);
   state.eliminated.push(p.id);
   state.log.push(`${p.name} fait faillite`);
   const alive = activePlayers(state);
@@ -140,21 +148,43 @@ function bankrupt(state: GameState, p: Player): void {
   }
 }
 
+export function allianceOf(state: GameState, playerId: PlayerId) {
+  return state.alliances.find((a) => a.members.includes(playerId)) ?? null;
+}
+
+function leaveAlliance(state: GameState, playerId: PlayerId): void {
+  for (const a of state.alliances) a.members = a.members.filter((m) => m !== playerId);
+  // an alliance that includes every player left has no one to play against
+  const alive = activePlayers(state).length;
+  state.alliances = state.alliances.filter((a) => a.members.length >= 2 && a.members.length < alive);
+}
+
+// The biggest holder is a solo player or a whole alliance (members' % added up).
+// Allies never pay each other; inside an alliance the royalty is split by each member's %.
 function payRoyalty(state: GameState, payer: Player, cellId: string): void {
   const company = state.royalties[cellId]!;
-  const alive = activePlayers(state);
-  const max = Math.max(0, ...alive.map((p) => p.holdings[company] ?? 0));
+  const groups = new Map<string, Player[]>();
+  for (const p of activePlayers(state)) {
+    if (!(p.holdings[company] ?? 0)) continue;
+    const key = allianceOf(state, p.id)?.id ?? p.id;
+    groups.set(key, [...(groups.get(key) ?? []), p]);
+  }
+  const total = (members: Player[]) => members.reduce((a, p) => a + (p.holdings[company] ?? 0), 0);
+  const max = Math.max(0, ...[...groups.values()].map(total));
   if (max === 0) return;
-  const holders = alive.filter((p) => (p.holdings[company] ?? 0) === max);
+  const winners = [...groups.values()].filter((g) => total(g) === max);
   const multiplier = max === 100 ? config.monopolyMultiplier : 1;
-  const total = companyById.get(company)!.royaltyPerPercent * max * multiplier;
-  const share = Math.floor(total / holders.length);
-  for (const h of holders) {
-    if (h.id === payer.id) continue;
+  const amount = companyById.get(company)!.royaltyPerPercent * max * multiplier;
+  const share = Math.floor(amount / winners.length);
+  const name = companyById.get(company)!.name;
+  const payerGroup = allianceOf(state, payer.id)?.id ?? payer.id;
+  for (const members of winners) {
+    if ((allianceOf(state, members[0]!.id)?.id ?? members[0]!.id) === payerGroup) continue;
     charge(state, payer, share);
-    // the bank covers a bankrupt player's debt, so the holder is always paid in full
-    h.cash += share;
-    state.log.push(`${payer.name} paie ${share} k$ à ${h.name} (${companyById.get(company)!.name})`);
+    // the bank covers a bankrupt player's debt, so holders are always paid in full
+    for (const m of members) m.cash += Math.floor((share * (m.holdings[company] ?? 0)) / max);
+    const to = members.length === 1 ? members[0]!.name : `l'alliance ${members.map((m) => m.name).join(" + ")}`;
+    state.log.push(`${payer.name} paie ${share} k$ à ${to} (${name})`);
     if (payer.bankrupt) return;
   }
 }
@@ -421,6 +451,48 @@ export function applyAction(prev: GameState, action: Action): Result {
     case "END_TURN": {
       if (!isCurrent || state.phase !== "act" || state.offer) return { ok: false, error: "Impossible de finir le tour maintenant" };
       nextTurn(state);
+      return { ok: true, state };
+    }
+
+    case "ALLIANCE_INVITE": {
+      const from = state.players.find((p) => p.id === action.playerId);
+      const to = state.players.find((p) => p.id === action.targetId);
+      if (!from || !to || from.bankrupt || to.bankrupt || from === to) return { ok: false, error: "Joueur introuvable" };
+      if (allianceOf(state, to.id)) return { ok: false, error: `${to.name} est déjà dans une alliance` };
+      const size = allianceOf(state, from.id)?.members.length ?? 1;
+      if (size + 1 >= activePlayers(state).length) return { ok: false, error: "Il doit rester au moins un adversaire hors de l'alliance" };
+      if (state.allianceInvites.some((i) => i.from === from.id && i.to === to.id)) return { ok: false, error: "Invitation déjà envoyée" };
+      state.allianceInvites.push({ from: from.id, to: to.id });
+      state.log.push(`${from.name} propose une alliance à ${to.name}`);
+      return { ok: true, state };
+    }
+
+    case "ALLIANCE_ANSWER": {
+      const invite = state.allianceInvites.find((i) => i.from === action.fromId && i.to === action.playerId);
+      if (!invite) return { ok: false, error: "Aucune invitation" };
+      state.allianceInvites = state.allianceInvites.filter((i) => i !== invite);
+      const from = state.players.find((p) => p.id === invite.from)!;
+      const to = state.players.find((p) => p.id === invite.to)!;
+      if (!action.accept) {
+        state.log.push(`${to.name} refuse l'alliance de ${from.name}`);
+        return { ok: true, state };
+      }
+      const existing = allianceOf(state, from.id);
+      if (allianceOf(state, to.id) || (existing?.members.length ?? 1) + 1 >= activePlayers(state).length) {
+        return { ok: false, error: "Cette alliance n'est plus possible" };
+      }
+      if (existing) existing.members.push(to.id);
+      else state.alliances.push({ id: `a${state.nextAllianceId++}`, members: [from.id, to.id] });
+      state.allianceInvites = state.allianceInvites.filter((i) => i.to !== to.id);
+      state.log.push(`${to.name} rejoint l'alliance de ${from.name}`);
+      return { ok: true, state };
+    }
+
+    case "ALLIANCE_LEAVE": {
+      const p = state.players.find((x) => x.id === action.playerId);
+      if (!p || !allianceOf(state, p.id)) return { ok: false, error: "Pas dans une alliance" };
+      leaveAlliance(state, p.id);
+      state.log.push(`${p.name} quitte son alliance`);
       return { ok: true, state };
     }
 
