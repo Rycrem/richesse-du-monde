@@ -1,6 +1,6 @@
 import { actuCards, board, companies, config } from "./data";
 import { nextRandom, rollDie } from "./rng";
-import type { GameMode, GameState, Player, PlayerId } from "./state";
+import type { GameMode, GameState, NewGameEvent, Player, PlayerId } from "./state";
 import type { CompanyId } from "./types";
 
 export type Action =
@@ -55,10 +55,28 @@ export function createGame(players: { id: PlayerId; name: string }[], seed: numb
     alliances: [],
     allianceInvites: [],
     nextAllianceId: 1,
+    events: [],
+    nextEventId: 1,
+    turnBuys: {},
     eliminated: [],
     winner: null,
     log: [],
   };
+}
+
+const MAX_EVENTS = 40;
+
+function emit(state: GameState, e: NewGameEvent): void {
+  state.events.push({ ...e, id: state.nextEventId++ } as GameState["events"][number]);
+  if (state.events.length > MAX_EVENTS) state.events.splice(0, state.events.length - MAX_EVENTS);
+}
+
+// Cash change shown on a card: who, why, how much, before and after
+function money(state: GameState, p: Player, kind: "actu" | "ipo" | "krach" | "lap" | "atout", text: string, amount: number): void {
+  const before = p.cash;
+  if (amount >= 0) p.cash += amount;
+  else charge(state, p, -amount);
+  emit(state, { kind, playerId: p.id, text, amount, before, after: p.cash });
 }
 
 function shuffle<T>(arr: T[], seed: number): [number] {
@@ -141,10 +159,12 @@ function bankrupt(state: GameState, p: Player): void {
   state.allianceInvites = state.allianceInvites.filter((i) => i.from !== p.id && i.to !== p.id);
   state.eliminated.push(p.id);
   state.log.push(`${p.name} fait faillite`);
+  emit(state, { kind: "bankrupt", playerId: p.id });
   const alive = activePlayers(state);
   if (alive.length === 1) {
     state.phase = "gameOver";
     state.winner = alive[0]!.id;
+    emit(state, { kind: "win", playerId: alive[0]!.id });
   }
 }
 
@@ -185,6 +205,7 @@ function payRoyalty(state: GameState, payer: Player, cellId: string): void {
     for (const m of members) m.cash += Math.floor((share * (m.holdings[company] ?? 0)) / max);
     const to = members.length === 1 ? members[0]!.name : `l'alliance ${members.map((m) => m.name).join(" + ")}`;
     state.log.push(`${payer.name} paie ${share} k$ à ${to} (${name})`);
+    emit(state, { kind: "royalty", playerId: payer.id, company, amount: share, to: members.map((m) => m.id) });
     if (payer.bankrupt) return;
   }
 }
@@ -205,9 +226,12 @@ function landOn(state: GameState, p: Player, pips: number): void {
     case "mondial":
       if (p.laps >= 1) state.buyScope = { kind: "world" };
       break;
-    case "levee":
+    case "levee": {
+      const before = p.cash;
       p.cash += pips * config.leveeFundsPerPip;
+      emit(state, { kind: "levee", playerId: p.id, text: `Vos investisseurs suivent : ${pips} aux dés × ${config.leveeFundsPerPip} k$`, amount: pips * config.leveeFundsPerPip, dice: state.lastRoll!, before, after: p.cash });
       break;
+    }
     case "atout":
       state.canBuyAtout = true;
       break;
@@ -216,8 +240,7 @@ function landOn(state: GameState, p: Player, pips: number): void {
       state.actuDeck.push(id);
       const card = actuCards.find((c) => c.id === id)!;
       state.log.push(`${p.name} : ${card.text}`);
-      if (card.amount >= 0) p.cash += card.amount;
-      else charge(state, p, -card.amount);
+      money(state, p, "actu", card.text, card.amount);
       break;
     }
     case "encheres": {
@@ -237,13 +260,13 @@ function landOn(state: GameState, p: Player, pips: number): void {
       break;
     }
     case "ipo":
-      p.cash += config.ipoBonus;
       state.log.push(`${p.name} réussit son introduction en Bourse : +${config.ipoBonus} k$`);
+      money(state, p, "ipo", "Votre entreprise entre en Bourse !", config.ipoBonus);
       break;
     case "krach": {
       const loss = Math.floor((p.cash * config.krachPercent) / 100);
-      p.cash -= loss;
       state.log.push(`Krach boursier : ${p.name} perd ${loss} k$`);
+      money(state, p, "krach", `Les marchés plongent : vous perdez ${config.krachPercent} % de votre trésorerie.`, -loss);
       break;
     }
     case "depart":
@@ -285,6 +308,7 @@ function nextTurn(state: GameState): void {
   state.boughtThisTurn = 0;
   state.canBuyAtout = false;
   state.offer = null;
+  state.turnBuys = {};
 }
 
 export function netWorth(p: Player): number {
@@ -305,8 +329,12 @@ export function applyAction(prev: GameState, action: Action): Result {
       state.seed = s2;
       state.lastRoll = [d1, d2];
       const to = cur.position + d1 + d2;
-      if (to >= board.length) cur.laps += 1;
+      emit(state, { kind: "roll", playerId: cur.id, dice: [d1, d2], from: cur.position, to: to % board.length });
       cur.position = to % board.length;
+      if (to >= board.length) {
+        cur.laps += 1;
+        money(state, cur, "lap", "Vous repassez par le Départ.", config.lapBonus);
+      }
       landOn(state, cur, d1 + d2);
       if (cur.bankrupt && (state.phase as string) !== "gameOver") nextTurn(state);
       return { ok: true, state };
@@ -337,6 +365,7 @@ export function applyAction(prev: GameState, action: Action): Result {
           if (left === 0) break;
         }
         cur.holdings[company] = (cur.holdings[company] ?? 0) + pct;
+        state.turnBuys[company] = (state.turnBuys[company] ?? 0) + pct;
       }
       cur.cash -= cost;
       state.boughtThisTurn += total;
@@ -346,7 +375,7 @@ export function applyAction(prev: GameState, action: Action): Result {
     case "BUY_ATOUT": {
       if (!isCurrent || state.phase !== "act" || !state.canBuyAtout) return { ok: false, error: "Achat d'Atout impossible" };
       if (cur.cash < config.atoutPrice) return { ok: false, error: "Pas assez d'argent" };
-      cur.cash -= config.atoutPrice;
+      money(state, cur, "atout", "Atout acheté : il annule la prochaine enchère forcée sur vos actions.", -config.atoutPrice);
       cur.atouts += 1;
       state.canBuyAtout = false;
       return { ok: true, state };
@@ -460,6 +489,8 @@ export function applyAction(prev: GameState, action: Action): Result {
 
     case "END_TURN": {
       if (!isCurrent || state.phase !== "act" || state.offer) return { ok: false, error: "Impossible de finir le tour maintenant" };
+      const items = Object.entries(state.turnBuys).map(([company, percent]) => ({ company, percent, total: cur.holdings[company] ?? 0 }));
+      if (items.length) emit(state, { kind: "buys", playerId: cur.id, items });
       nextTurn(state);
       return { ok: true, state };
     }
@@ -510,6 +541,7 @@ export function applyAction(prev: GameState, action: Action): Result {
       const ranked = [...activePlayers(state)].sort((x, y) => netWorth(y) - netWorth(x));
       state.phase = "gameOver";
       state.winner = ranked[0]!.id;
+      emit(state, { kind: "win", playerId: ranked[0]!.id });
       return { ok: true, state };
     }
   }
