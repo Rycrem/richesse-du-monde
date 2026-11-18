@@ -16,7 +16,7 @@ Objectif : un jeu de plateau économique sur le thème de la tech (parts d'entre
 | État client | Zustand | Léger, suffit pour un état reçu du serveur |
 | Tests | Vitest (moteur), Playwright (parcours multijoueur) | |
 | Persistance | Mémoire au départ, Redis ensuite si besoin de reprise après redémarrage | Pas de base de données au début |
-| Déploiement | Image Docker unique (serveur qui sert aussi le client) sur le NAS, publiée par le Cloudflare Tunnel existant sur `jeu.tortuebox.com` | Pas de coût, pas de port ouvert, HTTPS et WebSocket gérés par Cloudflare |
+| Déploiement | Image Docker unique (serveur qui sert aussi le client) sur le NAS, publiée par le Cloudflare Tunnel existant sur `jeu.tortuebox.fr` | Pas de coût, pas de port ouvert, HTTPS et WebSocket gérés par Cloudflare |
 
 ## Architecture multijoueur
 
@@ -59,7 +59,7 @@ Même infrastructure que Foyer : le NAS (Docker, `/volume1/docker`, `docker-comp
    Le port 8090 est libre à côté de Foyer (8088) ; à ajuster si déjà pris.
 2. Dans le tunnel Cloudflare, onglet Routes > Add route > Published application :
    - Subdomain : `jeu`
-   - Domain : `tortuebox.com`
+   - Domain : `tortuebox.fr`
    - Service : `http://localhost:8090`
 3. Le WebSocket (Socket.IO) passe par le tunnel sans réglage supplémentaire.
 4. L'image est construite par GitHub Actions et publiée sur GitHub Container Registry à chaque merge sur `main`. Mise à jour sur le NAS : `docker compose pull comptoirs && docker compose up -d comptoirs`.
@@ -90,7 +90,7 @@ Chaque jalon = une branche + une PR, testée avant de passer au suivant.
 | 4 | En ligne | Serveur, salles avec code, lobby, synchro, reconnexion | 2 navigateurs jouent ensemble, test Playwright |
 | 5 | Interactions | Offres de rachat du joueur actif avec contre-offre, cartes Actu Tech et Atout | Toutes les règles du game design jouables en ligne |
 | 6 | Finition | Animations, sons libres de droits, mobile, journal de partie, règles intégrées | Jouable confortablement sur téléphone |
-| 7 | Mise en ligne | Dockerfile, service à ajouter au `docker-compose.yml` du NAS, route Cloudflare `jeu.tortuebox.com` | Partie jouable sur `https://jeu.tortuebox.com` |
+| 7 | Mise en ligne | Dockerfile, service à ajouter au `docker-compose.yml` du NAS, route Cloudflare `jeu.tortuebox.fr` | Partie jouable sur `https://jeu.tortuebox.fr` |
 
 Après le jalon 7, pistes possibles : bots pour compléter une table, classement, reprise de partie après redémarrage du serveur (Redis).
 
