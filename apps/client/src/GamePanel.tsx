@@ -320,7 +320,7 @@ function SellForm({ game }: { game: GameState }) {
   const value = Math.floor(companyById.get(co)!.pricePerPercent * percent * config.bankBuybackRatio);
   return (
     <details className="card">
-      <summary>Revendre à la banque (moitié prix)</summary>
+      <summary>Revendre à la banque (75 % du prix)</summary>
       <select value={co} onChange={(e) => setCompany(e.target.value)}>
         {holdings.map((c) => (
           <option key={c} value={c}>
