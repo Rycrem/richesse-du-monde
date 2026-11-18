@@ -1,0 +1,14 @@
+{
+  "name": "@stonks/shared",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "echo 'pas de tests'"
+  },
+  "dependencies": {
+    "@stonks/engine": "workspace:*"
+  }
+}

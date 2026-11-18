@@ -57,3 +57,8 @@ details.card summary { cursor: pointer; font-weight: 600; }
   .board { height: 60vh; flex: none; }
   .panel { width: 100%; }
 }
+.tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+.code { font-family: ui-monospace, monospace; letter-spacing: 4px; color: var(--accent); }
+label { display: flex; flex-direction: column; gap: 4px; }
+label.row { flex-direction: row; }
+.offline { color: var(--danger); font-size: 12px; }
