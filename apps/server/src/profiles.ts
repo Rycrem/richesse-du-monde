@@ -54,7 +54,11 @@ export class Profiles {
     if (!dir || !this.file) return;
     mkdirSync(dir, { recursive: true });
     try {
-      for (const p of JSON.parse(readFileSync(this.file, "utf8")) as Profile[]) this.profiles.set(p.token, p);
+      for (const p of JSON.parse(readFileSync(this.file, "utf8")) as Profile[]) {
+        // free items added after the profile was created
+        p.owned = [...new Set([...p.owned, ...STARTER_ITEMS])];
+        this.profiles.set(p.token, p);
+      }
     } catch {
       // first start: no file yet
     }
