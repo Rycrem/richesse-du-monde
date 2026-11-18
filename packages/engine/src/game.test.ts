@@ -46,12 +46,12 @@ const price = (id: string) => companies.find((c) => c.id === id)!.pricePerPercen
 const royalty = (id: string) => companies.find((c) => c.id === id)!.royaltyPerPercent;
 
 describe("setup", () => {
-  it("gives each city one royalty company, 4 per company", () => {
+  it("gives each city one royalty company, the same count per company", () => {
     const g = createGame(P, 7);
     const counts: Record<string, number> = {};
     for (const c of Object.values(g.royalties)) counts[c] = (counts[c] ?? 0) + 1;
     expect(Object.keys(g.royalties)).toHaveLength(48);
-    for (const c of companies) expect(counts[c.id]).toBe(4);
+    for (const c of companies) expect(counts[c.id]).toBe(config.royaltyTokensPerCompany);
   });
 
   it("is deterministic for a seed and varies across seeds", () => {
@@ -83,38 +83,38 @@ describe("turn order", () => {
 describe("buying", () => {
   it("shows the city's stock and buys any split up to 30 %", () => {
     let g = at(createGame(P, 1), "pekin-hub");
-    expect(buyableStock(g)).toEqual({ samsong: 20, macrosoft: 20 });
+    expect(buyableStock(g)).toEqual({ appel: 25, netflox: 25 });
     const cash = g.players[0]!.cash;
-    g = ok(g, { type: "BUY", playerId: "a", purchases: { samsong: 10 } });
-    expect(g.players[0]!.holdings.samsong).toBe(10);
-    expect(g.players[0]!.cash).toBe(cash - 10 * price("samsong"));
-    expect(g.stocks["pekin-hub"]!.samsong).toBe(10);
+    g = ok(g, { type: "BUY", playerId: "a", purchases: { appel: 10 } });
+    expect(g.players[0]!.holdings.appel).toBe(10);
+    expect(g.players[0]!.cash).toBe(cash - 10 * price("appel"));
+    expect(g.stocks["pekin-hub"]!.appel).toBe(15);
   });
 
   it("caps the cumulative purchase at 30 % per landing", () => {
     let g = at(createGame(P, 1), "pekin-hub");
     g.players[0]!.cash = 1_000_000;
-    g = ok(g, { type: "BUY", playerId: "a", purchases: { samsong: 20 } });
-    expect(err(g, { type: "BUY", playerId: "a", purchases: { macrosoft: 11 } })).toMatch(/30/);
-    g = ok(g, { type: "BUY", playerId: "a", purchases: { macrosoft: 10 } });
+    g = ok(g, { type: "BUY", playerId: "a", purchases: { appel: 20 } });
+    expect(err(g, { type: "BUY", playerId: "a", purchases: { netflox: 11 } })).toMatch(/30/);
+    g = ok(g, { type: "BUY", playerId: "a", purchases: { netflox: 10 } });
     expect(g.boughtThisTurn).toBe(30);
   });
 
   it("refuses more than the city has, or more than the player can pay", () => {
     let g = at(createGame(P, 1), "paris");
-    expect(err(g, { type: "BUY", playerId: "a", purchases: { nvidio: 11 } })).toMatch(/Stock/);
+    expect(err(g, { type: "BUY", playerId: "a", purchases: { xiaomy: 16 } })).toMatch(/Stock/);
     g.players[0]!.cash = 0;
-    expect(err(g, { type: "BUY", playerId: "a", purchases: { nvidio: 1 } })).toMatch(/argent/);
+    expect(err(g, { type: "BUY", playerId: "a", purchases: { xiaomy: 1 } })).toMatch(/argent/);
   });
 
   it("other players cannot buy during someone else's turn", () => {
     const g = at(createGame(P, 1), "paris");
-    expect(err(g, { type: "BUY", playerId: "b", purchases: { nvidio: 1 } })).toMatch(/impossible/);
+    expect(err(g, { type: "BUY", playerId: "b", purchases: { xiaomy: 1 } })).toMatch(/impossible/);
   });
 
   it("regional choice sells every company of the region, even on the first lap", () => {
     const g = at(createGame(P, 1), "choix-europe");
-    expect(buyableStock(g)).toEqual({ sonyx: 10, gogol: 10, intol: 10, amazone: 10, nvidio: 10, tsmb: 10, appel: 10, meto: 10, macrosoft: 10, tesler: 10 });
+    expect(buyableStock(g)).toEqual({ amb: 15, intol: 15, samsong: 15, nvidio: 15, xiaomy: 15, appel: 15, sonyx: 15, macrosoft: 15, spotifaille: 15, gogol: 15 });
   });
 
   it("an Atout can be bought even with two players left", () => {
@@ -157,11 +157,11 @@ describe("spiral board", () => {
 describe("events", () => {
   it("records the roll, the card and the purchases of the turn, with growing ids", () => {
     let g = at(createGame(P, 1), "pekin-hub");
-    g = ok(g, { type: "BUY", playerId: "a", purchases: { samsong: 10 } });
-    g = ok(g, { type: "BUY", playerId: "a", purchases: { samsong: 5, macrosoft: 5 } });
+    g = ok(g, { type: "BUY", playerId: "a", purchases: { appel: 10 } });
+    g = ok(g, { type: "BUY", playerId: "a", purchases: { appel: 5, netflox: 5 } });
     g = ok(g, { type: "END_TURN", playerId: "a" });
     expect(g.events.map((e) => e.kind)).toEqual(["roll", "buys"]);
-    expect(g.events[1]).toMatchObject({ playerId: "a", items: [{ company: "samsong", percent: 15, total: 15 }, { company: "macrosoft", percent: 5, total: 5 }] });
+    expect(g.events[1]).toMatchObject({ playerId: "a", items: [{ company: "appel", percent: 15, total: 15 }, { company: "netflox", percent: 5, total: 5 }] });
     expect(g.events[1]!.id).toBeGreaterThan(g.events[0]!.id);
     expect(g.turnBuys).toEqual({});
   });
@@ -226,7 +226,7 @@ describe("royalties", () => {
     expect(alice.bankrupt).toBe(true);
     expect(g.eliminated).toEqual(["a"]);
     expect(g.players[g.current]!.id).toBe("b");
-    expect(g.stocks.mexico!.sonyx).toBe(10);
+    expect(g.stocks["sao-paulo"]!.sonyx).toBe(15);
   });
 });
 

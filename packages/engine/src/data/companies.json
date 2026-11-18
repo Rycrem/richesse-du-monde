@@ -48,6 +48,14 @@
     "royaltyPerPercent": 66
   },
   {
+    "id": "netflox",
+    "name": "Netflox",
+    "sector": "Streaming vidéo",
+    "color": "#b20710",
+    "pricePerPercent": 110,
+    "royaltyPerPercent": 66
+  },
+  {
     "id": "meto",
     "name": "Méto",
     "sector": "Réseaux sociaux",
@@ -60,6 +68,14 @@
     "name": "Tesler",
     "sector": "Voitures électriques",
     "color": "#cc0000",
+    "pricePerPercent": 100,
+    "royaltyPerPercent": 60
+  },
+  {
+    "id": "oracul",
+    "name": "Oracul",
+    "sector": "Bases de données / cloud",
+    "color": "#c74634",
     "pricePerPercent": 100,
     "royaltyPerPercent": 60
   },
@@ -80,10 +96,26 @@
     "royaltyPerPercent": 54
   },
   {
+    "id": "xiaomy",
+    "name": "Xiaomy",
+    "sector": "Smartphones / objets connectés",
+    "color": "#ff6900",
+    "pricePerPercent": 90,
+    "royaltyPerPercent": 54
+  },
+  {
     "id": "sonyx",
     "name": "Sonyx",
     "sector": "Consoles / électronique",
     "color": "#222222",
+    "pricePerPercent": 80,
+    "royaltyPerPercent": 48
+  },
+  {
+    "id": "spotifaille",
+    "name": "Spotifaille",
+    "sector": "Streaming musical",
+    "color": "#1db954",
     "pricePerPercent": 80,
     "royaltyPerPercent": 48
   },
