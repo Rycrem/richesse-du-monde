@@ -78,8 +78,8 @@ On reprend le système de gestion des ressources du genre (cartes de parts à po
 
 - Un joueur qui ne peut pas payer revend ses cartes à la banque. S'il ne peut toujours pas payer, il est éliminé et ses cartes retournent en vente.
 - Deux modes au choix de l'hôte :
-  - **Classique** : dernier joueur non ruiné.
-  - **Chrono** (par défaut, 45 à 60 min) : à la fin du temps ou d'un nombre de tours, le plus grand patrimoine (argent + valeur des cartes au cours) gagne.
+  - **Classique** (par défaut) : dernier joueur non ruiné.
+  - **Chrono** (option, 45 à 60 min) : à la fin du temps ou d'un nombre de tours, le plus grand patrimoine (argent + valeur des cartes au cours) gagne.
 
 ## Noms et logos des entreprises
 

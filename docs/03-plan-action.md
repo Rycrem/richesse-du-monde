@@ -16,7 +16,7 @@ Objectif : un jeu de plateau économique sur le thème de la tech (parts d'entre
 | État client | Zustand | Léger, suffit pour un état reçu du serveur |
 | Tests | Vitest (moteur), Playwright (parcours multijoueur) | |
 | Persistance | Mémoire au départ, Redis ensuite si besoin de reprise après redémarrage | Pas de base de données au début |
-| Déploiement | Image Docker unique (serveur qui sert aussi le client) | Hébergeable sur un VPS, Render, Fly.io ou un NAS |
+| Déploiement | Image Docker unique (serveur qui sert aussi le client) sur le serveur perso d'Emeric, derrière son reverse proxy, sur un sous-domaine du domaine du projet Foyer | Pas de coût d'hébergement, un seul conteneur à gérer |
 
 ## Architecture multijoueur
 
@@ -70,7 +70,7 @@ Chaque jalon = une branche + une PR, testée avant de passer au suivant.
 | 4 | En ligne | Serveur, salles avec code, lobby, synchro, reconnexion | 2 navigateurs jouent ensemble, test Playwright |
 | 5 | Interactions | Offres de rachat du joueur actif avec contre-offre, cartes Actu Tech et Atout | Toutes les règles du game design jouables en ligne |
 | 6 | Finition | Animations, sons libres de droits, mobile, journal de partie, règles intégrées | Jouable confortablement sur téléphone |
-| 7 | Mise en ligne | Docker, déploiement, nom de domaine | URL publique partageable |
+| 7 | Mise en ligne | Dockerfile, `docker-compose.yml`, config du reverse proxy (WebSocket activé, HTTPS), sous-domaine du domaine Foyer | URL publique partageable |
 
 Après le jalon 7, pistes possibles : bots pour compléter une table, classement, reprise de partie après redémarrage du serveur (Redis).
 
@@ -83,6 +83,8 @@ Après le jalon 7, pistes possibles : bots pour compléter une table, classement
 
 ## Points à valider avant de coder
 
-1. Le nom affiché du jeu.
-2. Le mode de victoire par défaut (Chrono ou Classique).
-3. L'hébergement visé (VPS, NAS perso, service cloud).
+Décidé : victoire Classique par défaut, hébergement sur le serveur perso avec le domaine Foyer.
+
+Reste à préciser :
+1. Le nom affiché du jeu (peut attendre).
+2. Pour le jalon 7 : sous-domaine voulu, et ce qui tourne déjà sur le serveur (Docker, reverse proxy : Nginx, Traefik, Caddy...).
