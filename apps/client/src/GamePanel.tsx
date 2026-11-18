@@ -250,6 +250,7 @@ function BuyPanel({ game }: { game: GameState }) {
         );
       })}
       <button
+        className={`buy-btn ${cost <= me.cash ? "afford" : "broke"}`}
         disabled={total === 0 || cost > me.cash}
         onClick={() => dispatch({ type: "BUY", playerId: me.id, purchases: wanted }) && setWanted({})}
       >

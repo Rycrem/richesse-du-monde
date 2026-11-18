@@ -1,4 +1,4 @@
-import { applyAction, createGame, type Action, type GameMode, type GameState } from "@stonks/engine";
+import { applyAction, createGame, rollTurnOrder, type Action, type GameMode, type GameState } from "@stonks/engine";
 import { DEFAULT_LOOK, STARTER_ITEMS, type AccountRow, type ClientToServer, type Look, type ProfileView, type RoomView, type ServerToClient, type Session, type Slot } from "@stonks/shared";
 import { io, type Socket } from "socket.io-client";
 import { create } from "zustand";
@@ -165,10 +165,12 @@ export const useStore = create<Store>((set, get) => {
         online: false,
         you: null,
         room: null,
-        game: createGame(
-          names.map((name, i) => ({ id: `p${i + 1}`, name })),
-          Math.floor(Math.random() * 2 ** 31),
-          mode,
+        game: rollTurnOrder(
+          createGame(
+            names.map((name, i) => ({ id: `p${i + 1}`, name })),
+            Math.floor(Math.random() * 2 ** 31),
+            mode,
+          ),
         ),
         error: null,
       }),

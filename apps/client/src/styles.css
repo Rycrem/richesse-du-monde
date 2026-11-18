@@ -44,7 +44,7 @@ details.card summary { cursor: pointer; font-weight: 600; }
 .player { background: var(--card); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
 .player.out { opacity: 0.4; }
 .buy-row { display: grid; grid-template-columns: 90px 1fr 70px; align-items: center; gap: 8px; }
-.buy-row small { grid-column: 1 / -1; color: var(--muted); }
+.buy-row small { grid-column: 1 / -1; color: #fff; }
 .muted, small { color: var(--muted); }
 .error { background: var(--danger); color: #fff; border-radius: 8px; padding: 8px 12px; cursor: pointer; }
 .log { font-size: 12px; color: var(--muted); display: flex; flex-direction: column; gap: 2px; }
@@ -225,7 +225,7 @@ button.link:disabled { opacity: 0.5; cursor: default; }
 .inspect header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; color: #fff; text-shadow: 0 1px 2px #0008; }
 .inspect header div { display: flex; flex-direction: column; }
 .inspect header strong { font-size: 18px; }
-.inspect header small { opacity: 0.85; }
+.inspect header small { color: #fff; font-weight: 600; text-shadow: 0 1px 3px #000a; }
 .inspect .close { background: #0003; color: #fff; border: none; border-radius: 999px; width: 28px; height: 28px; font-size: 18px; line-height: 1; padding: 0; }
 .inspect-body { padding: 4px 14px 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
 .inspect-body > * { animation: rise 0.35s ease-out both; }
@@ -237,7 +237,7 @@ button.link:disabled { opacity: 0.5; cursor: default; }
 .inspect-company { display: flex; gap: 10px; align-items: center; border-radius: 10px; padding: 8px 10px; color: #fff; text-shadow: 0 1px 2px #0008; }
 .inspect-company img { width: 34px; height: 34px; border-radius: 8px; background: #fff; padding: 3px; }
 .inspect-company div { display: flex; flex-direction: column; }
-.inspect-company small { font-size: 11px; opacity: 0.9; }
+.inspect-company small { font-size: 11px; color: #fff; font-weight: 600; }
 .inspect-holders { display: flex; flex-direction: column; gap: 4px; }
 .chip.clickable { cursor: pointer; transition: transform 0.15s; }
 .chip.clickable:hover { transform: translateY(-2px); }
@@ -245,3 +245,16 @@ button.link:disabled { opacity: 0.5; cursor: default; }
 .ally-btn { font-size: 11px; padding: 2px 8px; }
 @keyframes slide-in { from { opacity: 0; transform: translateX(-30px) scale(0.96); } to { opacity: 1; transform: none; } }
 @keyframes slide-out { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateX(-30px) scale(0.96); } }
+.buy-btn { border-width: 2px; transition: border-color 0.25s, box-shadow 0.25s; }
+.buy-btn.afford { border-color: #06d6a0; }
+.buy-btn.afford:not(:disabled) { box-shadow: 0 0 10px #06d6a055; }
+.buy-btn.broke { border-color: #6c757d; }
+.big-die.small { width: 30px; height: 30px; border-radius: 7px; box-shadow: 0 2px 0 #c9c3b5; }
+.big-die.small i { width: 6px; height: 6px; margin: -3px 0 0 -3px; }
+.order { min-width: 340px; display: flex; flex-direction: column; gap: 8px; }
+.order-row { display: flex; align-items: center; gap: 8px; color: #e8edf5; background: #ffffff10; border-radius: 12px; padding: 6px 10px; animation: rise 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
+.order-row .rank { font-weight: 900; color: #ffd166; width: 16px; }
+.order-row .eq { font-weight: 800; width: 24px; text-align: right; }
+.deals-title { margin-top: 12px; }
+.tray-item.deal { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.tray-item.deal small { color: #fff; font-size: 12px; }
