@@ -15,6 +15,18 @@ export interface ProfileView {
   points: number;
   owned: string[];
   look: Look;
+  // account name once logged in with a password, null for a browser-only profile
+  account: string | null;
+  email: string | null;
+  admin: boolean;
+}
+
+export interface AccountRow {
+  name: string;
+  email: string | null;
+  points: number;
+  owned: number;
+  created: number;
 }
 
 export interface RoomView {
@@ -46,6 +58,13 @@ export interface ClientToServer {
   "profile:get": (token: string, ack: Ack<ProfileView & { token: string }>) => void;
   "profile:buy": (token: string, itemId: string, ack: Ack<ProfileView>) => void;
   "profile:equip": (token: string, slot: Slot, itemId: string, ack: Ack<ProfileView>) => void;
+  "account:login": (name: string, password: string, currentToken: string, ack: Ack<ProfileView & { token: string }>) => void;
+  "account:email": (token: string, email: string, ack: Ack<ProfileView>) => void;
+  "account:forgot": (name: string, ack: Ack<string>) => void;
+  "account:reset": (resetToken: string, password: string, ack: Ack<ProfileView & { token: string }>) => void;
+  "admin:list": (token: string, ack: Ack<AccountRow[]>) => void;
+  "admin:password": (token: string, name: string, password: string, ack: Ack<null>) => void;
+  "admin:points": (token: string, name: string, points: number, ack: Ack<null>) => void;
 }
 
 export interface ServerToClient {

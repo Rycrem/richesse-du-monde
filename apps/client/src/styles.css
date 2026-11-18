@@ -92,3 +92,13 @@ label.row { flex-direction: row; }
 .my-pawn { display: flex; align-items: center; gap: 12px; text-align: left; margin-bottom: 12px; }
 .my-pawn img { width: 40px; height: 64px; }
 .my-pawn span { display: flex; flex-direction: column; }
+.notice { background: #1f6f43; color: #fff; border-radius: 8px; padding: 8px 12px; }
+.account small { color: var(--muted); }
+button.link { background: none; border: none; color: var(--accent); padding: 0; text-align: left; cursor: pointer; text-decoration: underline; }
+button.link:disabled { opacity: 0.5; cursor: default; }
+.admin table { width: 100%; border-collapse: collapse; }
+.admin th, .admin td { text-align: left; padding: 6px 4px; border-bottom: 1px solid #ffffff1a; vertical-align: middle; }
+.setup.admin { max-width: 760px; }
+.admin td input { width: 80px; }
+.account { margin-bottom: 12px; }
+.admin .card { overflow-x: auto; }

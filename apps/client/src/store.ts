@@ -1,5 +1,5 @@
 import { applyAction, createGame, type Action, type GameMode, type GameState } from "@stonks/engine";
-import { DEFAULT_LOOK, STARTER_ITEMS, type ClientToServer, type Look, type ProfileView, type RoomView, type ServerToClient, type Session, type Slot } from "@stonks/shared";
+import { DEFAULT_LOOK, STARTER_ITEMS, type AccountRow, type ClientToServer, type Look, type ProfileView, type RoomView, type ServerToClient, type Session, type Slot } from "@stonks/shared";
 import { io, type Socket } from "socket.io-client";
 import { create } from "zustand";
 
@@ -48,8 +48,17 @@ interface Store {
   room: RoomView | null;
   game: GameState | null;
   error: string | null;
+  notice: string | null;
   profile: ProfileView;
   loadProfile: () => void;
+  login: (name: string, password: string) => void;
+  logout: () => void;
+  setEmail: (email: string) => void;
+  forgot: (name: string) => void;
+  resetPassword: (resetToken: string, password: string) => Promise<boolean>;
+  adminList: () => Promise<AccountRow[]>;
+  adminPassword: (name: string, password: string) => Promise<boolean>;
+  adminPoints: (name: string, points: number) => Promise<boolean>;
   buy: (itemId: string) => void;
   equip: (slot: Slot, itemId: string) => void;
   startLocal: (names: string[], mode: GameMode) => void;
@@ -79,9 +88,26 @@ export const useStore = create<Store>((set, get) => {
   }
 
   const onProfile = (res: { ok: true; data: ProfileView } | { ok: false; error: string }) => {
-    if (res.ok) set({ profile: { name: res.data.name, points: res.data.points, owned: res.data.owned, look: res.data.look }, error: null });
-    else set({ error: res.error });
+    if (res.ok) {
+      const { name, points, owned, look, account, email, admin } = res.data;
+      set({ profile: { name, points, owned, look, account, email, admin }, error: null });
+    } else set({ error: res.error, notice: null });
   };
+
+  const onLogin = (res: { ok: true; data: ProfileView & { token: string } } | { ok: false; error: string }) => {
+    if (res.ok) saveProfileToken(res.data.token);
+    onProfile(res);
+  };
+
+  type Res<T> = { ok: true; data: T } | { ok: false; error: string };
+  function adminCall<T>(run: (s: Socket<ServerToClient, ClientToServer>, done: (r: Res<T>) => void) => void): Promise<Res<T>> {
+    return new Promise((resolve) =>
+      run(connect(), (r) => {
+        set({ error: r.ok ? null : r.error, notice: null });
+        resolve(r);
+      }),
+    );
+  }
 
   const onSession = (res: { ok: true; data: Session } | { ok: false; error: string }) => {
     if (!res.ok) {
@@ -98,12 +124,35 @@ export const useStore = create<Store>((set, get) => {
     room: null,
     game: null,
     error: null,
-    profile: { name: "", points: 0, owned: STARTER_ITEMS, look: DEFAULT_LOOK as Look },
-    loadProfile: () =>
-      connect().emit("profile:get", profileToken(), (res) => {
-        if (res.ok) saveProfileToken(res.data.token);
+    notice: null,
+    profile: { name: "", points: 0, owned: STARTER_ITEMS, look: DEFAULT_LOOK as Look, account: null, email: null, admin: false },
+    loadProfile: () => connect().emit("profile:get", profileToken(), onLogin),
+    login: (name, password) => connect().emit("account:login", name, password, profileToken(), onLogin),
+    logout: () => {
+      saveProfileToken("");
+      connect().emit("profile:get", "", onLogin);
+    },
+    setEmail: (email) =>
+      connect().emit("account:email", profileToken(), email, (res) => {
         onProfile(res);
+        if (res.ok) set({ notice: email.trim() ? "E-mail enregistré" : "E-mail retiré" });
       }),
+    forgot: (name) =>
+      connect().emit("account:forgot", name, (res) => set(res.ok ? { notice: res.data, error: null } : { error: res.error, notice: null })),
+    resetPassword: (resetToken, password) =>
+      new Promise((resolve) =>
+        connect().emit("account:reset", resetToken, password, (res) => {
+          onLogin(res);
+          if (res.ok) set({ notice: "Mot de passe changé, te voilà connecté" });
+          resolve(res.ok);
+        }),
+      ),
+    adminList: async () => {
+      const r = await adminCall<AccountRow[]>((s, done) => s.emit("admin:list", profileToken(), done));
+      return r.ok ? r.data : [];
+    },
+    adminPassword: async (name, password) => (await adminCall<null>((s, done) => s.emit("admin:password", profileToken(), name, password, done))).ok,
+    adminPoints: async (name, points) => (await adminCall<null>((s, done) => s.emit("admin:points", profileToken(), name, points, done))).ok,
     buy: (itemId) => connect().emit("profile:buy", profileToken(), itemId, onProfile),
     equip: (slot, itemId) => connect().emit("profile:equip", profileToken(), slot, itemId, onProfile),
     startLocal: (names, mode) =>
@@ -151,7 +200,7 @@ export const useStore = create<Store>((set, get) => {
       set({ game: r.state, error: null });
       return true;
     },
-    clearError: () => set({ error: null }),
+    clearError: () => set({ error: null, notice: null }),
     quit: () => {
       if (get().online) {
         socket?.emit("room:leave");

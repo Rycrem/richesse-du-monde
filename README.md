@@ -29,3 +29,12 @@ Chaque merge sur `main` publie l'image `ghcr.io/rycrem/stonks-valley:latest` (am
 3. Dans le tunnel Cloudflare `nas-maison` : Routes > Add route > Published application, Subdomain `jeu`, Domain `tortuebox.fr`, Service `http://localhost:8090`.
 
 Mise à jour : relancer l'étape 2.
+
+### Variables d'environnement
+
+| Variable | Rôle |
+|---|---|
+| `ADMIN_PASSWORD` | Mot de passe du compte admin. Le pseudo admin (`ADMIN_USER`, par défaut `Rycrem`) ne peut être créé qu'avec ce mot de passe. Sans cette variable, le pseudo reste réservé. |
+| `PUBLIC_URL` | Adresse du site, utilisée dans les liens de réinitialisation (`https://jeu.tortuebox.fr`) |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM` | Envoi des e-mails "mot de passe oublié". Facultatif : sans SMTP, l'admin réinitialise les mots de passe à la main. |
+| `DATA_DIR` | Dossier des profils (`/data` dans l'image) |
