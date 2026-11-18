@@ -1,6 +1,6 @@
 # Plan d'action de développement
 
-Objectif : un jeu de plateau économique jouable dans le navigateur, à 2-6 joueurs en ligne, en temps réel, avec un lien d'invitation.
+Objectif : un jeu de plateau économique sur le thème de la tech (parts d'entreprises), jouable dans le navigateur, à 2-6 joueurs en ligne, en temps réel, avec un lien d'invitation.
 
 ## Choix techniques
 
@@ -26,11 +26,12 @@ navigateur (React)  <-- socket.io -->  serveur Node  --> engine (règles)
   envoie des intentions             valide, applique, diffuse
 ```
 
-- **Serveur autoritaire** : le client envoie des actions (`ROLL_DICE`, `BUY_TITLE`, `BID`, `PROPOSE_TRADE`...). Le serveur les valide avec le moteur, calcule le nouvel état et le diffuse à la salle.
+- **Serveur autoritaire** : le client envoie des actions (`ROLL_DICE`, `BUY_CARD`, `OFFER_BUY_FROM_PLAYER`, `ANSWER_OFFER`, `END_TURN`...). Le serveur les valide avec le moteur, calcule le nouvel état et le diffuse à la salle.
 - **Moteur en réducteur pur** : `applyAction(state, action) -> state | erreur`. Les dés utilisent un générateur aléatoire à graine stocké dans l'état, donc une partie peut être rejouée et testée.
 - **Salles** : création d'une partie avec un code court (ex. `KX4P`), lien à partager, lobby où l'hôte choisit le mode et lance.
 - **Identité** : pseudo + jeton stocké dans le navigateur, pas de compte au début. Le jeton permet de se reconnecter à sa place après une coupure.
-- **Temps réel** : enchères et propositions d'échange avec minuteur côté serveur. Un joueur absent trop longtemps joue en automatique (passe son tour, refuse les échanges).
+- **Tour verrouillé** : seul le joueur actif peut acheter ou faire une offre de rachat. Le serveur refuse ces actions venant des autres joueurs.
+- **Temps réel** : une offre de rachat attend la réponse du propriétaire avec un minuteur côté serveur (refus automatique à expiration). Un joueur absent trop longtemps joue en automatique (passe son tour, refuse les offres).
 - **Info cachée** : les cartes Atout d'un joueur ne sont envoyées qu'à lui (le serveur filtre l'état par joueur).
 
 ## Structure du dépôt
@@ -40,7 +41,7 @@ apps/
   client/        React + Vite
   server/        Node + Socket.IO
 packages/
-  engine/        règles, types, données JSON (plateau, ressources, cartes)
+  engine/        règles, types, données JSON (plateau, entreprises, cartes, noms réels/parodiques)
   shared/        types des messages réseau
 docs/
 assets/          visuels originaux + LICENSES.md
@@ -53,11 +54,11 @@ Chaque jalon = une branche + une PR, testée avant de passer au suivant.
 | # | Jalon | Contenu | Livrable vérifiable |
 |---|---|---|---|
 | 0 | Socle | Monorepo, lint, Vitest, CI GitHub Actions | `pnpm test` vert en CI |
-| 1 | Données | Plateau 40 cases, 8 ressources, cartes en JSON | Données validées par des tests |
-| 2 | Moteur | Déplacement, achat, redevances, enchères, faillite, victoire | Tests unitaires + partie simulée complète par des bots |
-| 3 | Jeu local | Plateau SVG, panneau joueur, marché, plusieurs joueurs sur un même écran | Une partie jouable de bout en bout dans un onglet |
+| 1 | Données | Plateau 40 cases, 12 entreprises, 96 cartes de parts, cartes Actu Tech et Atout en JSON | Données validées par des tests (chaque entreprise = 100 %) |
+| 2 | Moteur | Déplacement, achat libre, paiement au plus gros détenteur, rachat entre joueurs, faillite, victoire | Tests unitaires + partie simulée complète par des bots |
+| 3 | Jeu local | Plateau SVG, panneau joueur avec ses parts par entreprise, achat des cartes de la case, plusieurs joueurs sur un même écran | Une partie jouable de bout en bout dans un onglet |
 | 4 | En ligne | Serveur, salles avec code, lobby, synchro, reconnexion | 2 navigateurs jouent ensemble, test Playwright |
-| 5 | Interactions | Échanges entre joueurs, enchères en direct, alliances, cartes Atout | Toutes les règles du game design jouables en ligne |
+| 5 | Interactions | Offres de rachat du joueur actif avec contre-offre, cartes Actu Tech et Atout | Toutes les règles du game design jouables en ligne |
 | 6 | Finition | Animations, sons libres de droits, mobile, journal de partie, règles intégrées | Jouable confortablement sur téléphone |
 | 7 | Mise en ligne | Docker, déploiement, nom de domaine | URL publique partageable |
 
@@ -66,11 +67,14 @@ Après le jalon 7, pistes possibles : bots pour compléter une table, classement
 ## Assets et propriété intellectuelle
 
 - Aucun élément graphique, nom, logo ou texte du jeu existant n'est réutilisé.
+- Aucun logo d'entreprise. Noms d'entreprises parodiques par défaut, noms réels possibles via un fichier de données pour les parties privées (voir `02-game-design.md`).
 - Les visuels sont faits pour le projet (SVG en code) ou pris dans des banques libres (CC0, licence notée dans `assets/LICENSES.md`).
 - Le nom affiché du jeu est un titre original ("Comptoirs du Globe" en attendant mieux).
 
 ## Points à valider avant de coder
 
 1. Le nom affiché du jeu.
-2. Le mode de victoire par défaut (Chrono ou Classique).
-3. L'hébergement visé (VPS, NAS perso, service cloud).
+2. Noms d'entreprises réels ou parodiques.
+3. Règle d'égalité entre plus gros détenteurs (proposition : le premier arrivé garde le bénéfice).
+4. Le mode de victoire par défaut (Chrono ou Classique).
+5. L'hébergement visé (VPS, NAS perso, service cloud).
