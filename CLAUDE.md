@@ -33,3 +33,7 @@
 - Plain hyphens and straight quotes only.
 - Natural language characters (accented letters, CJK, etc.) are fine when the content requires them.
 - Code output must be copy-paste safe.
+
+## Formating
+- Always creat a new branch for new features with a name relevent to it
+
