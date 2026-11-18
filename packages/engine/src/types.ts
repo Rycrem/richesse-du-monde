@@ -44,4 +44,5 @@ export interface GameConfig {
   maxPlayers: number;
   ipoBonus: number;
   krachPercent: number;
+  lapBonus: number;
 }

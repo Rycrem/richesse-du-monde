@@ -4,7 +4,7 @@
   "leveeFundsPerPip": 100,
   "auctionPercentPerPip": 5,
   "minBidIncrement": 100,
-  "auctionTimeoutSeconds": 7,
+  "auctionTimeoutSeconds": 30,
   "offerTimeoutSeconds": 15,
   "atoutPrice": 1500,
   "monopolyMultiplier": 2,
@@ -13,5 +13,6 @@
   "minPlayers": 2,
   "maxPlayers": 6,
   "ipoBonus": 1000,
-  "krachPercent": 10
+  "krachPercent": 10,
+  "lapBonus": 2000
 }

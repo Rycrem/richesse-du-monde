@@ -1,6 +1,7 @@
 import { activePlayers, allianceOf, board, buyableStock, config, currentPlayer, netWorth, ranking, type GameState } from "@stonks/engine";
 import { useEffect, useState } from "react";
 import { companyById, money, PLAYER_COLORS } from "./format";
+import { AnimatedMoney } from "./Overlay";
 import { useStore } from "./store";
 
 export function GamePanel({ game }: { game: GameState }) {
@@ -164,7 +165,7 @@ function Players({ game, colorOf }: { game: GameState; colorOf: (id: string) => 
             {offline.has(p.id) && <span className="offline">déconnecté</span>}
             {allianceOf(game, p.id) && <span className="chip alliance">Alliance {allianceOf(game, p.id)!.id.slice(1)}</span>}
             <span className="spacer" />
-            {p.bankrupt ? "en faillite" : money(p.cash)}
+            {p.bankrupt ? "en faillite" : <AnimatedMoney value={p.cash} />}
           </div>
           <div className="chips">
             {Object.entries(p.holdings)
@@ -319,7 +320,7 @@ function SellForm({ game }: { game: GameState }) {
   const value = Math.floor(companyById.get(co)!.pricePerPercent * percent * config.bankBuybackRatio);
   return (
     <details className="card">
-      <summary>Revendre à la banque (moitié prix)</summary>
+      <summary>Revendre à la banque (75 % du prix)</summary>
       <select value={co} onChange={(e) => setCompany(e.target.value)}>
         {holdings.map((c) => (
           <option key={c} value={c}>

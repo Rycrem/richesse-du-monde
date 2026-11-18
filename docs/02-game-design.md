@@ -46,7 +46,7 @@ Le plateau a deux anneaux : un anneau extérieur de 48 cases (les 6 régions du 
 
 | Case | Nombre | Effet |
 |---|---|---|
-| Départ | 1 | Point de départ, pas d'effet |
+| Départ | 1 | Chaque passage par le Départ (fin de la spirale) rapporte une prime de 2 000 k$ |
 | Ville tech | 30 (5 par région, anneau extérieur) | Paiement + achat (voir "Tour de jeu") |
 | Hub tech | 18 (anneau intérieur) | Comme une ville, avec des stocks plus gros (15 à 20 % par entreprise) |
 | Choix régional | 8 (1 par région, 2 pour les hubs) | Achat dans le stock de toutes les villes de la région, n'importe quelle entreprise, dès le premier tour |
@@ -144,3 +144,14 @@ Choix retenu : **noms modifiés** (colonne "Nom parodique" ci-dessus) et **logos
 - Mots de passe hachés (scrypt) côté serveur.
 - E-mail facultatif : il permet de recevoir un lien de réinitialisation valable 1 h (si le serveur a un SMTP).
 - Compte admin `Rycrem` (créable seulement avec `ADMIN_PASSWORD`) : liste des comptes, nouveau mot de passe à la main, modification des points.
+
+## Cartes et animations
+
+Tout ce qui change l'argent ou les parts s'affiche à tous les joueurs sous forme de carte animée, dans l'ordre où ça s'est passé (le moteur garde un flux d'événements numérotés) :
+- dés en grand, puis le pion avance case par case et la caméra le suit ;
+- cartes Actu Tech, Levée de fonds (avec les dés), Introduction en Bourse, Krach, Tour complet, Atout : montant en gros et trésorerie avant / après ;
+- redevance payée, faillite ;
+- en fin de tour, les actions achetées : une carte par entreprise, à sa couleur, logo en haut et % détenu en dessous ;
+- écran de victoire avec confettis.
+
+Rien n'apparaît ni ne disparaît d'un coup : les cartes entrent et sortent en animation, les bâtiments grandissent, les montants du panneau défilent jusqu'à leur nouvelle valeur.

@@ -142,6 +142,8 @@ describe("spiral board", () => {
     g = landOn(g, "seattle");
     expect(g.players[0]!.position).toBe(1);
     expect(g.players[0]!.laps).toBe(1);
+    const lap = g.events.find((e) => e.kind === "lap");
+    expect(lap).toMatchObject({ playerId: "a", amount: config.lapBonus });
   });
 
   it("Introduction en Bourse pays a bonus, Krach takes a share of the cash", () => {
@@ -149,6 +151,25 @@ describe("spiral board", () => {
     expect(ipo.players[0]!.cash).toBe(config.startingCash + config.ipoBonus);
     const krach = at(createGame(P, 1), "krach-1");
     expect(krach.players[0]!.cash).toBe(config.startingCash - (config.startingCash * config.krachPercent) / 100);
+  });
+});
+
+describe("events", () => {
+  it("records the roll, the card and the purchases of the turn, with growing ids", () => {
+    let g = at(createGame(P, 1), "pekin-hub");
+    g = ok(g, { type: "BUY", playerId: "a", purchases: { samsong: 10 } });
+    g = ok(g, { type: "BUY", playerId: "a", purchases: { samsong: 5, macrosoft: 5 } });
+    g = ok(g, { type: "END_TURN", playerId: "a" });
+    expect(g.events.map((e) => e.kind)).toEqual(["roll", "buys"]);
+    expect(g.events[1]).toMatchObject({ playerId: "a", items: [{ company: "samsong", percent: 15, total: 15 }, { company: "macrosoft", percent: 5, total: 5 }] });
+    expect(g.events[1]!.id).toBeGreaterThan(g.events[0]!.id);
+    expect(g.turnBuys).toEqual({});
+  });
+
+  it("a Levée de fonds card shows the dice and the cash before and after", () => {
+    const g = at(createGame(P, 1), "levee-1");
+    const e = g.events.at(-1)!;
+    expect(e).toMatchObject({ kind: "levee", amount: 2 * config.leveeFundsPerPip, dice: g.lastRoll, before: config.startingCash, after: config.startingCash + 2 * config.leveeFundsPerPip });
   });
 });
 
