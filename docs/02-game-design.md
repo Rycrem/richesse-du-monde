@@ -139,7 +139,7 @@ Choix retenu : **noms modifiés** (colonne "Nom parodique" ci-dessus) et **logos
 
 - Chaque joueur a un profil léger (pas de compte) : un jeton gardé dans son navigateur, le profil (points, objets possédés, pion équipé) est sauvegardé sur le serveur (`DATA_DIR/profiles.json`).
 - Écran "Mon pion" : 4 catégories (Chapeau, Tête, Corps, Jambes), aperçu en grand, flèches pour faire défiler, vignettes de tous les objets (grisées si non possédés), achat et équipement.
-- Objets de départ gratuits dans chaque catégorie ; objets payants de 120 à 300 points (`packages/shared/src/cosmetics.ts`).
+- 5 objets gratuits par catégorie (dont des variantes de couleur), objets payants de 120 à 350 points (`packages/shared/src/cosmetics.ts`). Les nouveaux objets gratuits sont ajoutés aux profils existants au démarrage du serveur.
 - Fin de partie en ligne : points selon le classement, 120 / 60 / 40 / 30 / 20 / 15. Tout le monde gagne des points, seul le 1er en gagne assez pour s'offrir un objet tout de suite (le moins cher coûte 120).
 - Les parties "sur cet écran" ne rapportent pas de points.
 

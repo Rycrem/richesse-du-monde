@@ -13,13 +13,14 @@ describe("cosmetics", () => {
     expect(RANK_POINTS).toHaveLength(6);
   });
 
-  it("has free starter items in every slot and a valid default look", () => {
-    for (const { slot } of SLOTS) expect(COSMETICS.filter((c) => c.slot === slot && c.price === 0).length).toBeGreaterThan(0);
+  it("has at least 5 free items in every slot and a valid default look", () => {
+    for (const { slot } of SLOTS) expect(COSMETICS.filter((c) => c.slot === slot && c.price === 0 && c.id !== "hat-none").length).toBeGreaterThanOrEqual(5);
     expect(isValidLook(DEFAULT_LOOK)).toBe(true);
     expect(isValidLook({ ...DEFAULT_LOOK, hat: "head-rond" })).toBe(false);
   });
 
-  it("has unique ids", () => {
+  it("has unique ids, and shapes point to an item of the same slot", () => {
     expect(new Set(COSMETICS.map((c) => c.id)).size).toBe(COSMETICS.length);
+    for (const c of COSMETICS) if (c.shape) expect(COSMETICS.find((o) => o.id === c.shape)?.slot).toBe(c.slot);
   });
 });
