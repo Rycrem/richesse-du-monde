@@ -90,6 +90,19 @@ Toute la répartition (quelle région et quelle ville détient combien de % de c
 - Chaque joueur commence avec la même somme (valeurs à équilibrer, toutes dans le JSON).
 - Un joueur peut revendre à la banque n'importe quel % à la moitié du prix d'achat. Les % retournent dans le stock des villes d'origine de l'entreprise.
 
+## Alliances
+
+- Un joueur propose une alliance à un autre, qui accepte ou refuse. On peut s'allier à plusieurs, mais il doit toujours rester au moins un adversaire hors de l'alliance.
+- Les alliés additionnent leurs % d'une même entreprise pour être le plus gros détenteur. La redevance est partagée entre eux selon leurs %.
+- Les alliés ne se paient pas de redevance entre eux.
+- On quitte l'alliance quand on veut ; elle disparaît quand il reste moins de 2 membres, ou quand elle contient tous les joueurs encore en jeu. Un joueur en faillite la quitte.
+
+## Chat en partie
+
+- Trois onglets : Public (tout le monde), Privé (à un joueur), Groupe.
+- N'importe qui peut créer un groupe avec les joueurs de son choix ; un groupe disparaît quand il reste moins de 2 membres.
+- Chaque alliance a son groupe, créé avec elle et supprimé (avec ses messages) quand elle se termine.
+
 ## Faillite et victoire
 
 - Un joueur qui ne peut pas payer une dette est en faillite : la banque couvre la dette, ses parts retournent dans le stock des villes, il est éliminé.
@@ -101,7 +114,6 @@ Toute la répartition (quelle région et quelle ville détient combien de % de c
 - Les cartes / titres d'exploitation : remplacés par des pourcentages directs.
 - Le seuil de 30 % pour toucher des redevances.
 - Payer la banque sur un double.
-- L'Association entre joueurs : peut revenir plus tard comme variante.
 - Le délai de 7 secondes pour réclamer ses redevances : remplacé par un paiement automatique.
 
 ## Noms et logos des entreprises

@@ -37,6 +37,16 @@ export interface Offer {
   awaiting: PlayerId;
 }
 
+export interface Alliance {
+  id: string;
+  members: PlayerId[];
+}
+
+export interface AllianceInvite {
+  from: PlayerId;
+  to: PlayerId;
+}
+
 export type Phase = "roll" | "act" | "auction" | "gameOver";
 export type GameMode = "classique" | "chrono";
 
@@ -55,6 +65,10 @@ export interface GameState {
   canBuyAtout: boolean;
   auction: Auction | null;
   offer: Offer | null;
+  // allied players add up their % to be the biggest holder and share the royalty
+  alliances: Alliance[];
+  allianceInvites: AllianceInvite[];
+  nextAllianceId: number;
   eliminated: PlayerId[];
   winner: PlayerId | null;
   log: string[];

@@ -29,6 +29,32 @@ export interface AccountRow {
   created: number;
 }
 
+export interface ChatMessage {
+  id: number;
+  at: number;
+  // player id, or "system"
+  from: string;
+  // "public", "dm:<id>:<id>" (ids sorted) or "group:<id>"
+  channel: string;
+  text: string;
+}
+
+export interface ChatGroup {
+  id: string;
+  name: string;
+  members: string[];
+  // set for the group that follows an in-game alliance
+  allianceId: string | null;
+}
+
+// Only what the viewer may read: public, their private conversations, their groups
+export interface ChatView {
+  messages: ChatMessage[];
+  groups: ChatGroup[];
+}
+
+export const dmChannel = (a: string, b: string) => `dm:${[a, b].sort().join(":")}`;
+
 export interface RoomView {
   code: string;
   hostId: string;
@@ -38,6 +64,7 @@ export interface RoomView {
   deadline: number | null;
   // points earned by each player at the end of the game
   rewards: Record<string, number> | null;
+  chat: ChatView;
 }
 
 export interface Session {
@@ -55,6 +82,9 @@ export interface ClientToServer {
   "room:start": (mode: GameMode, ack: Ack<null>) => void;
   "room:leave": () => void;
   "game:action": (action: Action, ack: Ack<null>) => void;
+  "chat:send": (channel: string, text: string, ack: Ack<null>) => void;
+  "chat:group": (name: string, members: string[], ack: Ack<string>) => void;
+  "chat:leave": (groupId: string, ack: Ack<null>) => void;
   "profile:get": (token: string, ack: Ack<ProfileView & { token: string }>) => void;
   "profile:buy": (token: string, itemId: string, ack: Ack<ProfileView>) => void;
   "profile:equip": (token: string, slot: Slot, itemId: string, ack: Ack<ProfileView>) => void;

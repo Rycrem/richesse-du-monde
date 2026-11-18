@@ -1,6 +1,6 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import { applyAction, config, createGame, ranking, type Action, type GameMode, type GameState } from "@stonks/engine";
-import { pointsForRank, SYSTEM_ACTIONS, type LobbyPlayer, type RoomView, type Session } from "@stonks/shared";
+import { dmChannel, pointsForRank, SYSTEM_ACTIONS, type ChatGroup, type ChatMessage, type LobbyPlayer, type RoomView, type Session } from "@stonks/shared";
 import type { Profiles } from "./profiles";
 
 interface Member extends LobbyPlayer {
@@ -17,12 +17,17 @@ export interface Room {
   timerKey: string | null;
   deadline: number | null;
   rewards: Record<string, number> | null;
+  messages: ChatMessage[];
+  groups: ChatGroup[];
+  nextChatId: number;
 }
 
 type Result<T> = { ok: true; data: T } | { ok: false; error: string };
 
 const CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 export const AFK_SECONDS = 20;
+const MAX_MESSAGES = 300;
+const MAX_TEXT = 300;
 
 // What the server plays for a disconnected player whose turn it is
 function afkAction(room: Room): Action | null {
@@ -71,7 +76,7 @@ export class Rooms {
 
   create(name: string, profileToken: string): Result<Session> {
     if (!name.trim()) return { ok: false, error: "Pseudo requis" };
-    const room: Room = { code: this.newCode(), hostId: "p1", members: [], game: null, timer: null, timerKey: null, deadline: null, rewards: null };
+    const room: Room = { code: this.newCode(), hostId: "p1", members: [], game: null, timer: null, timerKey: null, deadline: null, rewards: null, messages: [], groups: [], nextChatId: 1 };
     this.rooms.set(room.code, room);
     return { ok: true, data: this.addMember(room, name, profileToken) };
   }
@@ -149,6 +154,7 @@ export class Rooms {
     const r = applyAction(room.game!, action);
     if (!r.ok) return { ok: false, error: r.error };
     room.game = r.state;
+    this.syncAllianceGroups(room);
     if (room.game.phase === "gameOver" && !room.rewards) this.reward(room);
     this.schedule(room);
     this.onChange(room);
@@ -204,6 +210,80 @@ export class Rooms {
     });
   }
 
+  private post(room: Room, from: string, channel: string, text: string): void {
+    room.messages.push({ id: room.nextChatId++, at: Date.now(), from, channel, text });
+    if (room.messages.length > MAX_MESSAGES) room.messages.splice(0, room.messages.length - MAX_MESSAGES);
+  }
+
+  private canRead(room: Room, playerId: string, channel: string): boolean {
+    if (channel === "public") return true;
+    if (channel.startsWith("dm:")) return channel.split(":").slice(1).includes(playerId);
+    return !!room.groups.find((g) => `group:${g.id}` === channel)?.members.includes(playerId);
+  }
+
+  sendChat(code: string, playerId: string, channel: string, text: string): Result<null> {
+    const room = this.get(code);
+    if (!room) return { ok: false, error: "Partie introuvable" };
+    const clean = text.trim().slice(0, MAX_TEXT);
+    if (!clean) return { ok: false, error: "Message vide" };
+    if (channel.startsWith("dm:")) {
+      const ids = channel.split(":").slice(1);
+      const other = ids.find((id) => id !== playerId);
+      if (ids.length !== 2 || !other || channel !== dmChannel(playerId, other) || !room.members.some((m) => m.id === other)) {
+        return { ok: false, error: "Destinataire inconnu" };
+      }
+    } else if (!this.canRead(room, playerId, channel)) return { ok: false, error: "Conversation inconnue" };
+    this.post(room, playerId, channel, clean);
+    this.onChange(room);
+    return { ok: true, data: null };
+  }
+
+  createGroup(code: string, playerId: string, name: string, members: string[]): Result<string> {
+    const room = this.get(code);
+    if (!room) return { ok: false, error: "Partie introuvable" };
+    const ids = [...new Set([playerId, ...members])].filter((id) => room.members.some((m) => m.id === id));
+    if (ids.length < 2) return { ok: false, error: "Choisis au moins un autre joueur" };
+    const group: ChatGroup = { id: `g${room.nextChatId++}`, name: name.trim().slice(0, 24) || "Groupe", members: ids, allianceId: null };
+    room.groups.push(group);
+    this.post(room, "system", `group:${group.id}`, `Groupe créé par ${room.members.find((m) => m.id === playerId)!.name}`);
+    this.onChange(room);
+    return { ok: true, data: group.id };
+  }
+
+  leaveGroup(code: string, playerId: string, groupId: string): Result<null> {
+    const room = this.get(code);
+    const group = room?.groups.find((g) => g.id === groupId && g.members.includes(playerId));
+    if (!room || !group) return { ok: false, error: "Groupe introuvable" };
+    if (group.allianceId) return { ok: false, error: "Quitte l'alliance pour quitter ce groupe" };
+    group.members = group.members.filter((m) => m !== playerId);
+    if (group.members.length < 2) this.dropGroup(room, group);
+    else this.post(room, "system", `group:${group.id}`, `${room.members.find((m) => m.id === playerId)!.name} a quitté le groupe`);
+    this.onChange(room);
+    return { ok: true, data: null };
+  }
+
+  private dropGroup(room: Room, group: ChatGroup): void {
+    room.groups = room.groups.filter((g) => g !== group);
+    room.messages = room.messages.filter((m) => m.channel !== `group:${group.id}`);
+  }
+
+  // Each in-game alliance has its own group, removed with its messages when the alliance ends
+  private syncAllianceGroups(room: Room): void {
+    const alliances = room.game?.alliances ?? [];
+    for (const group of room.groups.filter((g) => g.allianceId && !alliances.some((a) => a.id === g.allianceId))) this.dropGroup(room, group);
+    for (const a of alliances) {
+      const group = room.groups.find((g) => g.allianceId === a.id);
+      const names = a.members.map((id) => room.members.find((m) => m.id === id)?.name ?? id);
+      if (!group) {
+        room.groups.push({ id: `al-${a.id}`, name: "Alliance", members: [...a.members], allianceId: a.id });
+        this.post(room, "system", `group:al-${a.id}`, `Alliance formée : ${names.join(", ")}`);
+      } else if (group.members.join() !== a.members.join()) {
+        group.members = [...a.members];
+        this.post(room, "system", `group:${group.id}`, `Alliance : ${names.join(", ")}`);
+      }
+    }
+  }
+
   // A player changed their pawn in the lobby
   refreshLook(profileToken: string): void {
     for (const room of this.rooms.values()) {
@@ -214,7 +294,7 @@ export class Rooms {
     }
   }
 
-  view(room: Room): RoomView {
+  view(room: Room, viewerId: string): RoomView {
     return {
       code: room.code,
       hostId: room.hostId,
@@ -222,6 +302,10 @@ export class Rooms {
       game: room.game,
       deadline: room.deadline,
       rewards: room.rewards,
+      chat: {
+        messages: room.messages.filter((m) => this.canRead(room, viewerId, m.channel)),
+        groups: room.groups.filter((g) => g.members.includes(viewerId)),
+      },
     };
   }
 }

@@ -21,7 +21,7 @@ describe("rooms", () => {
   it("creates a room with a 4-char code and lets others join", () => {
     const { rooms, host } = setup();
     expect(host.code).toMatch(/^[A-Z2-9]{4}$/);
-    expect(rooms.view(rooms.get(host.code)!).players.map((p) => p.name)).toEqual(["Alice", "Bob"]);
+    expect(rooms.view(rooms.get(host.code)!, "p1").players.map((p) => p.name)).toEqual(["Alice", "Bob"]);
   });
 
   it("only the host starts, and nobody joins after the start", () => {
@@ -43,7 +43,7 @@ describe("rooms", () => {
     const { rooms, host, guest } = setup();
     rooms.start(host.code, host.playerId, "classique");
     rooms.setConnected(host.code, guest.playerId, false);
-    expect(rooms.view(rooms.get(host.code)!).players[1]!.connected).toBe(false);
+    expect(rooms.view(rooms.get(host.code)!, "p1").players[1]!.connected).toBe(false);
     expect(rooms.rejoin(host.code, guest.token)).toMatchObject({ ok: true, data: { playerId: "p2" } });
     expect(rooms.rejoin(host.code, "bad").ok).toBe(false);
   });
@@ -96,7 +96,7 @@ describe("rooms", () => {
     profiles.award("tok-a", 500);
     expect(profiles.buy("tok-a", "hat-couronne").ok).toBe(true);
     rooms.refreshLook("tok-a");
-    expect(rooms.view(rooms.get(host.code)!).players[0]!.look.hat).toBe("hat-couronne");
+    expect(rooms.view(rooms.get(host.code)!, "p1").players[0]!.look.hat).toBe("hat-couronne");
   });
 });
 
@@ -110,5 +110,54 @@ describe("profiles", () => {
     profiles.award("t", crown.price);
     expect(profiles.buy("t", crown.id)).toMatchObject({ ok: true, data: { points: 0 } });
     expect(profiles.equip("t", "hat", "hat-casquette")).toMatchObject({ ok: true, data: { look: { hat: "hat-casquette" } } });
+  });
+});
+
+describe("chat", () => {
+  function three() {
+    const s = setup();
+    const third = s.rooms.join(s.host.code, "Chloé", "tok-c");
+    if (!third.ok) throw new Error();
+    return { ...s, code: s.host.code, room: s.rooms.get(s.host.code)! };
+  }
+  const texts = (s: ReturnType<typeof three>, viewer: string) => s.rooms.view(s.room, viewer).chat.messages.map((m) => m.text);
+
+  it("public messages reach everyone, private ones only the two players", () => {
+    const s = three();
+    expect(s.rooms.sendChat(s.code, "p1", "public", "salut").ok).toBe(true);
+    expect(s.rooms.sendChat(s.code, "p1", "dm:p1:p2", "psst").ok).toBe(true);
+    expect(s.rooms.sendChat(s.code, "p3", "dm:p1:p2", "espion").ok).toBe(false);
+    expect(s.rooms.sendChat(s.code, "p1", "dm:p1:p9", "?").ok).toBe(false);
+    expect(texts(s, "p2")).toEqual(["salut", "psst"]);
+    expect(texts(s, "p3")).toEqual(["salut"]);
+  });
+
+  it("groups are visible to their members only, and vanish when one member is left", () => {
+    const s = three();
+    const g = s.rooms.createGroup(s.code, "p1", "Les loups", ["p2"]);
+    if (!g.ok) throw new Error(g.error);
+    s.rooms.sendChat(s.code, "p2", `group:${g.data}`, "on vise Chloé");
+    expect(s.rooms.sendChat(s.code, "p3", `group:${g.data}`, "moi aussi").ok).toBe(false);
+    expect(texts(s, "p1")).toContain("on vise Chloé");
+    expect(texts(s, "p3")).toEqual([]);
+    expect(s.rooms.view(s.room, "p3").chat.groups).toEqual([]);
+    s.rooms.leaveGroup(s.code, "p2", g.data);
+    expect(s.rooms.view(s.room, "p1").chat.groups).toEqual([]);
+    expect(texts(s, "p1")).toEqual([]);
+  });
+
+  it("an alliance creates a group that is removed when the alliance ends", () => {
+    const s = three();
+    s.rooms.start(s.code, "p1", "classique");
+    s.rooms.act(s.code, "p1", { type: "ALLIANCE_INVITE", playerId: "p1", targetId: "p2" });
+    s.rooms.act(s.code, "p2", { type: "ALLIANCE_ANSWER", playerId: "p2", fromId: "p1", accept: true });
+    const [group] = s.rooms.view(s.room, "p2").chat.groups;
+    expect(group).toMatchObject({ name: "Alliance", members: ["p1", "p2"] });
+    expect(s.rooms.view(s.room, "p3").chat.groups).toEqual([]);
+    expect(s.rooms.leaveGroup(s.code, "p1", group!.id).ok).toBe(false);
+    s.rooms.sendChat(s.code, "p1", `group:${group!.id}`, "secret");
+    s.rooms.act(s.code, "p2", { type: "ALLIANCE_LEAVE", playerId: "p2" });
+    expect(s.rooms.view(s.room, "p1").chat.groups).toEqual([]);
+    expect(texts(s, "p1")).not.toContain("secret");
   });
 });

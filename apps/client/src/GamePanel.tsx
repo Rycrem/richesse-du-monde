@@ -1,4 +1,4 @@
-import { board, buyableStock, config, currentPlayer, netWorth, ranking, type GameState } from "@stonks/engine";
+import { activePlayers, allianceOf, board, buyableStock, config, currentPlayer, netWorth, ranking, type GameState } from "@stonks/engine";
 import { useEffect, useState } from "react";
 import { companyById, money, PLAYER_COLORS } from "./format";
 import { useStore } from "./store";
@@ -83,6 +83,8 @@ export function GamePanel({ game }: { game: GameState }) {
 
       {game.offer && <OfferPanel game={game} nameOf={nameOf} />}
 
+      {you && <AlliancePanel game={game} you={you} nameOf={nameOf} />}
+
       <Players game={game} colorOf={colorOf} />
 
       <div className="log">
@@ -100,6 +102,55 @@ export function GamePanel({ game }: { game: GameState }) {
   );
 }
 
+// Online only: each player manages their own alliance
+function AlliancePanel({ game, you, nameOf }: { game: GameState; you: string; nameOf: (id: string) => string }) {
+  const dispatch = useStore((s) => s.dispatch);
+  const mine = allianceOf(game, you);
+  const invites = game.allianceInvites.filter((i) => i.to === you);
+  const sent = game.allianceInvites.filter((i) => i.from === you).map((i) => i.to);
+  const alive = activePlayers(game);
+  const room = (mine?.members.length ?? 1) + 1 < alive.length;
+  const candidates = alive.filter((p) => p.id !== you && !allianceOf(game, p.id) && !sent.includes(p.id));
+  const [target, setTarget] = useState("");
+  if (game.players.find((p) => p.id === you)?.bankrupt) return null;
+  return (
+    <details className="card" open={invites.length > 0}>
+      <summary>Alliance{mine ? ` : ${mine.members.map(nameOf).join(", ")}` : ""}</summary>
+      <p className="muted">Les alliés additionnent leurs % pour être le plus gros détenteur, se partagent la redevance selon leurs % et ne se paient pas entre eux.</p>
+      {invites.map((i) => (
+        <div key={i.from} className="alliance-box">
+          <span>
+            <strong>{nameOf(i.from)}</strong> te propose une alliance
+          </span>
+          <div className="row">
+            <button className="primary" onClick={() => dispatch({ type: "ALLIANCE_ANSWER", playerId: you, fromId: i.from, accept: true })}>
+              Accepter
+            </button>
+            <button onClick={() => dispatch({ type: "ALLIANCE_ANSWER", playerId: you, fromId: i.from, accept: false })}>Refuser</button>
+          </div>
+        </div>
+      ))}
+      {sent.length > 0 && <small className="muted">En attente : {sent.map(nameOf).join(", ")}</small>}
+      {room && candidates.length > 0 && (
+        <div className="row">
+          <select value={target} onChange={(e) => setTarget(e.target.value)}>
+            <option value="">Choisir un joueur</option>
+            {candidates.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+          <button disabled={!target} onClick={() => dispatch({ type: "ALLIANCE_INVITE", playerId: you, targetId: target }) && setTarget("")}>
+            Proposer
+          </button>
+        </div>
+      )}
+      {mine && <button onClick={() => dispatch({ type: "ALLIANCE_LEAVE", playerId: you })}>Quitter l'alliance</button>}
+    </details>
+  );
+}
+
 function Players({ game, colorOf }: { game: GameState; colorOf: (id: string) => string }) {
   const room = useStore((s) => s.room);
   const offline = new Set(room?.players.filter((p) => !p.connected).map((p) => p.id));
@@ -111,6 +162,7 @@ function Players({ game, colorOf }: { game: GameState; colorOf: (id: string) => 
             <span className="dot" style={{ background: colorOf(p.id) }} />
             <strong>{p.name}</strong>
             {offline.has(p.id) && <span className="offline">déconnecté</span>}
+            {allianceOf(game, p.id) && <span className="chip alliance">Alliance {allianceOf(game, p.id)!.id.slice(1)}</span>}
             <span className="spacer" />
             {p.bankrupt ? "en faillite" : money(p.cash)}
           </div>
