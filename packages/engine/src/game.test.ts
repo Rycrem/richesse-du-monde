@@ -255,56 +255,85 @@ describe("trading with other players", () => {
 });
 
 describe("auctions", () => {
+  // Alice lands on Enchères; Bob owns 50 % of Appel
   function auction(): GameState {
     const g = createGame(P, 1);
-    g.players[0]!.laps = 1;
-    g.players[0]!.holdings = { appel: 50 };
+    g.players[1]!.holdings = { appel: 50 };
     return at(g, "encheres-1");
   }
 
-  it("forces a sale of dice x 5 % at half price, highest bid wins", () => {
+  it("the lander picks an opponent's company; dice x 5 % go to the highest bidder, the owner is paid", () => {
     let g = auction();
     expect(g.phase).toBe("auction");
     const toSell = g.auction!.percentToSell;
-    g = ok(g, { type: "AUCTION_CHOOSE", playerId: "a", company: "appel" });
+    expect(err(g, { type: "AUCTION_CHOOSE", playerId: "a", ownerId: "c", company: "appel" })).toMatch(/détient pas/);
+    g = ok(g, { type: "AUCTION_CHOOSE", playerId: "a", ownerId: "b", company: "appel" });
     expect(g.auction!.startPrice).toBe(Math.floor(toSell * price("appel") * config.bankBuybackRatio));
-    expect(err(g, { type: "BID", playerId: "a", amount: 99999 })).toMatch(/interdite/);
-    g = ok(g, { type: "BID", playerId: "b", amount: g.auction!.startPrice });
+    expect(err(g, { type: "BID", playerId: "b", amount: 99999 })).toMatch(/interdite/);
+    g = ok(g, { type: "BID", playerId: "a", amount: g.auction!.startPrice });
     expect(err(g, { type: "BID", playerId: "c", amount: g.auction!.highestBid + 1 })).toMatch(/minimum/);
     const bid = g.auction!.highestBid + config.minBidIncrement;
     g = ok(g, { type: "BID", playerId: "c", amount: bid });
+    expect(g.auction!.bids.map((x) => x.playerId)).toEqual(["a", "c"]);
     g = ok(g, { type: "AUCTION_CLOSE" });
     expect(g.players[2]!.holdings.appel).toBe(toSell);
-    expect(g.players[0]!.holdings.appel).toBe(50 - toSell);
-    expect(g.players[0]!.cash).toBe(config.startingCash + bid);
+    expect(g.players[1]!.holdings.appel).toBe(50 - toSell);
+    expect(g.players[1]!.cash).toBe(config.startingCash + bid);
+    expect(g.events.at(-1)).toMatchObject({ kind: "auction", winnerId: "c", price: bid, sellerId: "b" });
     expect(g.phase).toBe("act");
   });
 
-  it("without bids the bank buys at half price and refills city stock", () => {
+  it("without bids the bank buys at 75 % and refills city stock", () => {
     let g = auction();
-    g = ok(g, { type: "AUCTION_CHOOSE", playerId: "a", company: "appel" });
+    g = ok(g, { type: "AUCTION_CHOOSE", playerId: "a", ownerId: "b", company: "appel" });
     const start = g.auction!.startPrice;
     g = ok(g, { type: "AUCTION_CLOSE" });
-    expect(g.players[0]!.cash).toBe(config.startingCash + start);
+    expect(g.players[1]!.cash).toBe(config.startingCash + start);
   });
 
-  it("an Atout skips the auction", () => {
+  it("the targeted owner can cancel it with an Atout", () => {
     let g = createGame(P, 1);
-    g.players[0]!.laps = 1;
-    g.players[0]!.atouts = 1;
-    g.players[0]!.holdings = { appel: 50 };
+    g.players[1]!.atouts = 1;
+    g.players[1]!.holdings = { appel: 50 };
     g = at(g, "encheres-1");
-    g = ok(g, { type: "USE_ATOUT", playerId: "a" });
+    g = ok(g, { type: "AUCTION_CHOOSE", playerId: "a", ownerId: "b", company: "appel" });
+    g = ok(g, { type: "USE_ATOUT", playerId: "b" });
     expect(g.phase).toBe("act");
-    expect(g.players[0]!.holdings.appel).toBe(50);
-    expect(g.players[0]!.atouts).toBe(0);
+    expect(g.players[1]!.holdings.appel).toBe(50);
+    expect(g.players[1]!.atouts).toBe(0);
   });
 
-  it("does nothing before the first lap", () => {
+  it("works from the first lap, and does nothing when no opponent holds anything", () => {
+    expect(auction().phase).toBe("auction");
+    expect(at(createGame(P, 1), "encheres-1").phase).toBe("act");
+  });
+});
+
+describe("debts", () => {
+  it("a player who can cover a payment by selling picks what to sell before ending the turn", () => {
     let g = createGame(P, 1);
-    g.players[0]!.holdings = { appel: 50 };
-    g = at(g, "encheres-1");
-    expect(g.phase).toBe("act");
+    g.royalties.berlin = "intol";
+    g.players[1]!.holdings = { intol: 50 };
+    g.players[0]!.cash = 0;
+    g.players[0]!.holdings = { nvidio: 60 };
+    g = at(g, "berlin");
+    const due = 50 * royalty("intol");
+    expect(g.players[0]!.cash).toBe(-due);
+    expect(g.players[0]!.bankrupt).toBe(false);
+    expect(err(g, { type: "END_TURN", playerId: "a" })).toMatch(/dette/);
+    g = ok(g, { type: "SELL_TO_BANK", playerId: "a", company: "nvidio", percent: 60 });
+    expect(g.players[0]!.cash).toBeGreaterThanOrEqual(0);
+    g = ok(g, { type: "END_TURN", playerId: "a" });
+  });
+
+  it("SETTLE_DEBT sells the cheapest holdings automatically, just enough", () => {
+    let g = createGame(P, 1);
+    g.players[0]!.cash = -100;
+    g.players[0]!.holdings = { nvidio: 10, sonyx: 10 };
+    g = ok(g, { type: "SETTLE_DEBT", playerId: "a" });
+    expect(g.players[0]!.cash).toBeGreaterThanOrEqual(0);
+    expect(g.players[0]!.holdings.nvidio).toBe(10);
+    expect(g.players[0]!.holdings.sonyx).toBeLessThan(10);
   });
 });
 

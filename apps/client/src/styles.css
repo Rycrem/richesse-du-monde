@@ -186,3 +186,30 @@ button.link:disabled { opacity: 0.5; cursor: default; }
 .money.down { color: #ef476f; }
 .chips .chip { animation: pop 0.4s both; }
 .panel > .card, .panel > button, .panel > p { animation: rise 0.3s ease-out both; }
+
+/* auction screen over the board */
+.auction-screen { position: absolute; left: 50%; top: 50%; z-index: 25; width: min(640px, calc(100% - 24px)); max-height: calc(100% - 24px); overflow-y: auto; background: #1b263b; border-radius: 22px; box-shadow: 0 18px 44px #000c; animation: card-in 0.42s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
+.auction-screen.leaving { animation: card-out 0.38s ease-in both; }
+.auction-top { background: #e94f6f; padding: 14px 20px; font-weight: 900; letter-spacing: 2px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1; }
+.timer-pill { background: #0d1b2a; border-radius: 999px; padding: 2px 12px; font-variant-numeric: tabular-nums; }
+.auction-choose { padding: 16px 20px 20px; display: flex; flex-direction: column; gap: 12px; }
+.owners { display: flex; flex-direction: column; gap: 14px; }
+.owner { animation: rise 0.4s both; }
+.owner-cards { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+.card-button { padding: 0; background: none; border: none; cursor: pointer; transition: transform 0.15s; }
+.card-button:hover { transform: translateY(-6px) scale(1.04); }
+.auction-bid { display: flex; gap: 20px; padding: 20px; }
+.auction-bid .lot { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; color: var(--muted); }
+.auction-bid .bids { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.auction-bid .bar { height: 6px; background: #24324c; border-radius: 3px; overflow: hidden; }
+.auction-bid .bar b { display: block; height: 100%; background: #e8c45a; transition: width 0.1s linear; }
+.auction-bid .bid { display: flex; justify-content: space-between; background: #24324c; border-radius: 10px; padding: 10px 14px; font-weight: 700; animation: rise 0.3s both; }
+.auction-bid .bid.best { outline: 2px solid #06d6a0; }
+.bid-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.bid-row button { flex: 1; }
+.who-inline { display: inline-flex; align-items: center; gap: 5px; font-weight: 700; color: #e8edf5; }
+.auction-result { display: flex; gap: 14px; align-items: center; text-align: left; }
+.auction-result .text { font-size: 16px; }
+.debt { border: 2px solid #ef476f; }
+.debt-row button { padding: 4px 10px; }
+@media (max-width: 700px) { .auction-bid { flex-direction: column; align-items: center; } }

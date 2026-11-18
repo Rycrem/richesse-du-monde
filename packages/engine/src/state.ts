@@ -18,14 +18,17 @@ export type BuyScope =
   | { kind: "region"; region: string }
   | { kind: "world" };
 
+// The player who lands on Enchères picks an opponent and one of their companies; everyone else bids
 export interface Auction {
-  sellerId: PlayerId;
+  chooserId: PlayerId;
+  sellerId: PlayerId | null;
   percentToSell: number;
   company: CompanyId | null;
   percent: number;
   startPrice: number;
   highestBid: number;
   highestBidderId: PlayerId | null;
+  bids: { playerId: PlayerId; amount: number }[];
 }
 
 export interface Offer {
@@ -54,6 +57,7 @@ export type GameEvent =
   | { id: number; kind: "levee"; playerId: PlayerId; text: string; amount: number; dice: [number, number]; before: number; after: number }
   | { id: number; kind: "royalty"; playerId: PlayerId; company: string; amount: number; to: PlayerId[] }
   | { id: number; kind: "buys"; playerId: PlayerId; items: { company: string; percent: number; total: number }[] }
+  | { id: number; kind: "auction"; playerId: PlayerId; sellerId: PlayerId; company: string; percent: number; price: number; winnerId: PlayerId | null; cancelled: boolean }
   | { id: number; kind: "bankrupt"; playerId: PlayerId }
   | { id: number; kind: "win"; playerId: PlayerId };
 export type NewGameEvent = GameEvent extends infer E ? (E extends GameEvent ? Omit<E, "id"> : never) : never;

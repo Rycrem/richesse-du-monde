@@ -66,7 +66,8 @@ export function GamePanel({ game }: { game: GameState }) {
         </div>
       )}
 
-      {game.phase === "auction" && <AuctionPanel game={game} nameOf={nameOf} />}
+      {game.phase === "auction" && <p className="muted">Enchères en cours sur le plateau...</p>}
+      {me.cash < 0 && game.phase === "act" && <DebtPanel game={game} />}
 
       {game.phase === "act" && !game.offer && myTurn && (
         <>
@@ -309,6 +310,37 @@ function OfferPanel({ game, nameOf }: { game: GameState; nameOf: (id: string) =>
   );
 }
 
+// Short of cash after a payment: the player chooses what to sell to the bank
+function DebtPanel({ game }: { game: GameState }) {
+  const { dispatch, you } = useStore();
+  const me = currentPlayer(game);
+  if (you !== null && you !== me.id) return <p className="muted">{me.name} doit vendre des actions pour payer sa dette.</p>;
+  const ratio = config.bankBuybackRatio;
+  return (
+    <div className="card highlight debt">
+      <h3>Dette : {money(-me.cash)}</h3>
+      <p className="muted">Choisis quelles actions revendre à la banque ({ratio * 100} % du prix) pour revenir à 0.</p>
+      {Object.entries(me.holdings).map(([c, pct]) => {
+        const co = companyById.get(c)!;
+        const per = co.pricePerPercent * ratio;
+        const needed = Math.min(pct, Math.ceil(-me.cash / per));
+        return (
+          <div key={c} className="row debt-row">
+            <span className="chip" style={{ background: co.color }}>
+              <img src={`/logos/${c}.svg`} alt="" />
+              {co.name} {pct} %
+            </span>
+            <span className="spacer" />
+            <button onClick={() => dispatch({ type: "SELL_TO_BANK", playerId: me.id, company: c, percent: 1 })}>1 %</button>
+            <button onClick={() => dispatch({ type: "SELL_TO_BANK", playerId: me.id, company: c, percent: needed })}>{needed} %</button>
+          </div>
+        );
+      })}
+      <button onClick={() => dispatch({ type: "SETTLE_DEBT", playerId: me.id })}>Vendre automatiquement (les moins chères d'abord)</button>
+    </div>
+  );
+}
+
 function SellForm({ game }: { game: GameState }) {
   const dispatch = useStore((s) => s.dispatch);
   const me = currentPlayer(game);
@@ -331,78 +363,6 @@ function SellForm({ game }: { game: GameState }) {
       <input type="number" min={1} max={me.holdings[co]} value={percent} onChange={(e) => setPercent(Number(e.target.value))} />
       <button onClick={() => dispatch({ type: "SELL_TO_BANK", playerId: me.id, company: co, percent })}>Vendre pour {money(value)}</button>
     </details>
-  );
-}
-
-function AuctionPanel({ game, nameOf }: { game: GameState; nameOf: (id: string) => string }) {
-  const { dispatch, you, online } = useStore();
-  const a = game.auction!;
-  const seller = game.players.find((p) => p.id === a.sellerId)!;
-  const bidders = game.players.filter((p) => !p.bankrupt && p.id !== a.sellerId && (you === null || p.id === you));
-  const [bidderId, setBidderId] = useState(bidders[0]?.id ?? "");
-  const min = a.highestBidderId ? a.highestBid + config.minBidIncrement : a.startPrice;
-  const [amount, setAmount] = useState(min);
-  const [remaining, setRemaining] = useState(config.auctionTimeoutSeconds);
-  useEffect(() => setAmount(min), [min]);
-
-  useEffect(() => {
-    if (!a.company || online) return;
-    setRemaining(config.auctionTimeoutSeconds);
-    const id = setInterval(() => setRemaining((r) => r - 1), 1000);
-    return () => clearInterval(id);
-  }, [a.company, a.highestBid]);
-
-  useEffect(() => {
-    if (!online && a.company && remaining <= 0) dispatch({ type: "AUCTION_CLOSE" });
-  }, [online, remaining, a.company, dispatch]);
-
-  if (!a.company) {
-    return (
-      <div className="card highlight">
-        <h3>Enchères !</h3>
-        <p>
-          {seller.name} doit mettre aux enchères {a.percentToSell} % d'une entreprise.
-        </p>
-        {(you === null || you === seller.id) && (
-        <div className="chips">
-          {Object.entries(seller.holdings).map(([c, pct]) => (
-            <button key={c} className="chip" style={{ background: companyById.get(c)!.color }} onClick={() => dispatch({ type: "AUCTION_CHOOSE", playerId: seller.id, company: c })}>
-              {companyById.get(c)!.name} ({pct} %)
-            </button>
-          ))}
-        </div>
-        )}
-        {seller.atouts > 0 && (you === null || you === seller.id) && <button onClick={() => dispatch({ type: "USE_ATOUT", playerId: seller.id })}>Utiliser un Atout</button>}
-      </div>
-    );
-  }
-
-  return (
-    <div className="card highlight">
-      <h3>
-        Enchère : {a.percent} % de {companyById.get(a.company)!.name}
-      </h3>
-      <p>
-        Mise à prix {money(a.startPrice)}.{" "}
-        {a.highestBidderId ? `Meilleure offre : ${money(a.highestBid)} (${nameOf(a.highestBidderId)})` : "Aucune offre."}
-      </p>
-      {online ? <Countdown prefix="Adjugé dans" /> : <p className="timer">Adjugé dans {Math.max(0, remaining)} s</p>}
-      {bidders.length > 0 && (
-      <div className="row">
-        <select value={bidderId} onChange={(e) => setBidderId(e.target.value)}>
-          {bidders.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
-        <input type="number" min={min} step={config.minBidIncrement} value={amount} onChange={(e) => setAmount(Number(e.target.value))} />
-        <button className="primary" onClick={() => dispatch({ type: "BID", playerId: bidderId, amount })}>
-          Enchérir
-        </button>
-      </div>
-      )}
-    </div>
   );
 }
 
