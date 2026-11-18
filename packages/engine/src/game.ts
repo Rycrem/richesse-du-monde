@@ -154,7 +154,7 @@ function payRoyalty(state: GameState, payer: Player, cellId: string): void {
     charge(state, payer, share);
     // the bank covers a bankrupt player's debt, so the holder is always paid in full
     h.cash += share;
-    state.log.push(`${payer.name} paie ${share} à ${h.name} (${companyById.get(company)!.name})`);
+    state.log.push(`${payer.name} paie ${share} k$ à ${h.name} (${companyById.get(company)!.name})`);
     if (payer.bankrupt) return;
   }
 }
