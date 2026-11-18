@@ -54,7 +54,7 @@ Chaque jalon = une branche + une PR, testée avant de passer au suivant.
 | # | Jalon | Contenu | Livrable vérifiable |
 |---|---|---|---|
 | 0 | Socle | Monorepo, lint, Vitest, CI GitHub Actions | `pnpm test` vert en CI |
-| 1 | Données | Plateau 40 cases, 12 entreprises, 96 cartes de parts, cartes Actu Tech et Atout en JSON | Données validées par des tests (chaque entreprise = 100 %) |
+| 1 | Données | Plateau 40 cases (entreprise attribuée à chaque hub), 12 entreprises avec noms et logos parodiques SVG, 96 cartes de parts, cartes Actu Tech et Atout en JSON | Données validées par des tests (chaque entreprise = 100 %) |
 | 2 | Moteur | Déplacement, achat libre, paiement au plus gros détenteur, rachat entre joueurs, faillite, victoire | Tests unitaires + partie simulée complète par des bots |
 | 3 | Jeu local | Plateau SVG, panneau joueur avec ses parts par entreprise, achat des cartes de la case, plusieurs joueurs sur un même écran | Une partie jouable de bout en bout dans un onglet |
 | 4 | En ligne | Serveur, salles avec code, lobby, synchro, reconnexion | 2 navigateurs jouent ensemble, test Playwright |
@@ -67,14 +67,13 @@ Après le jalon 7, pistes possibles : bots pour compléter une table, classement
 ## Assets et propriété intellectuelle
 
 - Aucun élément graphique, nom, logo ou texte du jeu existant n'est réutilisé.
-- Aucun logo d'entreprise. Noms d'entreprises parodiques par défaut, noms réels possibles via un fichier de données pour les parties privées (voir `02-game-design.md`).
+- Entreprises affichées sous des noms modifiés, avec des logos parodiques redessinés de zéro en SVG (aucun fichier de logo officiel importé ou retouché). Voir `02-game-design.md`.
 - Les visuels sont faits pour le projet (SVG en code) ou pris dans des banques libres (CC0, licence notée dans `assets/LICENSES.md`).
 - Le nom affiché du jeu est un titre original ("Comptoirs du Globe" en attendant mieux).
 
 ## Points à valider avant de coder
 
 1. Le nom affiché du jeu.
-2. Noms d'entreprises réels ou parodiques.
-3. Règle d'égalité entre plus gros détenteurs (proposition : le premier arrivé garde le bénéfice).
-4. Le mode de victoire par défaut (Chrono ou Classique).
-5. L'hébergement visé (VPS, NAS perso, service cloud).
+2. Règle d'égalité entre plus gros détenteurs (proposition : le premier arrivé garde le bénéfice).
+3. Le mode de victoire par défaut (Chrono ou Classique).
+4. L'hébergement visé (VPS, NAS perso, service cloud).
