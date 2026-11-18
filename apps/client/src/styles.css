@@ -26,7 +26,8 @@ button.primary { background: var(--accent); color: #0d1b2a; border: none; font-w
 button.ghost { background: transparent; }
 input, select { background: #0d1b2a; color: var(--text); border: 1px solid #415a77; border-radius: 6px; padding: 6px 8px; min-width: 0; }
 .layout { display: flex; height: 100vh; }
-.board { flex: 1; min-width: 0; touch-action: none; cursor: grab; }
+.board { flex: 1; min-width: 0; touch-action: none; cursor: grab; position: relative; overflow: hidden; }
+.board canvas { display: block; }
 .panel { width: 380px; overflow-y: auto; background: var(--panel); padding: 16px; display: flex; flex-direction: column; gap: 12px; }
 .card { background: var(--card); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
 .card h3 { margin: 0; }

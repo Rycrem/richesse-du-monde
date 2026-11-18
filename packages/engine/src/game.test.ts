@@ -46,12 +46,12 @@ const price = (id: string) => companies.find((c) => c.id === id)!.pricePerPercen
 const royalty = (id: string) => companies.find((c) => c.id === id)!.royaltyPerPercent;
 
 describe("setup", () => {
-  it("gives each city one royalty company, 2 per company", () => {
+  it("gives each city one royalty company, 4 per company", () => {
     const g = createGame(P, 7);
     const counts: Record<string, number> = {};
     for (const c of Object.values(g.royalties)) counts[c] = (counts[c] ?? 0) + 1;
-    expect(Object.keys(g.royalties)).toHaveLength(24);
-    for (const c of companies) expect(counts[c.id]).toBe(2);
+    expect(Object.keys(g.royalties)).toHaveLength(48);
+    for (const c of companies) expect(counts[c.id]).toBe(4);
   });
 
   it("is deterministic for a seed and varies across seeds", () => {
@@ -82,19 +82,19 @@ describe("turn order", () => {
 
 describe("buying", () => {
   it("shows the city's stock and buys any split up to 30 %", () => {
-    let g = at(createGame(P, 1), "paris");
-    expect(buyableStock(g)).toEqual({ amb: 10, amazone: 15, macrosoft: 15 });
+    let g = at(createGame(P, 1), "pekin-hub");
+    expect(buyableStock(g)).toEqual({ samsong: 20, macrosoft: 20 });
     const cash = g.players[0]!.cash;
-    g = ok(g, { type: "BUY", playerId: "a", purchases: { amb: 10 } });
-    expect(g.players[0]!.holdings.amb).toBe(10);
-    expect(g.players[0]!.cash).toBe(cash - 10 * price("amb"));
-    expect(g.stocks.paris!.amb).toBe(0);
+    g = ok(g, { type: "BUY", playerId: "a", purchases: { samsong: 10 } });
+    expect(g.players[0]!.holdings.samsong).toBe(10);
+    expect(g.players[0]!.cash).toBe(cash - 10 * price("samsong"));
+    expect(g.stocks["pekin-hub"]!.samsong).toBe(10);
   });
 
   it("caps the cumulative purchase at 30 % per landing", () => {
-    let g = at(createGame(P, 1), "seattle");
+    let g = at(createGame(P, 1), "pekin-hub");
     g.players[0]!.cash = 1_000_000;
-    g = ok(g, { type: "BUY", playerId: "a", purchases: { amazone: 20 } });
+    g = ok(g, { type: "BUY", playerId: "a", purchases: { samsong: 20 } });
     expect(err(g, { type: "BUY", playerId: "a", purchases: { macrosoft: 11 } })).toMatch(/30/);
     g = ok(g, { type: "BUY", playerId: "a", purchases: { macrosoft: 10 } });
     expect(g.boughtThisTurn).toBe(30);
@@ -102,21 +102,21 @@ describe("buying", () => {
 
   it("refuses more than the city has, or more than the player can pay", () => {
     let g = at(createGame(P, 1), "paris");
-    expect(err(g, { type: "BUY", playerId: "a", purchases: { amb: 11 } })).toMatch(/Stock/);
+    expect(err(g, { type: "BUY", playerId: "a", purchases: { nvidio: 11 } })).toMatch(/Stock/);
     g.players[0]!.cash = 0;
-    expect(err(g, { type: "BUY", playerId: "a", purchases: { amb: 1 } })).toMatch(/argent/);
+    expect(err(g, { type: "BUY", playerId: "a", purchases: { nvidio: 1 } })).toMatch(/argent/);
   });
 
   it("other players cannot buy during someone else's turn", () => {
     const g = at(createGame(P, 1), "paris");
-    expect(err(g, { type: "BUY", playerId: "b", purchases: { amb: 1 } })).toMatch(/impossible/);
+    expect(err(g, { type: "BUY", playerId: "b", purchases: { nvidio: 1 } })).toMatch(/impossible/);
   });
 
   it("regional choice only sells companies the player already holds", () => {
     let g = createGame(P, 1);
-    g.players[0]!.holdings = { amb: 5 };
+    g.players[0]!.holdings = { nvidio: 5 };
     g = at(g, "choix-europe");
-    expect(buyableStock(g)).toEqual({ amb: 10 });
+    expect(buyableStock(g)).toEqual({ nvidio: 10 });
   });
 
   it("world choice requires a completed lap", () => {
@@ -124,6 +124,28 @@ describe("buying", () => {
     g.players[0]!.holdings = { amb: 5 };
     g = at(g, "mondial-1");
     expect(buyableStock(g)).toEqual({});
+  });
+});
+
+describe("spiral board", () => {
+  it("goes from the outer ring straight into the hubs, then back to Départ with a new lap", () => {
+    let g = createGame(P, 3);
+    g.players[0]!.position = 46;
+    g = landOn(g, "ipo-1");
+    expect(g.players[0]!.laps).toBe(0);
+    g = ok(g, { type: "END_TURN", playerId: "a" });
+    g = { ...g, current: 0, phase: "roll" };
+    g.players[0]!.position = 78;
+    g = landOn(g, "seattle");
+    expect(g.players[0]!.position).toBe(1);
+    expect(g.players[0]!.laps).toBe(1);
+  });
+
+  it("Introduction en Bourse pays a bonus, Krach takes a share of the cash", () => {
+    const ipo = at(createGame(P, 1), "ipo-1");
+    expect(ipo.players[0]!.cash).toBe(config.startingCash + config.ipoBonus);
+    const krach = at(createGame(P, 1), "krach-1");
+    expect(krach.players[0]!.cash).toBe(config.startingCash - (config.startingCash * config.krachPercent) / 100);
   });
 });
 
@@ -180,7 +202,7 @@ describe("royalties", () => {
     expect(alice.bankrupt).toBe(true);
     expect(g.eliminated).toEqual(["a"]);
     expect(g.players[g.current]!.id).toBe("b");
-    expect(g.stocks.tokyo!.sonyx).toBe(40);
+    expect(g.stocks.mexico!.sonyx).toBe(10);
   });
 });
 

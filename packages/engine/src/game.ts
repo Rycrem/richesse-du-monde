@@ -237,6 +237,16 @@ function landOn(state: GameState, p: Player, pips: number): void {
       };
       break;
     }
+    case "ipo":
+      p.cash += config.ipoBonus;
+      state.log.push(`${p.name} réussit son introduction en Bourse : +${config.ipoBonus} k$`);
+      break;
+    case "krach": {
+      const loss = Math.floor((p.cash * config.krachPercent) / 100);
+      p.cash -= loss;
+      state.log.push(`Krach boursier : ${p.name} perd ${loss} k$`);
+      break;
+    }
     case "depart":
       break;
   }

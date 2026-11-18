@@ -37,24 +37,31 @@ Les mécaniques suivent le livret de "Richesses du Monde" fourni par Emeric (red
 - Prix = cours de l'entreprise (prix pour 1 %) x pourcentage acheté. Les entreprises chères (Nvidio, Appel) rapportent plus mais coûtent plus.
 - Achat par tranches de 1 %.
 
-## Plateau (40 cases)
+## Plateau (80 cases en spirale)
 
-Un anneau de 40 cases, en 6 régions de couleur : Amérique du Nord, Amérique latine, Europe, Asie de l'Est, Asie du Sud et Moyen-Orient, Afrique et Océanie.
+Le plateau a deux anneaux : un anneau extérieur de 48 cases (les 6 régions du monde) et un anneau intérieur surélevé de 32 cases (les hubs tech). Le chemin est une seule spirale :
+- on part du Départ et on fait le tour de l'anneau extérieur ;
+- après Sydney, on monte automatiquement dans l'anneau intérieur par le passage vert "Vers les hubs" (première case : Introduction en Bourse) ;
+- à la fin de l'anneau intérieur (Cupertino), le passage doré "Retour au Départ" ramène au Départ, ce qui compte un tour complet.
 
 | Case | Nombre | Effet |
 |---|---|---|
 | Départ | 1 | Point de départ, pas d'effet |
-| Ville tech | 24 (4 par région) | Paiement + achat (voir "Tour de jeu") |
-| Choix régional | 6 (1 par région) | Achat dans le stock de toutes les villes de la région, seulement d'entreprises dont on détient déjà au moins 1 % |
+| Ville tech | 30 (5 par région, anneau extérieur) | Paiement + achat (voir "Tour de jeu") |
+| Hub tech | 18 (anneau intérieur) | Comme une ville, avec des stocks plus gros (15 à 20 % par entreprise) |
+| Choix régional | 8 (1 par région, 2 pour les hubs) | Achat dans le stock de toutes les villes de la région, seulement d'entreprises dont on détient déjà au moins 1 % |
 | Choix mondial | 1 | Pareil, dans le monde entier. Valable seulement après un premier tour complet |
-| Enchères | 2 | Mise aux enchères forcée (voir "Enchères"). Valable seulement après un premier tour complet |
-| Atout | 2 | On peut acheter une carte Atout |
-| Actu Tech | 2 | On pioche une carte événement : on reçoit ou on paie une somme |
-| Levée de fonds | 2 | On reçoit de la banque (total des dés x un montant fixe) |
+| Enchères | 3 | Mise aux enchères forcée (voir "Enchères"). Valable seulement après un premier tour complet |
+| Atout | 4 | On peut acheter une carte Atout |
+| Actu Tech | 7 | On pioche une carte événement : on reçoit ou on paie une somme |
+| Levée de fonds | 4 | On reçoit de la banque (total des dés x un montant fixe) |
+| Introduction en Bourse | 2 | On reçoit une prime de 1 000 k$ |
+| Krach | 2 | On perd 10 % de sa trésorerie |
 
-**Villes tech** (villes réelles : Silicon Valley, Seattle, Austin, Shenzhen, Taipei, Séoul, Tokyo, Bangalore, Berlin, Paris...). Chaque ville affiche :
-- son **stock** : les entreprises disponibles et le % restant de chacune (ex. Paris : AMB 20 %, Nvidio 10 %) ;
-- son **entreprise de redevance**, visible sur le plateau (logo + couleur sur la case). Ces jetons (2 par entreprise, 24 au total) sont **placés au hasard en début de partie**, donc chaque partie a un plateau différent.
+**Villes tech** (villes réelles : Seattle, Austin, Londres, Paris, Tokyo, Bangalore...) et **hubs tech** (Palo Alto, Cupertino, Shenzhen, Hsinchu, Munich...). Chaque ville affiche :
+- son **stock** : les entreprises disponibles et le % restant de chacune ;
+- son **entreprise de redevance**, visible sur le plateau (logo + couleur du bâtiment). Ces jetons (4 par entreprise, 48 au total) sont **placés au hasard en début de partie**, donc chaque partie a un plateau différent ;
+- un **bâtiment qui grandit** avec le % détenu par le plus gros détenteur de cette entreprise (une alliance compte comme un seul détenteur) : terrain à vendre à 0 %, puis 5 paliers (1-9 %, 10-29 %, 30-59 %, 60-99 %, 100 %). Les villes ont des gratte-ciel (étages, flèche, puis couronne dorée), les hubs des campus (garage, bureaux, siège en verre, campus, puis siège en anneau). À 100 %, un anneau et une étoile dorés marquent le monopole.
 
 Toute la répartition (quelle région et quelle ville détient combien de % de chaque entreprise) est dans un fichier JSON, facile à rééquilibrer.
 

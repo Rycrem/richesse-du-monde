@@ -9,7 +9,9 @@
   "atoutPrice": 1500,
   "monopolyMultiplier": 2,
   "bankBuybackRatio": 0.5,
-  "royaltyTokensPerCompany": 2,
+  "royaltyTokensPerCompany": 4,
   "minPlayers": 2,
-  "maxPlayers": 6
+  "maxPlayers": 6,
+  "ipoBonus": 1000,
+  "krachPercent": 10
 }

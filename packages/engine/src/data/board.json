@@ -5,25 +5,23 @@
     "name": "Départ"
   },
   {
-    "id": "silicon-valley",
-    "type": "city",
-    "name": "Silicon Valley",
-    "region": "amerique-nord",
-    "stock": {
-      "nvidio": 25,
-      "intol": 20,
-      "appel": 25
-    }
-  },
-  {
     "id": "seattle",
     "type": "city",
     "name": "Seattle",
     "region": "amerique-nord",
     "stock": {
-      "amazone": 30,
-      "macrosoft": 25,
-      "meto": 15
+      "nvidio": 10,
+      "tsmb": 15
+    }
+  },
+  {
+    "id": "vancouver",
+    "type": "city",
+    "name": "Vancouver",
+    "region": "amerique-nord",
+    "stock": {
+      "appel": 10,
+      "meto": 10
     }
   },
   {
@@ -32,25 +30,23 @@
     "name": "Actu Tech"
   },
   {
-    "id": "austin",
-    "type": "city",
-    "name": "Austin",
-    "region": "amerique-nord",
-    "stock": {
-      "nvidio": 15,
-      "amb": 25,
-      "tesler": 25
-    }
-  },
-  {
     "id": "toronto",
     "type": "city",
     "name": "Toronto",
     "region": "amerique-nord",
     "stock": {
-      "amb": 15,
-      "macrosoft": 20,
-      "gogol": 15
+      "macrosoft": 10,
+      "tesler": 10
+    }
+  },
+  {
+    "id": "austin",
+    "type": "city",
+    "name": "Austin",
+    "region": "amerique-nord",
+    "stock": {
+      "gogol": 10,
+      "amb": 10
     }
   },
   {
@@ -60,9 +56,19 @@
     "region": "amerique-nord"
   },
   {
-    "id": "encheres-1",
-    "type": "encheres",
-    "name": "Enchères"
+    "id": "new-york",
+    "type": "city",
+    "name": "New York",
+    "region": "amerique-nord",
+    "stock": {
+      "amazone": 10,
+      "samsong": 10
+    }
+  },
+  {
+    "id": "atout-1",
+    "type": "atout",
+    "name": "Atout"
   },
   {
     "id": "mexico",
@@ -70,20 +76,18 @@
     "name": "Mexico",
     "region": "amerique-latine",
     "stock": {
-      "intol": 15,
-      "samsong": 15,
-      "amazone": 10
+      "tsmb": 10,
+      "sonyx": 10
     }
   },
   {
-    "id": "sao-paulo",
+    "id": "bogota",
     "type": "city",
-    "name": "São Paulo",
+    "name": "Bogotá",
     "region": "amerique-latine",
     "stock": {
-      "appel": 15,
-      "meto": 20,
-      "sonyx": 15
+      "meto": 10,
+      "intol": 10
     }
   },
   {
@@ -92,25 +96,18 @@
     "name": "Levée de fonds"
   },
   {
-    "id": "buenos-aires",
-    "type": "city",
-    "name": "Buenos Aires",
-    "region": "amerique-latine",
-    "stock": {
-      "samsong": 10,
-      "gogol": 15,
-      "tesler": 15
-    }
+    "id": "encheres-1",
+    "type": "encheres",
+    "name": "Enchères"
   },
   {
-    "id": "santiago",
+    "id": "lima",
     "type": "city",
-    "name": "Santiago",
+    "name": "Lima",
     "region": "amerique-latine",
     "stock": {
-      "amb": 20,
-      "intol": 15,
-      "amazone": 10
+      "tesler": 10,
+      "nvidio": 10
     }
   },
   {
@@ -120,52 +117,48 @@
     "region": "amerique-latine"
   },
   {
+    "id": "sao-paulo",
+    "type": "city",
+    "name": "São Paulo",
+    "region": "amerique-latine",
+    "stock": {
+      "amb": 10,
+      "appel": 10
+    }
+  },
+  {
+    "id": "santiago",
+    "type": "city",
+    "name": "Santiago",
+    "region": "amerique-latine",
+    "stock": {
+      "samsong": 10,
+      "macrosoft": 10
+    }
+  },
+  {
+    "id": "actu-2",
+    "type": "actu",
+    "name": "Actu Tech"
+  },
+  {
     "id": "londres",
     "type": "city",
     "name": "Londres",
     "region": "europe",
     "stock": {
-      "appel": 15,
-      "amazone": 20,
-      "gogol": 20
+      "sonyx": 10,
+      "gogol": 10
     }
   },
   {
-    "id": "paris",
+    "id": "dublin",
     "type": "city",
-    "name": "Paris",
+    "name": "Dublin",
     "region": "europe",
     "stock": {
-      "amb": 10,
-      "amazone": 15,
-      "macrosoft": 15
-    }
-  },
-  {
-    "id": "atout-1",
-    "type": "atout",
-    "name": "Atout"
-  },
-  {
-    "id": "berlin",
-    "type": "city",
-    "name": "Berlin",
-    "region": "europe",
-    "stock": {
-      "nvidio": 10,
-      "amazone": 15,
-      "tesler": 15
-    }
-  },
-  {
-    "id": "amsterdam",
-    "type": "city",
-    "name": "Amsterdam",
-    "region": "europe",
-    "stock": {
-      "intol": 15,
-      "gogol": 20,
-      "meto": 20
+      "intol": 10,
+      "amazone": 10
     }
   },
   {
@@ -175,36 +168,39 @@
     "region": "europe"
   },
   {
+    "id": "paris",
+    "type": "city",
+    "name": "Paris",
+    "region": "europe",
+    "stock": {
+      "nvidio": 10,
+      "tsmb": 10
+    }
+  },
+  {
+    "id": "berlin",
+    "type": "city",
+    "name": "Berlin",
+    "region": "europe",
+    "stock": {
+      "appel": 10,
+      "meto": 10
+    }
+  },
+  {
+    "id": "stockholm",
+    "type": "city",
+    "name": "Stockholm",
+    "region": "europe",
+    "stock": {
+      "macrosoft": 10,
+      "tesler": 10
+    }
+  },
+  {
     "id": "mondial-1",
     "type": "mondial",
     "name": "Choix mondial"
-  },
-  {
-    "id": "shenzhen",
-    "type": "city",
-    "name": "Shenzhen",
-    "region": "asie-est",
-    "stock": {
-      "amb": 15,
-      "appel": 20,
-      "tesler": 20
-    }
-  },
-  {
-    "id": "taipei",
-    "type": "city",
-    "name": "Taipei",
-    "region": "asie-est",
-    "stock": {
-      "nvidio": 20,
-      "tsmb": 30,
-      "sonyx": 15
-    }
-  },
-  {
-    "id": "actu-2",
-    "type": "actu",
-    "name": "Actu Tech"
   },
   {
     "id": "seoul",
@@ -212,8 +208,8 @@
     "name": "Séoul",
     "region": "asie-est",
     "stock": {
-      "samsong": 30,
-      "sonyx": 20
+      "gogol": 10,
+      "amb": 10
     }
   },
   {
@@ -222,8 +218,23 @@
     "name": "Tokyo",
     "region": "asie-est",
     "stock": {
-      "tsmb": 20,
-      "sonyx": 40
+      "amazone": 10,
+      "samsong": 10
+    }
+  },
+  {
+    "id": "actu-3",
+    "type": "actu",
+    "name": "Actu Tech"
+  },
+  {
+    "id": "osaka",
+    "type": "city",
+    "name": "Osaka",
+    "region": "asie-est",
+    "stock": {
+      "tsmb": 10,
+      "sonyx": 10
     }
   },
   {
@@ -233,9 +244,29 @@
     "region": "asie-est"
   },
   {
-    "id": "encheres-2",
-    "type": "encheres",
-    "name": "Enchères"
+    "id": "taipei",
+    "type": "city",
+    "name": "Taipei",
+    "region": "asie-est",
+    "stock": {
+      "meto": 10,
+      "intol": 10
+    }
+  },
+  {
+    "id": "hong-kong",
+    "type": "city",
+    "name": "Hong Kong",
+    "region": "asie-est",
+    "stock": {
+      "tesler": 10,
+      "nvidio": 10
+    }
+  },
+  {
+    "id": "atout-2",
+    "type": "atout",
+    "name": "Atout"
   },
   {
     "id": "bangalore",
@@ -243,9 +274,8 @@
     "name": "Bangalore",
     "region": "asie-sud",
     "stock": {
-      "nvidio": 15,
-      "intol": 15,
-      "samsong": 20
+      "amb": 10,
+      "appel": 10
     }
   },
   {
@@ -254,10 +284,14 @@
     "name": "Singapour",
     "region": "asie-sud",
     "stock": {
-      "amb": 15,
-      "tsmb": 20,
-      "meto": 15
+      "samsong": 10,
+      "macrosoft": 10
     }
+  },
+  {
+    "id": "encheres-2",
+    "type": "encheres",
+    "name": "Enchères"
   },
   {
     "id": "levee-2",
@@ -270,9 +304,8 @@
     "name": "Dubaï",
     "region": "asie-sud",
     "stock": {
-      "tsmb": 15,
-      "macrosoft": 15,
-      "tesler": 15
+      "sonyx": 10,
+      "gogol": 10
     }
   },
   {
@@ -281,9 +314,8 @@
     "name": "Tel Aviv",
     "region": "asie-sud",
     "stock": {
-      "nvidio": 15,
-      "intol": 20,
-      "meto": 15
+      "intol": 10,
+      "amazone": 10
     }
   },
   {
@@ -293,14 +325,38 @@
     "region": "asie-sud"
   },
   {
+    "id": "mumbai",
+    "type": "city",
+    "name": "Mumbai",
+    "region": "asie-sud",
+    "stock": {
+      "nvidio": 10,
+      "tsmb": 10
+    }
+  },
+  {
+    "id": "actu-4",
+    "type": "actu",
+    "name": "Actu Tech"
+  },
+  {
     "id": "lagos",
     "type": "city",
     "name": "Lagos",
     "region": "afrique-oceanie",
     "stock": {
-      "samsong": 15,
-      "gogol": 15,
-      "meto": 15
+      "appel": 10,
+      "meto": 10
+    }
+  },
+  {
+    "id": "le-caire",
+    "type": "city",
+    "name": "Le Caire",
+    "region": "afrique-oceanie",
+    "stock": {
+      "macrosoft": 10,
+      "tesler": 10
     }
   },
   {
@@ -309,15 +365,15 @@
     "name": "Nairobi",
     "region": "afrique-oceanie",
     "stock": {
-      "samsong": 10,
-      "macrosoft": 15,
-      "sonyx": 10
+      "gogol": 10,
+      "amb": 10
     }
   },
   {
-    "id": "atout-2",
-    "type": "atout",
-    "name": "Atout"
+    "id": "choix-afrique-oceanie",
+    "type": "choix-regional",
+    "name": "Choix régional",
+    "region": "afrique-oceanie"
   },
   {
     "id": "le-cap",
@@ -325,9 +381,8 @@
     "name": "Le Cap",
     "region": "afrique-oceanie",
     "stock": {
-      "appel": 10,
-      "macrosoft": 10,
-      "tesler": 10
+      "amazone": 10,
+      "samsong": 10
     }
   },
   {
@@ -336,15 +391,260 @@
     "name": "Sydney",
     "region": "afrique-oceanie",
     "stock": {
-      "tsmb": 15,
+      "tsmb": 10,
+      "sonyx": 10
+    }
+  },
+  {
+    "id": "ipo-1",
+    "type": "ipo",
+    "name": "Introduction en Bourse"
+  },
+  {
+    "id": "hyderabad-hub",
+    "type": "city",
+    "name": "Hyderabad",
+    "region": "hubs",
+    "stock": {
+      "meto": 20,
+      "intol": 20
+    }
+  },
+  {
+    "id": "abu-dhabi-hub",
+    "type": "city",
+    "name": "Abu Dhabi",
+    "region": "hubs",
+    "stock": {
+      "tesler": 20,
+      "nvidio": 20
+    }
+  },
+  {
+    "id": "actu-5",
+    "type": "actu",
+    "name": "Actu Tech"
+  },
+  {
+    "id": "shanghai-hub",
+    "type": "city",
+    "name": "Shanghai",
+    "region": "hubs",
+    "stock": {
+      "amb": 20,
+      "appel": 20
+    }
+  },
+  {
+    "id": "pekin-hub",
+    "type": "city",
+    "name": "Pékin",
+    "region": "hubs",
+    "stock": {
+      "samsong": 20,
+      "macrosoft": 20
+    }
+  },
+  {
+    "id": "atout-3",
+    "type": "atout",
+    "name": "Atout"
+  },
+  {
+    "id": "shenzhen-hub",
+    "type": "city",
+    "name": "Shenzhen",
+    "region": "hubs",
+    "stock": {
+      "sonyx": 20,
+      "gogol": 20
+    }
+  },
+  {
+    "id": "krach-1",
+    "type": "krach",
+    "name": "Krach"
+  },
+  {
+    "id": "hsinchu-hub",
+    "type": "city",
+    "name": "Hsinchu",
+    "region": "hubs",
+    "stock": {
+      "intol": 15,
+      "amazone": 20
+    }
+  },
+  {
+    "id": "suwon-hub",
+    "type": "city",
+    "name": "Suwon",
+    "region": "hubs",
+    "stock": {
+      "nvidio": 15,
+      "tsmb": 20
+    }
+  },
+  {
+    "id": "choix-hubs-1",
+    "type": "choix-regional",
+    "name": "Choix régional",
+    "region": "hubs"
+  },
+  {
+    "id": "kyoto-hub",
+    "type": "city",
+    "name": "Kyoto",
+    "region": "hubs",
+    "stock": {
       "appel": 15,
+      "meto": 15
+    }
+  },
+  {
+    "id": "levee-3",
+    "type": "levee",
+    "name": "Levée de fonds"
+  },
+  {
+    "id": "helsinki-hub",
+    "type": "city",
+    "name": "Helsinki",
+    "region": "hubs",
+    "stock": {
+      "macrosoft": 15,
+      "tesler": 15
+    }
+  },
+  {
+    "id": "eindhoven-hub",
+    "type": "city",
+    "name": "Eindhoven",
+    "region": "hubs",
+    "stock": {
+      "gogol": 15,
+      "amb": 15
+    }
+  },
+  {
+    "id": "ipo-2",
+    "type": "ipo",
+    "name": "Introduction en Bourse"
+  },
+  {
+    "id": "munich-hub",
+    "type": "city",
+    "name": "Munich",
+    "region": "hubs",
+    "stock": {
+      "amazone": 15,
+      "samsong": 15
+    }
+  },
+  {
+    "id": "zurich-hub",
+    "type": "city",
+    "name": "Zurich",
+    "region": "hubs",
+    "stock": {
+      "tsmb": 15,
+      "sonyx": 15
+    }
+  },
+  {
+    "id": "actu-6",
+    "type": "actu",
+    "name": "Actu Tech"
+  },
+  {
+    "id": "cambridge-hub",
+    "type": "city",
+    "name": "Cambridge",
+    "region": "hubs",
+    "stock": {
+      "meto": 15,
+      "intol": 15
+    }
+  },
+  {
+    "id": "encheres-3",
+    "type": "encheres",
+    "name": "Enchères"
+  },
+  {
+    "id": "redmond-hub",
+    "type": "city",
+    "name": "Redmond",
+    "region": "hubs",
+    "stock": {
+      "tesler": 15,
+      "nvidio": 15
+    }
+  },
+  {
+    "id": "atout-4",
+    "type": "atout",
+    "name": "Atout"
+  },
+  {
+    "id": "krach-2",
+    "type": "krach",
+    "name": "Krach"
+  },
+  {
+    "id": "palo-alto-hub",
+    "type": "city",
+    "name": "Palo Alto",
+    "region": "hubs",
+    "stock": {
+      "amb": 15,
+      "appel": 15
+    }
+  },
+  {
+    "id": "mountain-view-hub",
+    "type": "city",
+    "name": "Mountain View",
+    "region": "hubs",
+    "stock": {
+      "samsong": 15,
+      "macrosoft": 15
+    }
+  },
+  {
+    "id": "choix-hubs-2",
+    "type": "choix-regional",
+    "name": "Choix régional",
+    "region": "hubs"
+  },
+  {
+    "id": "san-jose-hub",
+    "type": "city",
+    "name": "San José",
+    "region": "hubs",
+    "stock": {
+      "sonyx": 15,
       "gogol": 15
     }
   },
   {
-    "id": "choix-afrique-oceanie",
-    "type": "choix-regional",
-    "name": "Choix régional",
-    "region": "afrique-oceanie"
+    "id": "levee-4",
+    "type": "levee",
+    "name": "Levée de fonds"
+  },
+  {
+    "id": "actu-7",
+    "type": "actu",
+    "name": "Actu Tech"
+  },
+  {
+    "id": "cupertino-hub",
+    "type": "city",
+    "name": "Cupertino",
+    "region": "hubs",
+    "stock": {
+      "intol": 10,
+      "amazone": 15
+    }
   }
 ]
