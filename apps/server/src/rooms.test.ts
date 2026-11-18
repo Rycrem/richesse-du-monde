@@ -34,9 +34,11 @@ describe("rooms", () => {
   it("players can only act for themselves", () => {
     const { rooms, host, guest } = setup();
     rooms.start(host.code, host.playerId, "classique");
-    expect(rooms.act(host.code, guest.playerId, { type: "ROLL", playerId: "p1" })).toMatchObject({ ok: false });
-    expect(rooms.act(host.code, host.playerId, { type: "AUCTION_CLOSE" })).toMatchObject({ ok: false });
-    expect(rooms.act(host.code, host.playerId, { type: "ROLL", playerId: "p1" })).toMatchObject({ ok: true });
+    const first = rooms.get(host.code)!.game!.players[0]!.id;
+    const other = first === host.playerId ? guest.playerId : host.playerId;
+    expect(rooms.act(host.code, other, { type: "ROLL", playerId: first })).toMatchObject({ ok: false });
+    expect(rooms.act(host.code, first, { type: "AUCTION_CLOSE" })).toMatchObject({ ok: false });
+    expect(rooms.act(host.code, first, { type: "ROLL", playerId: first })).toMatchObject({ ok: true });
   });
 
   it("reconnects a player with their token", () => {
@@ -60,8 +62,9 @@ describe("rooms", () => {
     rooms.start(host.code, host.playerId, "classique");
     const room = rooms.get(host.code)!;
     room.game!.phase = "act";
-    room.game!.players[1]!.holdings = { nvidio: 10 };
-    expect(rooms.act(host.code, "p1", { type: "OFFER", playerId: "p1", ownerId: "p2", company: "nvidio", percent: 5, price: 100 }).ok).toBe(true);
+    const [buyer, owner] = room.game!.players;
+    owner!.holdings = { nvidio: 10 };
+    expect(rooms.act(host.code, buyer!.id, { type: "OFFER", playerId: buyer!.id, ownerId: owner!.id, company: "nvidio", percent: 5, price: 100 }).ok).toBe(true);
     expect(room.deadline).not.toBeNull();
     vi.advanceTimersByTime(config.offerTimeoutSeconds * 1000);
     expect(room.game!.offer).toBeNull();
@@ -73,18 +76,20 @@ describe("rooms", () => {
     const { rooms, host, guest } = setup();
     rooms.start(host.code, host.playerId, "classique");
     const room = rooms.get(host.code)!;
-    rooms.setConnected(host.code, host.playerId, false);
+    // the dice decide who starts
+    const [first, second] = room.game!.players.map((p) => p.id);
+    rooms.setConnected(host.code, first!, false);
     vi.advanceTimersByTime(AFK_SECONDS * 1000);
     expect(room.game!.lastRoll).not.toBeNull();
     vi.advanceTimersByTime(AFK_SECONDS * 1000 * 3);
-    expect(room.game!.players[room.game!.current]!.id).toBe(guest.playerId);
+    expect(room.game!.players[room.game!.current]!.id).toBe(second);
   });
 
   it("credits points by rank once at the end of the game", () => {
     const { rooms, profiles, host } = setup();
     rooms.start(host.code, host.playerId, "chrono");
     const room = rooms.get(host.code)!;
-    room.game!.players[1]!.cash = 99999;
+    room.game!.players.find((p) => p.id === "p2")!.cash = 99999;
     expect(rooms.act(host.code, host.playerId, { type: "END_GAME" }).ok).toBe(true);
     expect(room.rewards).toEqual({ p2: pointsForRank(0), p1: pointsForRank(1) });
     expect(profiles.fetch("tok-b")).toMatchObject({ data: { points: pointsForRank(0) } });

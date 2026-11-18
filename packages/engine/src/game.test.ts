@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { board, companies, config } from "./data";
-import { applyAction, buyableStock, createGame, type Action } from "./game";
+import { applyAction, buyableStock, createGame, rollTurnOrder, type Action } from "./game";
 import { rollDie } from "./rng";
 import type { GameState } from "./state";
 
@@ -164,6 +164,36 @@ describe("events", () => {
     expect(g.events[1]).toMatchObject({ playerId: "a", items: [{ company: "appel", percent: 15, total: 15 }, { company: "netflox", percent: 5, total: 5 }] });
     expect(g.events[1]!.id).toBeGreaterThan(g.events[0]!.id);
     expect(g.turnBuys).toEqual({});
+  });
+
+  it("the end-of-turn recap also lists sales to the bank and trades between players", () => {
+    let g = at(createGame(P, 1), "depart");
+    g.players[0]!.holdings = { appel: 10 };
+    g.players[1]!.holdings = { tesler: 20 };
+    g = ok(g, { type: "SELL_TO_BANK", playerId: "a", company: "appel", percent: 4 });
+    g = ok(g, { type: "SELL_TO_BANK", playerId: "a", company: "appel", percent: 2 });
+    g = ok(g, { type: "OFFER", playerId: "a", ownerId: "b", company: "tesler", percent: 10, price: 700 });
+    g = ok(g, { type: "RESPOND_OFFER", playerId: "b", accept: true });
+    g = ok(g, { type: "END_TURN", playerId: "a" });
+    const recap = g.events.at(-1)!;
+    expect(recap).toMatchObject({
+      kind: "buys",
+      items: [],
+      deals: [
+        { sellerId: "a", buyerId: null, company: "appel", percent: 6, price: Math.floor(6 * price("appel") * config.bankBuybackRatio) },
+        { sellerId: "b", buyerId: "a", company: "tesler", percent: 10, price: 700 },
+      ],
+    });
+  });
+
+  it("rolls the turn order: highest dice first, shown to everyone", () => {
+    const g = rollTurnOrder(createGame(P, 5));
+    const e = g.events.at(-1)!;
+    if (e.kind !== "order") throw new Error("no order event");
+    expect(e.rolls.map((r) => r.playerId)).toEqual(g.players.map((p) => p.id));
+    const sums = e.rolls.map((r) => r.dice[0] + r.dice[1]);
+    expect([...sums].sort((a, b) => b - a)).toEqual(sums);
+    expect(new Set(g.players.map((p) => p.id)).size).toBe(P.length);
   });
 
   it("a Levée de fonds card shows the dice and the cash before and after", () => {

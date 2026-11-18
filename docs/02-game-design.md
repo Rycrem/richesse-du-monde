@@ -71,12 +71,25 @@ Toute la répartition (quelle région et quelle ville détient combien de % de c
 
 ## Tour de jeu
 
+En début de partie, chaque joueur lance 2 dés : le plus haut total commence, puis l'ordre suit les totaux (égalités départagées au hasard). Une carte montre les lancers à tout le monde.
+
 1. **Dés** : le joueur actif lance 2 dés et avance. Les doubles n'ont pas d'effet particulier.
 2. **Paiement** (ville) : il paie le plus gros détenteur de l'entreprise de redevance de la case (voir "Paiements").
 3. **Achats** : le joueur actif, et **lui seul** :
    - voit le stock de la case (ex. "Paris : AMB 20 %, Nvidio 10 %") et choisit combien de % il achète de chaque entreprise, **au maximum 30 % cumulés** par achat (ex. 20 % d'AMB + 10 % de Nvidio, ou 15 % + 5 %...) ;
    - peut proposer de racheter un pourcentage à **n'importe quel autre joueur** (ex. 10 % de ses Nvidio pour 3 M). Le propriétaire accepte, refuse ou fait une contre-offre (délai de 15 s). Les autres joueurs ne peuvent ni acheter ni lancer de transaction pendant ce tour.
-4. **Fin du tour** : on passe au joueur suivant.
+4. **Fin du tour** : une carte récapitule pour tout le monde les achats, les ventes à la banque et les échanges entre joueurs du tour, puis on passe au joueur suivant.
+
+## Solo contre des bots
+
+- Onglet "Solo contre des bots" : un joueur humain contre 1 à 5 bots, sur le même écran.
+- Les bots jouent un coup à la fois, avec un délai pour suivre les dés, le pion et les cartes. Ils achètent les entreprises les plus chères en gardant une réserve, enchérissent jusqu'au prix d'achat, utilisent leur Atout contre une enchère, acceptent les alliances et les offres au moins au prix d'achat.
+
+## Options, sons et musique
+
+- Bouton engrenage en haut à gauche, sur tous les écrans : volume de la musique, volume des effets, couper le son (réglages gardés dans le navigateur).
+- Tous les sons sont synthétisés dans le navigateur (aucun fichier) : dés, pas du pion, cartes, gains, pertes, achats, enchères, faillite, victoire.
+- Musique lofi générative : progressions d'accords jazz tirées au hasard, batterie douce avec swing, mélodie pentatonique improvisée et craquements de vinyle. Elle ne se répète jamais à l'identique.
 
 ## Paiements
 

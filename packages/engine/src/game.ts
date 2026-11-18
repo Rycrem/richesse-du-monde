@@ -1,6 +1,6 @@
 import { actuCards, board, companies, config } from "./data";
 import { nextRandom, rollDie } from "./rng";
-import type { GameMode, GameState, NewGameEvent, Player, PlayerId } from "./state";
+import type { Deal, GameMode, GameState, NewGameEvent, Player, PlayerId } from "./state";
 import type { CompanyId } from "./types";
 
 export type Action =
@@ -59,10 +59,36 @@ export function createGame(players: { id: PlayerId; name: string }[], seed: numb
     events: [],
     nextEventId: 1,
     turnBuys: {},
+    turnDeals: [],
     eliminated: [],
     winner: null,
     log: [],
   };
+}
+
+// Everyone rolls two dice; the highest total plays first, ties are broken at random
+export function rollTurnOrder(state: GameState): GameState {
+  let s = state.seed;
+  const roll = (): [number, number] => {
+    const [a, s1] = rollDie(s);
+    const [b, s2] = rollDie(s1);
+    s = s2;
+    return [a, b];
+  };
+  const shown = new Map(state.players.map((p) => [p.id, roll()]));
+  const tiebreak = new Map(state.players.map((p) => [p.id, 0]));
+  const sum = (id: PlayerId) => shown.get(id)![0] + shown.get(id)![1];
+  for (const p of state.players) {
+    while (state.players.some((o) => o.id !== p.id && sum(o.id) === sum(p.id) && tiebreak.get(o.id) === tiebreak.get(p.id))) {
+      const [r, next] = nextRandom(s);
+      s = next;
+      tiebreak.set(p.id, r);
+    }
+  }
+  const players = [...state.players].sort((a, b) => sum(b.id) - sum(a.id) || tiebreak.get(b.id)! - tiebreak.get(a.id)!);
+  const next = { ...state, seed: s, players, events: [...state.events] };
+  emit(next, { kind: "order", rolls: players.map((p) => ({ playerId: p.id, dice: shown.get(p.id)! })) });
+  return next;
 }
 
 const MAX_EVENTS = 40;
@@ -137,6 +163,14 @@ function liquidation(p: Player): number {
 }
 
 // Sells holdings to the bank, cheapest first, until cash is back to `target`
+// Repeated sales of the same company by the same player add up into one line of the recap
+function recordDeal(state: GameState, deal: Deal): void {
+  const same = state.turnDeals.find((d) => d.sellerId === deal.sellerId && d.buyerId === deal.buyerId && d.company === deal.company);
+  if (!same) return void state.turnDeals.push(deal);
+  same.percent += deal.percent;
+  same.price += deal.price;
+}
+
 function autoSell(state: GameState, p: Player, target: number): void {
   const sellable = Object.keys(p.holdings).sort((a, b) => percentPrice(a, 1) - percentPrice(b, 1));
   for (const company of sellable) {
@@ -144,6 +178,7 @@ function autoSell(state: GameState, p: Player, target: number): void {
       removeHolding(p, company, 1);
       returnToStock(state, company, 1);
       p.cash += bankPrice(company, 1);
+      recordDeal(state, { sellerId: p.id, buyerId: null, company, percent: 1, price: bankPrice(company, 1) });
     }
   }
 }
@@ -328,6 +363,7 @@ function nextTurn(state: GameState): void {
   state.canBuyAtout = false;
   state.offer = null;
   state.turnBuys = {};
+  state.turnDeals = [];
 }
 
 export function netWorth(p: Player): number {
@@ -409,6 +445,7 @@ export function applyAction(prev: GameState, action: Action): Result {
       removeHolding(p, action.company, action.percent);
       returnToStock(state, action.company, action.percent);
       p.cash += bankPrice(action.company, action.percent);
+      recordDeal(state, { sellerId: p.id, buyerId: null, company: action.company, percent: action.percent, price: bankPrice(action.company, action.percent) });
       return { ok: true, state };
     }
 
@@ -442,6 +479,7 @@ export function applyAction(prev: GameState, action: Action): Result {
         owner.cash += offer.price;
         removeHolding(owner, offer.company, offer.percent);
         buyer.holdings[offer.company] = (buyer.holdings[offer.company] ?? 0) + offer.percent;
+        recordDeal(state, { sellerId: owner.id, buyerId: buyer.id, company: offer.company, percent: offer.percent, price: offer.price });
       }
       state.offer = null;
       return { ok: true, state };
@@ -528,7 +566,7 @@ export function applyAction(prev: GameState, action: Action): Result {
       if (!isCurrent || state.phase !== "act" || state.offer) return { ok: false, error: "Impossible de finir le tour maintenant" };
       if (cur.cash < 0) return { ok: false, error: "Vendez des actions pour rembourser votre dette avant de finir le tour" };
       const items = Object.entries(state.turnBuys).map(([company, percent]) => ({ company, percent, total: cur.holdings[company] ?? 0 }));
-      if (items.length) emit(state, { kind: "buys", playerId: cur.id, items });
+      if (items.length || state.turnDeals.length) emit(state, { kind: "buys", playerId: cur.id, items, deals: state.turnDeals });
       nextTurn(state);
       return { ok: true, state };
     }

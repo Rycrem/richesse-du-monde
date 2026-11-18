@@ -15,7 +15,7 @@ export function Home() {
     loadProfile();
   }, [loadProfile]);
   const params = new URLSearchParams(location.search);
-  const [tab, setTab] = useState<"online" | "local">("online");
+  const [tab, setTab] = useState<"online" | "local" | "solo">("online");
   const [name, setName] = useState("");
   const [code, setCode] = useState(params.get("code") ?? "");
   const [resetToken, setResetToken] = useState(params.get("reset"));
@@ -58,9 +58,12 @@ export function Home() {
         <button className={tab === "local" ? "primary" : ""} onClick={() => setTab("local")}>
           Sur cet écran
         </button>
+        <button className={tab === "solo" ? "primary" : ""} onClick={() => setTab("solo")}>
+          Solo contre des bots
+        </button>
       </div>
-      {tab === "local" ? (
-        <Setup />
+      {tab !== "online" ? (
+        <Setup key={tab} solo={tab === "solo"} />
       ) : (
         <div className="card">
           {hasSavedSession() && (

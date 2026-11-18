@@ -1,5 +1,6 @@
 import { board, type GameEvent, type GameState } from "@stonks/engine";
 import { useEffect, useRef, useState } from "react";
+import { play, steps, type Sfx } from "./audio";
 import { companyById, money, PLAYER_COLORS } from "./format";
 
 const WALK_DELAY = 1.5;
@@ -16,10 +17,21 @@ const HEAD: Record<string, { color: string; icon: string; title: string }> = {
   bankrupt: { color: "#3a3f4b", icon: "💸", title: "FAILLITE" },
 };
 
+function sound(e: GameEvent) {
+  if (e.kind === "roll") {
+    play("dice");
+    return steps((e.to - e.from + board.length) % board.length, WALK_DELAY, STEP);
+  }
+  const map: Partial<Record<GameEvent["kind"], Sfx>> = { order: "dice", krach: "loss", royalty: "coin", buys: "buy", auction: "bid", bankrupt: "bankrupt", win: "win" };
+  const amount = "amount" in e ? e.amount : 0;
+  play(map[e.kind] ?? (e.kind === "atout" ? "buy" : amount >= 0 ? "coin" : "loss"));
+}
+
 // how long a card stays, then how long to wait before the next one (the pawn walk after a roll)
 function timing(e: GameEvent): [number, number] {
   if (e.kind === "roll") return [WALK_DELAY * 1000 - LEAVE_MS, ((e.to - e.from + board.length) % board.length) * STEP * 1000 + 150];
-  if (e.kind === "buys") return [3200, 0];
+  if (e.kind === "order") return [2000 + e.rolls.length * 700, 0];
+  if (e.kind === "buys") return [3200 + e.deals.length * 600, 0];
   if (e.kind === "royalty") return [2400, 0];
   return [2800, 0];
 }
@@ -33,7 +45,7 @@ const PIPS: Record<number, [number, number][]> = {
   6: [[27, 22], [73, 22], [27, 50], [73, 50], [27, 78], [73, 78]],
 };
 
-function Die({ value, delay }: { value: number; delay: number }) {
+function Die({ value, delay, small }: { value: number; delay: number; small?: boolean }) {
   const [face, setFace] = useState(1 + Math.floor(Math.random() * 6));
   const [settled, setSettled] = useState(false);
   useEffect(() => {
@@ -49,7 +61,7 @@ function Die({ value, delay }: { value: number; delay: number }) {
     };
   }, [value, delay]);
   return (
-    <div className={`big-die ${settled ? "settled" : "rolling"}`}>
+    <div className={`big-die ${small ? "small" : ""} ${settled ? "settled" : "rolling"}`}>
       {PIPS[face]!.map(([x, y], i) => (
         <i key={i} style={{ left: `${x}%`, top: `${y}%` }} />
       ))}
@@ -72,6 +84,23 @@ export function StockCard({ company, percent, badge, small }: { company: string;
 }
 
 function Card({ e, nameOf, colorOf }: { e: GameEvent; nameOf: (id: string) => string; colorOf: (id: string) => string }) {
+  if (e.kind === "order")
+    return (
+      <div className="buys order">
+        <div className="buys-title">Ordre de passage</div>
+        {e.rolls.map((r, i) => (
+          <div key={r.playerId} className="order-row" style={{ animationDelay: `${150 + i * 250}ms` }}>
+            <span className="rank">{i + 1}</span>
+            <span className="dot" style={{ background: colorOf(r.playerId) }} />
+            <strong>{nameOf(r.playerId)}</strong>
+            <span className="spacer" />
+            <Die value={r.dice[0]} delay={i * 250} small />
+            <Die value={r.dice[1]} delay={i * 250 + 100} small />
+            <span className="eq">{r.dice[0] + r.dice[1]}</span>
+          </div>
+        ))}
+      </div>
+    );
   const who = (
     <div className="who">
       <span className="dot" style={{ background: colorOf(e.playerId) }} />
@@ -90,14 +119,33 @@ function Card({ e, nameOf, colorOf }: { e: GameEvent; nameOf: (id: string) => st
     return (
       <div className="buys">
         {who}
-        <div className="buys-title">a acheté</div>
-        <div className="tray">
-          {e.items.map((it, i) => (
-            <div key={it.company} className="tray-item" style={{ animationDelay: `${150 + i * 120}ms` }}>
-              <StockCard company={it.company} percent={it.total} badge={`+${it.percent} %`} />
+        {e.items.length > 0 && (
+          <>
+            <div className="buys-title">a acheté</div>
+            <div className="tray">
+              {e.items.map((it, i) => (
+                <div key={it.company} className="tray-item" style={{ animationDelay: `${150 + i * 120}ms` }}>
+                  <StockCard company={it.company} percent={it.total} badge={`+${it.percent} %`} />
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </>
+        )}
+        {e.deals.length > 0 && (
+          <>
+            <div className="buys-title deals-title">ventes et échanges</div>
+            <div className="tray">
+              {e.deals.map((d, i) => (
+                <div key={i} className="tray-item deal" style={{ animationDelay: `${150 + (e.items.length + i) * 120}ms` }}>
+                  <StockCard company={d.company} percent={d.percent} badge={money(d.price)} small />
+                  <small>
+                    {nameOf(d.sellerId)} → {d.buyerId ? nameOf(d.buyerId) : "la banque"}
+                  </small>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </div>
     );
   if (e.kind === "royalty") {
@@ -205,10 +253,12 @@ export function EventOverlay({ game }: { game: GameState }) {
 
   useEffect(() => {
     const max = Math.max(0, ...game.events.map((e) => e.id));
-    if (seen.current === null) {
+    // joining a game in progress skips its past events; a brand new game shows its turn order
+    if (seen.current === null && game.lastRoll !== null) {
       seen.current = max;
       return;
     }
+    seen.current ??= 0;
     const fresh = game.events.filter((e) => e.id > seen.current!);
     if (!fresh.length) return;
     seen.current = max;
@@ -219,6 +269,7 @@ export function EventOverlay({ game }: { game: GameState }) {
     if (current || !queue.length) return;
     const [e, ...rest] = queue;
     setQueue(rest);
+    sound(e!);
     if (e!.kind === "win") {
       setWinner({ id: e!.playerId, leaving: false });
       return;

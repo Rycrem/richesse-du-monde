@@ -95,7 +95,7 @@ export function GamePanel({ game }: { game: GameState }) {
         ))}
       </div>
 
-      {game.mode === "chrono" && (you === null || you === room?.hostId) && (
+      {game.mode === "chrono" && (!room || you === room.hostId) && (
         <button className="ghost" onClick={() => dispatch({ type: "END_GAME" })}>
           Arrêter la partie (le plus riche gagne)
         </button>
@@ -250,6 +250,7 @@ function BuyPanel({ game }: { game: GameState }) {
         );
       })}
       <button
+        className={`buy-btn ${cost <= me.cash ? "afford" : "broke"}`}
         disabled={total === 0 || cost > me.cash}
         onClick={() => dispatch({ type: "BUY", playerId: me.id, purchases: wanted }) && setWanted({})}
       >

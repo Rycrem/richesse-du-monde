@@ -7,10 +7,12 @@ import { InspectPanel } from "./Inspect";
 import { Lobby } from "./Lobby";
 import { EventOverlay } from "./Overlay";
 import { STARTER_LOOKS } from "./format";
+import { useBots } from "./bots";
 import { useStore } from "./store";
 
 export function App() {
   const { game, room, online, you } = useStore();
+  useBots(game);
   if (online && room && !game) return <Lobby room={room} />;
   if (!game) return <Home />;
   return (

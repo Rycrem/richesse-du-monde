@@ -1,5 +1,5 @@
 import { randomBytes, randomUUID } from "node:crypto";
-import { applyAction, config, createGame, ranking, type Action, type GameMode, type GameState } from "@stonks/engine";
+import { applyAction, config, createGame, ranking, rollTurnOrder, type Action, type GameMode, type GameState } from "@stonks/engine";
 import { dmChannel, pointsForRank, SYSTEM_ACTIONS, type ChatGroup, type ChatMessage, type LobbyPlayer, type RoomView, type Session } from "@stonks/shared";
 import type { Profiles } from "./profiles";
 
@@ -128,10 +128,12 @@ export class Rooms {
     if (room.hostId !== playerId) return { ok: false, error: "Seul l'hôte peut lancer la partie" };
     if (room.game) return { ok: false, error: "Déjà lancée" };
     if (room.members.length < config.minPlayers) return { ok: false, error: `Il faut au moins ${config.minPlayers} joueurs` };
-    room.game = createGame(
-      room.members.map((m) => ({ id: m.id, name: m.name })),
-      randomBytes(4).readUInt32LE(),
-      mode,
+    room.game = rollTurnOrder(
+      createGame(
+        room.members.map((m) => ({ id: m.id, name: m.name })),
+        randomBytes(4).readUInt32LE(),
+        mode,
+      ),
     );
     this.onChange(room);
     return { ok: true, data: null };
