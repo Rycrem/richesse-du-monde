@@ -2,13 +2,18 @@ import { config, type GameMode } from "@stonks/engine";
 import type { RoomView } from "@stonks/shared";
 import { useState } from "react";
 import { PLAYER_COLORS } from "./format";
+import { Garage } from "./Garage";
+import { pawnDataUrl } from "./pawn";
 import { useStore } from "./store";
 
 export function Lobby({ room }: { room: RoomView }) {
   const { you, startOnline, quit, error } = useStore();
   const [mode, setMode] = useState<GameMode>("classique");
+  const [garage, setGarage] = useState(false);
   const link = `${location.origin}/?code=${room.code}`;
   const isHost = you === room.hostId;
+  const myIndex = room.players.findIndex((p) => p.id === you);
+  if (garage) return <Garage color={PLAYER_COLORS[myIndex] ?? PLAYER_COLORS[0]!} onClose={() => setGarage(false)} />;
 
   return (
     <div className="setup">
@@ -26,7 +31,7 @@ export function Lobby({ room }: { room: RoomView }) {
         </h3>
         {room.players.map((p, i) => (
           <div className="row" key={p.id}>
-            <span className="dot" style={{ background: PLAYER_COLORS[i] }} />
+            <img className="lobby-pawn" src={pawnDataUrl(p.look, PLAYER_COLORS[i]!, 28)} alt="" />
             {p.name}
             {p.id === room.hostId && <small>(hôte)</small>}
             {p.id === you && <small>(toi)</small>}
@@ -50,6 +55,7 @@ export function Lobby({ room }: { room: RoomView }) {
         ) : (
           <p className="muted">En attente du lancement par l'hôte...</p>
         )}
+        <button onClick={() => setGarage(true)}>Modifier mon pion</button>
         <button className="ghost" onClick={quit}>
           Quitter
         </button>

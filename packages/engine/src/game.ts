@@ -432,3 +432,12 @@ export function applyAction(prev: GameState, action: Action): Result {
     }
   }
 }
+
+// Final order: winner, then remaining players by net worth, then eliminated players (last eliminated first)
+export function ranking(state: GameState): PlayerId[] {
+  const alive = activePlayers(state)
+    .filter((p) => p.id !== state.winner)
+    .sort((a, b) => netWorth(b) - netWorth(a))
+    .map((p) => p.id);
+  return [...(state.winner ? [state.winner] : []), ...alive, ...[...state.eliminated].reverse()];
+}

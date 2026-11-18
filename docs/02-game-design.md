@@ -111,3 +111,11 @@ Choix retenu : **noms modifiés** (colonne "Nom parodique" ci-dessus) et **logos
 - Les logos sont **redessinés de zéro en SVG** pour le projet : ils reprennent l'esprit de l'original (couleur dominante, forme générale) avec un détournement visible, mais aucun fichier officiel n'est importé ni retouché. Un logo officiel modifié reste une oeuvre dérivée du dessin d'origine, ce que le dessin maison évite.
 - Le style vise la parodie évidente (comme les marques détournées des jeux vidéo) pour qu'aucun joueur ne pense à un partenariat officiel.
 - Logos et noms vivent dans les données (`engine/data/companies.json` + `assets/logos/*.svg`) : on peut les retoucher sans toucher au code.
+
+## Pions personnalisables et points
+
+- Chaque joueur a un profil léger (pas de compte) : un jeton gardé dans son navigateur, le profil (points, objets possédés, pion équipé) est sauvegardé sur le serveur (`DATA_DIR/profiles.json`).
+- Écran "Mon pion" : 4 catégories (Chapeau, Tête, Corps, Jambes), aperçu en grand, flèches pour faire défiler, vignettes de tous les objets (grisées si non possédés), achat et équipement.
+- Objets de départ gratuits dans chaque catégorie ; objets payants de 120 à 300 points (`packages/shared/src/cosmetics.ts`).
+- Fin de partie en ligne : points selon le classement, 120 / 60 / 40 / 30 / 20 / 15. Tout le monde gagne des points, seul le 1er en gagne assez pour s'offrir un objet tout de suite (le moins cher coûte 120).
+- Les parties "sur cet écran" ne rapportent pas de points.

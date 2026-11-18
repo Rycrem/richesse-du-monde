@@ -6,7 +6,7 @@
   "main": "src/index.ts",
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
-    "test": "echo 'pas de tests'"
+    "test": "vitest run"
   },
   "dependencies": {
     "@stonks/engine": "workspace:*"

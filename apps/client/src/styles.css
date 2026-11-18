@@ -64,3 +64,31 @@ label.row { flex-direction: row; }
 .offline { color: var(--danger); font-size: 12px; }
 .chip { display: inline-flex; align-items: center; gap: 4px; }
 .chip img { width: 16px; height: 16px; border-radius: 3px; }
+.garage { max-width: 760px; margin: 0 auto; padding: 24px 16px; display: flex; flex-direction: column; gap: 16px; }
+.garage h1 { margin: 0; color: var(--accent); }
+.points { background: #ffd166; color: #1b1b1b; font-weight: 800; border-radius: 999px; padding: 6px 14px; }
+.garage-main { display: grid; grid-template-columns: 150px 1fr 200px; gap: 16px; align-items: center; }
+.slots { display: flex; flex-direction: column; gap: 8px; }
+.slots button { display: flex; align-items: center; gap: 8px; }
+.slot-icon { width: 24px; height: 38px; }
+.stage { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.arrow { font-size: 28px; font-weight: 800; width: 48px; height: 64px; border-radius: 12px; }
+.podium { width: 220px; height: 320px; display: flex; align-items: flex-end; justify-content: center; background: radial-gradient(ellipse 45% 6% at 50% 94%, #3dd6d066 0 99%, transparent 100%), radial-gradient(circle at 50% 40%, #24324c, var(--bg)); border-radius: 16px; padding-bottom: 12px; }
+.pop { animation: pop 0.25s ease-out; }
+@keyframes pop { from { transform: scale(0.8) translateY(10px); opacity: 0.4; } to { transform: none; opacity: 1; } }
+.item-info { display: flex; flex-direction: column; gap: 8px; }
+.item-info h2 { margin: 0; }
+.thumbs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+.thumb { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 76px; padding: 6px; }
+.thumb img { width: 48px; height: 77px; }
+.thumb.selected { outline: 3px solid var(--accent); }
+.thumb.locked img { filter: grayscale(1) brightness(0.6); }
+.lobby-pawn { width: 28px; height: 45px; }
+.rewards { display: flex; flex-direction: column; gap: 4px; }
+@media (max-width: 700px) {
+  .garage-main { grid-template-columns: 1fr; }
+  .slots { flex-direction: row; overflow-x: auto; }
+}
+.my-pawn { display: flex; align-items: center; gap: 12px; text-align: left; margin-bottom: 12px; }
+.my-pawn img { width: 40px; height: 64px; }
+.my-pawn span { display: flex; flex-direction: column; }

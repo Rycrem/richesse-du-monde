@@ -1,11 +1,34 @@
 import { board, regions, type GameState } from "@stonks/engine";
-import { Application, Assets, Container, Graphics, Sprite, Text, type Texture } from "pixi.js";
+import { Application, Assets, Container, Graphics, Sprite, Text, Texture } from "pixi.js";
 import { useEffect, useRef } from "react";
+import type { Look } from "@stonks/shared";
 import { companyById, PLAYER_COLORS } from "./format";
+import { pawnDataUrl } from "./pawn";
 import { cellGrid, SIDE, TILE_H, TILE_W, toScreen } from "./iso";
 
 const regionColor = new Map(regions.map((r) => [r.id, r.color]));
 const logos = new Map<string, Texture>();
+const pawns = new Map<string, Texture>();
+
+async function loadPawns(looks: Look[]): Promise<boolean> {
+  let added = false;
+  await Promise.all(
+    looks.map(async (look, i) => {
+      const key = `${i}:${JSON.stringify(look)}`;
+      if (pawns.has(key)) return;
+      const img = new Image();
+      img.src = pawnDataUrl(look, PLAYER_COLORS[i]!, 120);
+      await img.decode();
+      pawns.set(key, Texture.from(img));
+      added = true;
+    }),
+  );
+  return added;
+}
+
+function pawnTexture(look: Look, i: number): Texture | undefined {
+  return pawns.get(`${i}:${JSON.stringify(look)}`);
+}
 
 async function loadLogos() {
   await Promise.all(
@@ -49,7 +72,7 @@ function label(text: string, size: number, color = "#1b1b1b", bold = true): Text
   return t;
 }
 
-function drawBoard(world: Container, game: GameState) {
+function drawBoard(world: Container, game: GameState, looks: Look[]) {
   world.removeChildren().forEach((c) => c.destroy({ children: true }));
   const current = game.players[game.current]!;
 
@@ -94,13 +117,14 @@ function drawBoard(world: Container, game: GameState) {
     if (p.bankrupt) return;
     const [gx, gy] = cellGrid(p.position);
     const [x, y] = toScreen(gx, gy);
-    const pawn = new Graphics();
-    const ox = ((idx % 3) - 1) * 18;
-    const oy = idx < 3 ? -6 : 10;
-    pawn.ellipse(x + ox, y + oy + 4, 9, 4).fill({ color: 0x000000, alpha: 0.3 });
-    pawn.roundRect(x + ox - 7, y + oy - 22, 14, 24, 7).fill(PLAYER_COLORS[idx]!).stroke({ width: 2, color: 0x1b1b1b });
-    pawn.circle(x + ox, y + oy - 28, 7).fill(PLAYER_COLORS[idx]!).stroke({ width: 2, color: 0x1b1b1b });
-    pawn.zIndex = gx + gy + 0.5;
+    const tex = pawnTexture(looks[idx]!, idx);
+    if (!tex) return;
+    const pawn = new Sprite(tex);
+    pawn.anchor.set(0.5, 1);
+    pawn.height = 80;
+    pawn.width = 50;
+    pawn.position.set(x + ((idx % 3) - 1) * 22, y + (idx < 3 ? 2 : 16));
+    pawn.zIndex = gx + gy + 0.5 + idx * 0.01;
     world.addChild(pawn);
   });
 
@@ -117,11 +141,13 @@ function drawBoard(world: Container, game: GameState) {
   }
 }
 
-export function Board({ game }: { game: GameState }) {
+export function Board({ game, looks }: { game: GameState; looks: Look[] }) {
   const host = useRef<HTMLDivElement>(null);
   const worldRef = useRef<Container | null>(null);
   const gameRef = useRef(game);
   gameRef.current = game;
+  const looksRef = useRef(looks);
+  looksRef.current = looks;
 
   useEffect(() => {
     const el = host.current!;
@@ -143,6 +169,7 @@ export function Board({ game }: { game: GameState }) {
     app
       .init({ resizeTo: el, background: "#1d2d44", antialias: true, autoDensity: true, resolution: window.devicePixelRatio })
       .then(loadLogos)
+      .then(() => loadPawns(looksRef.current))
       .then(() => {
         if (destroyed) {
           app.destroy(true);
@@ -153,7 +180,7 @@ export function Board({ game }: { game: GameState }) {
         app.stage.addChild(world);
         worldRef.current = world;
         fit();
-        drawBoard(world, gameRef.current);
+        drawBoard(world, gameRef.current, looksRef.current);
       });
 
     let drag: { x: number; y: number } | null = null;
@@ -190,8 +217,9 @@ export function Board({ game }: { game: GameState }) {
   }, []);
 
   useEffect(() => {
-    if (worldRef.current) drawBoard(worldRef.current, game);
-  }, [game]);
+    if (worldRef.current) drawBoard(worldRef.current, game, looks);
+    loadPawns(looks).then((added) => added && worldRef.current && drawBoard(worldRef.current, gameRef.current, looksRef.current));
+  }, [game, looks]);
 
   return <div className="board" ref={host} title="Glisser pour déplacer, molette pour zoomer, double-clic pour recentrer" />;
 }

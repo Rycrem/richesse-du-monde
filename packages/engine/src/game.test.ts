@@ -270,3 +270,16 @@ describe("game end", () => {
     expect(r.ok && r.state.winner).toBe("c");
   });
 });
+
+describe("ranking", () => {
+  it("orders winner, survivors by net worth, then last eliminated first", async () => {
+    const { ranking } = await import("./game");
+    const g = createGame([...P, { id: "d", name: "Dan" }], 1);
+    g.players[1]!.bankrupt = true;
+    g.players[3]!.bankrupt = true;
+    g.eliminated = ["d", "b"];
+    g.players[2]!.cash = 99999;
+    g.winner = "a";
+    expect(ranking(g)).toEqual(["a", "c", "b", "d"]);
+  });
+});

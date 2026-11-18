@@ -1,18 +1,37 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { PLAYER_COLORS } from "./format";
+import { Garage } from "./Garage";
+import { pawnDataUrl } from "./pawn";
 import { Setup } from "./Setup";
 import { hasSavedSession, useStore } from "./store";
 
 export function Home() {
-  const { createRoom, joinRoom, resume, error } = useStore();
+  const { createRoom, joinRoom, resume, error, profile, loadProfile } = useStore();
+  const [garage, setGarage] = useState(false);
+  useEffect(() => {
+    loadProfile();
+  }, [loadProfile]);
   const params = new URLSearchParams(location.search);
   const [tab, setTab] = useState<"online" | "local">("online");
   const [name, setName] = useState("");
   const [code, setCode] = useState(params.get("code") ?? "");
+  useEffect(() => {
+    if (profile.name && !name) setName(profile.name);
+  }, [profile.name]);
+
+  if (garage) return <Garage color={PLAYER_COLORS[0]!} onClose={() => setGarage(false)} />;
 
   return (
     <div className="setup">
       <h1>Stonks Valley</h1>
       <p className="tagline">Achète des parts, encaisse les redevances, ruine tes amis.</p>
+      <button className="my-pawn" onClick={() => setGarage(true)}>
+        <img src={pawnDataUrl(profile.look, PLAYER_COLORS[0]!, 40)} alt="" />
+        <span>
+          <strong>Mon pion</strong>
+          <small>{profile.points} pts</small>
+        </span>
+      </button>
       <div className="tabs">
         <button className={tab === "online" ? "primary" : ""} onClick={() => setTab("online")}>
           En ligne
