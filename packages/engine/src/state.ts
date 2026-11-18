@@ -54,7 +54,8 @@ export type GameEvent =
   | { id: number; kind: "levee"; playerId: PlayerId; text: string; amount: number; dice: [number, number]; before: number; after: number }
   | { id: number; kind: "royalty"; playerId: PlayerId; company: string; amount: number; to: PlayerId[] }
   | { id: number; kind: "buys"; playerId: PlayerId; items: { company: string; percent: number; total: number }[] }
-  | { id: number; kind: "bankrupt" | "win"; playerId: PlayerId };
+  | { id: number; kind: "bankrupt"; playerId: PlayerId }
+  | { id: number; kind: "win"; playerId: PlayerId };
 export type NewGameEvent = GameEvent extends infer E ? (E extends GameEvent ? Omit<E, "id"> : never) : never;
 
 export type Phase = "roll" | "act" | "auction" | "gameOver";

@@ -429,10 +429,27 @@ export function createBoardScene(host: HTMLElement): BoardScene {
     return t;
   };
 
+  // small tween engine: everything that changes on the board moves instead of popping
+  type Tween = { t0: number; dur: number; step: (k: number) => void; done?: () => void };
+  let tweens: Tween[] = [];
+  const now = () => performance.now() / 1000;
+  const tween = (dur: number, step: (k: number) => void, done?: () => void, delay = 0) => {
+    tweens.push({ t0: now() + delay, dur, step, done });
+    dirty = true;
+  };
+  const easeOut = (k: number) => 1 - (1 - k) ** 3;
+  const easeBack = (k: number) => 1 + 2.7 * (k - 1) ** 3 + 1.7 * (k - 1) ** 2;
+  // the big dice overlay plays first, then the pawn walks
+  const WALK_DELAY = 1.5;
+  const STEP = 0.24;
+
   const built = new Map<number, string>();
   const pawnTex = new Map<string, THREE.Texture>();
-  const pawns = new THREE.Group();
-  scene.add(pawns);
+  const pawns: { sprite: THREE.Sprite; cell: number; key: string; walking: boolean; out: boolean }[] = [];
+  let first = true;
+  let current = -1;
+  let follow = false;
+  let lastRoll = 0;
 
   function biggestHolding(game: GameState, company: string) {
     const groups = new Map<string, number>();
@@ -442,6 +459,62 @@ export function createBoardScene(host: HTMLElement): BoardScene {
       groups.set(key, (groups.get(key) ?? 0) + p.holdings[company]!);
     }
     return Math.max(0, ...groups.values());
+  }
+
+  function texFor(look: Look, idx: number) {
+    const key = `${idx}:${JSON.stringify(look)}`;
+    let tex = pawnTex.get(key);
+    if (!tex) {
+      const img = new Image();
+      img.src = pawnDataUrl(look, PLAYER_COLORS[idx]!, 120);
+      tex = new THREE.Texture(img);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      const t = tex;
+      img.onload = () => {
+        t.needsUpdate = true;
+        dirty = true;
+      };
+      pawnTex.set(key, tex);
+    }
+    return { key, tex };
+  }
+
+  // where pawn `idx` stands on `cell`, spread out when several pawns share it
+  function spot(cell: number, idx: number) {
+    const sharing = pawns.map((p, i) => [p, i] as const).filter(([p]) => !p.out && !p.walking && p.cell === cell).map(([, i]) => i);
+    const slot = Math.max(0, sharing.indexOf(idx));
+    const pose = cellPose(cell);
+    const v = new THREE.Vector3(-0.28 + (slot % 3) * 0.28, 0, 0.12 + Math.floor(slot / 3) * 0.3).applyAxisAngle(new THREE.Vector3(0, 1, 0), pose.rot);
+    return new THREE.Vector3(pose.x + v.x, pose.y + 0.16, pose.z + v.z);
+  }
+
+  function place() {
+    pawns.forEach((p, i) => !p.walking && p.sprite.position.copy(spot(p.cell, i)));
+  }
+
+  function walk(idx: number, to: number) {
+    const p = pawns[idx]!;
+    const from = p.cell;
+    const steps = (to - from + board.length) % board.length;
+    p.walking = true;
+    place();
+    tween(
+      steps * STEP,
+      (k) => {
+        const f = k * steps;
+        const i = Math.min(steps - 1, Math.floor(f));
+        const a = spot((from + i) % board.length, idx);
+        const b = spot((from + i + 1) % board.length, idx);
+        p.sprite.position.lerpVectors(a, b, f - i);
+        p.sprite.position.y += Math.sin((f - i) * Math.PI) * 0.45;
+      },
+      () => {
+        p.walking = false;
+        p.cell = to;
+        place();
+      },
+      WALK_DELAY,
+    );
   }
 
   function update(game: GameState, looks: Look[]) {
@@ -454,59 +527,81 @@ export function createBoardScene(host: HTMLElement): BoardScene {
       if (built.get(i) === key) return;
       built.set(i, key);
       const deco = decos[i]!;
-      deco.children.forEach(disposeTree);
-      deco.clear();
+      const old = [...deco.children];
       const logo = logoTex(company.id);
       const b = !pct ? emptyLot(hub, company.color, logo) : hub ? campus(tierOf(pct), company.color, logo) : skyscraper(tierOf(pct), company.color, logo);
-      b.scale.setScalar(hub ? 0.9 : 0.8);
+      const size = hub ? 0.9 : 0.8;
       deco.add(b);
-    });
-
-    pawns.clear();
-    const byCell = new Map<number, number>();
-    game.players.forEach((p, idx) => {
-      if (p.bankrupt) return;
-      const look = looks[idx]!;
-      const key = `${idx}:${JSON.stringify(look)}`;
-      let tex = pawnTex.get(key);
-      if (!tex) {
-        const img = new Image();
-        img.src = pawnDataUrl(look, PLAYER_COLORS[idx]!, 120);
-        tex = new THREE.Texture(img);
-        tex.colorSpace = THREE.SRGBColorSpace;
-        const t = tex;
-        img.onload = () => {
-          t.needsUpdate = true;
-          dirty = true;
-        };
-        pawnTex.set(key, tex);
+      if (first) {
+        old.forEach((o) => (disposeTree(o), deco.remove(o)));
+        b.scale.setScalar(size);
+        return;
       }
-      const slot = byCell.get(p.position) ?? 0;
-      byCell.set(p.position, slot + 1);
-      const pose = cellPose(p.position);
-      const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true }));
-      sprite.center.set(0.5, 0);
-      sprite.scale.set(0.5, 0.8, 1);
-      const v = new THREE.Vector3(-0.28 + (slot % 3) * 0.28, 0, 0.12 + Math.floor(slot / 3) * 0.3).applyAxisAngle(new THREE.Vector3(0, 1, 0), pose.rot);
-      sprite.position.set(pose.x + v.x, pose.y + 0.16, pose.z + v.z);
-      pawns.add(sprite);
+      b.scale.setScalar(0.001);
+      tween(0.35, (k) => old.forEach((o) => o.scale.setScalar(Math.max(0.001, size * (1 - easeOut(k))))), () => old.forEach((o) => (disposeTree(o), deco.remove(o))));
+      tween(0.6, (k) => b.scale.setScalar(Math.max(0.001, size * easeBack(k))), undefined, 0.3);
     });
 
-    const cur = game.players[game.current]!;
-    const pose = cellPose(cur.position);
-    marker.position.set(pose.x, pose.y + 1.4, pose.z);
-    marker.material.color.set(PLAYER_COLORS[game.current]!);
-    marker.material.emissive.set(PLAYER_COLORS[game.current]!);
-
-    const [a, b] = game.lastRoll ?? [6, 5];
-    [a, b].forEach((n, k) => {
-      const m = dice[k]!.material as THREE.Material[];
-      m[2] = dieMat(n);
+    game.players.forEach((p, idx) => {
+      const { key, tex } = texFor(looks[idx]!, idx);
+      let pawn = pawns[idx];
+      if (!pawn) {
+        const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true }));
+        sprite.center.set(0.5, 0);
+        sprite.scale.set(0.5, 0.8, 1);
+        scene.add(sprite);
+        pawn = pawns[idx] = { sprite, cell: p.position, key, walking: false, out: false };
+      }
+      if (pawn.key !== key) {
+        pawn.sprite.material.map = tex;
+        pawn.key = key;
+      }
+      if (p.bankrupt && !pawn.out) {
+        pawn.out = true;
+        const m = pawn.sprite.material;
+        tween(0.8, (k) => (m.opacity = 1 - k), () => (pawn!.sprite.visible = false));
+      }
+      if (!p.bankrupt && pawn.cell !== p.position && !pawn.walking) {
+        if (first) pawn.cell = p.position;
+        else walk(idx, p.position);
+      }
     });
+    place();
+
+    if (game.current !== current) {
+      current = game.current;
+      if (!first) follow = true;
+      const color = PLAYER_COLORS[game.current]!;
+      marker.material.color.set(color);
+      marker.material.emissive.set(color);
+    }
+    if (pawns[game.current]?.walking) follow = true;
+
+    const roll = [...game.events].reverse().find((e) => e.kind === "roll")?.id ?? 0;
+    if (game.lastRoll && roll !== lastRoll) {
+      lastRoll = roll;
+      const [a, b] = game.lastRoll;
+      dice.forEach((d, k) => {
+        const r0 = d.rotation.clone();
+        tween(
+          first ? 0.001 : 1.1,
+          (t) => {
+            d.rotation.set(r0.x + (1 - t) * 9, r0.y, r0.z + (1 - t) * 7);
+            d.position.y = 0.3 + Math.sin(t * Math.PI) * 0.6;
+          },
+          () => {
+            (d.material as THREE.Material[])[2] = dieMat(k ? b : a);
+            d.rotation.set(0, d.rotation.y, 0);
+          },
+        );
+      });
+    }
+    first = false;
     dirty = true;
   }
 
   function recenter() {
+    follow = false;
     const aspect = host.clientWidth / Math.max(1, host.clientHeight);
     const k = Math.max(0.9, 1.2 / aspect);
     controls.target.set(0, 0, 0.9);
@@ -530,8 +625,41 @@ export function createBoardScene(host: HTMLElement): BoardScene {
   recenter();
 
   let frame = 0;
+  const focus = new THREE.Vector3();
   const loop = () => {
     frame = requestAnimationFrame(loop);
+    const t = now();
+    if (tweens.length) {
+      const running = tweens;
+      // done() callbacks may queue new tweens into the fresh list
+      tweens = [];
+      for (const tw of running) {
+        if (t < tw.t0) {
+          tweens.push(tw);
+          continue;
+        }
+        const k = Math.min(1, (t - tw.t0) / tw.dur);
+        tw.step(k);
+        if (k < 1) tweens.push(tw);
+        else tw.done?.();
+      }
+      dirty = true;
+    }
+    const me = pawns[current];
+    // the marker only spins while something else is moving, so an idle board does not redraw
+    if (me && (dirty || follow)) {
+      marker.position.set(me.sprite.position.x, me.sprite.position.y + 1.25, me.sprite.position.z);
+      marker.rotation.y = t * 1.5;
+      // ease the camera onto the active pawn, keeping the user's angle, a bit closer than the overview
+      if (follow) {
+        focus.copy(me.sprite.position).setY(0.2);
+        const offset = camera.position.clone().sub(controls.target);
+        const want = THREE.MathUtils.lerp(offset.length(), 17, 0.04);
+        controls.target.lerp(focus, 0.06);
+        camera.position.copy(controls.target).add(offset.setLength(want));
+        if (controls.target.distanceTo(focus) < 0.02 && !me.walking && Math.abs(offset.length() - 17) < 0.2) follow = false;
+      }
+    }
     if (controls.update() || dirty) {
       dirty = false;
       renderer.render(scene, camera);
@@ -540,6 +668,7 @@ export function createBoardScene(host: HTMLElement): BoardScene {
   loop();
   const invalidate = () => (dirty = true);
   controls.addEventListener("change", invalidate);
+  controls.addEventListener("start", () => (follow = false));
   ro.observe(host);
 
   return {
