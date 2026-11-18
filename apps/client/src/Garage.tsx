@@ -11,12 +11,15 @@ export function Garage({ onClose, color }: { onClose: () => void; color: string 
   useEffect(() => {
     loadProfile();
   }, [loadProfile]);
-  useEffect(() => setIndex(Math.max(0, items.findIndex((c) => c.id === profile.look[slot]))), [slot]);
 
   const item = items[index]!;
   const preview: Look = { ...profile.look, [slot]: item.id };
   const owned = profile.owned.includes(item.id);
   const equipped = profile.look[slot] === item.id;
+  const pickSlot = (s: Slot) => {
+    setSlot(s);
+    setIndex(Math.max(0, COSMETICS.filter((c) => c.slot === s).findIndex((c) => c.id === profile.look[s])));
+  };
   const move = (d: number) => setIndex((index + d + items.length) % items.length);
 
   return (
@@ -29,7 +32,7 @@ export function Garage({ onClose, color }: { onClose: () => void; color: string 
       <div className="garage-main">
         <nav className="slots">
           {SLOTS.map((s) => (
-            <button key={s.slot} className={s.slot === slot ? "primary" : ""} onClick={() => setSlot(s.slot)}>
+            <button key={s.slot} className={s.slot === slot ? "primary" : ""} onClick={() => pickSlot(s.slot)}>
               <img src={pawnDataUrl({ ...profile.look, [s.slot]: profile.look[s.slot] }, color, 24)} alt="" className="slot-icon" />
               {s.label}
             </button>
