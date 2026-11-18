@@ -1,10 +1,19 @@
 import { board, regions, type GameState } from "@stonks/engine";
-import { Application, Container, Graphics, Text } from "pixi.js";
+import { Application, Assets, Container, Graphics, Sprite, Text, type Texture } from "pixi.js";
 import { useEffect, useRef } from "react";
 import { companyById, PLAYER_COLORS } from "./format";
 import { cellGrid, SIDE, TILE_H, TILE_W, toScreen } from "./iso";
 
 const regionColor = new Map(regions.map((r) => [r.id, r.color]));
+const logos = new Map<string, Texture>();
+
+async function loadLogos() {
+  await Promise.all(
+    [...companyById.keys()].map(async (id) => {
+      if (!logos.has(id)) logos.set(id, await Assets.load<Texture>({ src: `/logos/${id}.svg`, data: { resolution: 4 } }));
+    }),
+  );
+}
 const SPECIAL: Record<string, { color: string; label: string }> = {
   depart: { color: "#f4f1de", label: "DÉPART" },
   "choix-regional": { color: "#b8c0ff", label: "CHOIX\nRÉGIONAL" },
@@ -62,9 +71,14 @@ function drawBoard(world: Container, game: GameState) {
       const b = new Graphics();
       box(b, x, y - 22, 46, 23, 22, company.color);
       layer.addChild(b);
-      const logo = label(company.name, 11, "#ffffff");
-      logo.position.set(x, y - 22);
-      layer.addChild(logo);
+      const tex = logos.get(company.id);
+      if (tex) {
+        const logo = new Sprite(tex);
+        logo.anchor.set(0.5, 1);
+        logo.width = logo.height = 30;
+        logo.position.set(x, y - 30);
+        layer.addChild(logo);
+      }
       const name = label(cell.name, 12);
       name.position.set(x, y + 14);
       layer.addChild(name);
@@ -128,6 +142,7 @@ export function Board({ game }: { game: GameState }) {
 
     app
       .init({ resizeTo: el, background: "#1d2d44", antialias: true, autoDensity: true, resolution: window.devicePixelRatio })
+      .then(loadLogos)
       .then(() => {
         if (destroyed) {
           app.destroy(true);

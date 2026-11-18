@@ -19,6 +19,23 @@ export interface Room {
 type Result<T> = { ok: true; data: T } | { ok: false; error: string };
 
 const CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+export const AFK_SECONDS = 20;
+
+// What the server plays for a disconnected player whose turn it is
+function afkAction(room: Room): Action | null {
+  const g = room.game!;
+  const actorId = g.phase === "auction" && g.auction && !g.auction.company ? g.auction.sellerId : g.players[g.current]!.id;
+  if (room.members.find((m) => m.id === actorId)?.connected !== false) return null;
+  const actor = g.players.find((p) => p.id === actorId)!;
+  if (g.phase === "roll") return { type: "ROLL", playerId: actorId };
+  if (g.phase === "act") return { type: "END_TURN", playerId: actorId };
+  if (g.phase === "auction" && g.auction && !g.auction.company) {
+    if (actor.atouts > 0) return { type: "USE_ATOUT", playerId: actorId };
+    const smallest = Object.entries(actor.holdings).sort((a, b) => a[1] - b[1])[0]![0];
+    return { type: "AUCTION_CHOOSE", playerId: actorId, company: smallest };
+  }
+  return null;
+}
 
 export class Rooms {
   private rooms = new Map<string, Room>();
@@ -65,6 +82,7 @@ export class Rooms {
     const member = room?.members.find((m) => m.token === token);
     if (!room || !member) return { ok: false, error: "Session expirée" };
     member.connected = true;
+    if (room.game) this.schedule(room);
     this.onChange(room);
     return { ok: true, data: { code: room.code, playerId: member.id, token } };
   }
@@ -80,6 +98,7 @@ export class Rooms {
       if (room.hostId === playerId) room.hostId = room.members[0]!.id;
     }
     if (room.game && room.members.every((m) => !m.connected)) return this.remove(room);
+    if (room.game) this.schedule(room);
     this.onChange(room);
   }
 
@@ -125,8 +144,10 @@ export class Rooms {
     return { ok: true, data: null };
   }
 
-  // Server-side timers: auction closes after N s without a new bid, offers expire
+  // Server-side timers: auction closes after N s without a new bid, offers expire,
+  // and a disconnected player's turn is played automatically
   private schedule(room: Room): void {
+    if (!room.game) return;
     const g = room.game!;
     let key: string | null = null;
     let seconds = 0;
@@ -139,6 +160,12 @@ export class Rooms {
       key = `offer:${g.offer.price}:${g.offer.awaiting}`;
       seconds = config.offerTimeoutSeconds;
       action = { type: "OFFER_TIMEOUT" };
+    } else if (g.phase !== "gameOver") {
+      action = afkAction(room);
+      if (action) {
+        key = `afk:${JSON.stringify(action)}:${g.log.length}:${g.lastRoll}`;
+        seconds = AFK_SECONDS;
+      }
     }
     if (key === room.timerKey) return;
     if (room.timer) clearTimeout(room.timer);

@@ -106,6 +106,7 @@ function Players({ game, colorOf }: { game: GameState; colorOf: (id: string) => 
               .sort((a, b) => b[1] - a[1])
               .map(([c, pct]) => (
                 <span key={c} className="chip" style={{ background: companyById.get(c)!.color }}>
+                  <img src={`/logos/${c}.svg`} alt="" />
                   {companyById.get(c)!.name} {pct} %
                 </span>
               ))}
@@ -141,6 +142,7 @@ function BuyPanel({ game }: { game: GameState }) {
         return (
           <div key={c} className="buy-row">
             <span className="chip" style={{ background: company.color }}>
+              <img src={`/logos/${c}.svg`} alt="" />
               {company.name}
             </span>
             <input type="range" min={0} max={max} value={wanted[c] ?? 0} onChange={(e) => setWanted({ ...wanted, [c]: Number(e.target.value) })} />
