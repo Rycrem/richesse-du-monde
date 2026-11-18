@@ -20,7 +20,7 @@ export type Cell =
   | { id: string; type: "depart"; name: string }
   | { id: string; type: "city"; name: string; region: RegionId; stock: Record<CompanyId, number> }
   | { id: string; type: "choix-regional"; name: string; region: RegionId }
-  | { id: string; type: "mondial" | "encheres" | "atout" | "actu" | "levee"; name: string };
+  | { id: string; type: "mondial" | "encheres" | "atout" | "actu" | "levee" | "ipo" | "krach"; name: string };
 
 export interface ActuCard {
   id: string;
@@ -42,4 +42,6 @@ export interface GameConfig {
   royaltyTokensPerCompany: number;
   minPlayers: number;
   maxPlayers: number;
+  ipoBonus: number;
+  krachPercent: number;
 }

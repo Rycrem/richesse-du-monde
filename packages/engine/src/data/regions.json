@@ -28,5 +28,10 @@
     "id": "afrique-oceanie",
     "name": "Afrique et Océanie",
     "color": "#2e86ab"
+  },
+  {
+    "id": "hubs",
+    "name": "Hubs tech",
+    "color": "#d4a72c"
   }
 ]
