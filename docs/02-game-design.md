@@ -117,7 +117,7 @@ En début de partie, chaque joueur lance 2 dés : le plus haut total commence, p
 
 ## Tour de la Bourse (centre du plateau)
 
-- **Cours vivants** : les 16 entreprises sont réparties en 4 marchés (Puces & IA, Cloud & logiciels, Appareils, Médias & mobilité). À chaque nouveau tour, chaque marché tire une tendance entre -30 et +30 % (jamais entre -10 et +10). Les redevances des entreprises du marché sont augmentées ou baissées d'autant.
+- **Cours vivants** : les 16 entreprises sont réparties en 4 marchés (Puces & IA, Cloud & logiciels, Appareils, Médias & mobilité). Tous les marchés restent à 0 % tant que personne n'a bouclé le premier tour de plateau. Ensuite, chaque fois que le joueur le plus avancé (le plus de tours complets) repasse par le Départ, chaque marché tire une nouvelle tendance entre -30 et +30 % (jamais entre -10 et +10). Les redevances des entreprises du marché sont augmentées ou baissées d'autant.
 - Le bandeau de la tour affiche les tendances et la cagnotte ; la tour brille en vert quand les marchés montent en moyenne, en rouge quand ils baissent.
 - **Cagnotte** : les pertes des cartes Actu et du Krach s'accumulent au centre. Seule la carte Actu « Délit d'initié » permet de la rafler en entier.
 

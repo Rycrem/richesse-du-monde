@@ -153,7 +153,7 @@ function MarketBody({ game, market }: { game: GameState; market: string }) {
   return (
     <>
       <p>
-        Ce tour, les redevances des entreprises de ce marché sont <strong className={t >= 0 ? "plus" : "minus"}>{t >= 0 ? `en hausse de ${t}` : `en baisse de ${-t}`} %</strong>. La tendance change à chaque tour.
+        Ce tour, les redevances des entreprises de ce marché sont <strong className={t > 0 ? "plus" : t < 0 ? "minus" : ""}>{t > 0 ? `en hausse de ${t} %` : t < 0 ? `en baisse de ${-t} %` : "stables"}</strong>. La tendance change quand le joueur le plus avancé repasse par le Départ.
       </p>
       <h4>Entreprises impactées</h4>
       <div className="market-companies">

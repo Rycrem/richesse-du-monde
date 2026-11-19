@@ -224,17 +224,30 @@ describe("stock exchange tower", () => {
     expect(g.players[0]!.cash).toBe(a - 40 * royalty("nvidio"));
   });
 
-  it("every turn draws a new trend for each market, between -30 and +30 %", () => {
-    let g = at(createGame(P, 1), "berlin");
-    const seen = new Set<string>();
-    for (let i = 0; i < 6; i++) {
-      g = ok(g, { type: "END_TURN", playerId: g.players[g.current]!.id });
-      expect(Object.keys(g.market).sort()).toEqual(markets.map((m) => m.id).sort());
-      for (const v of Object.values(g.market)) expect(Math.abs(v) >= 10 && Math.abs(v) <= 30).toBe(true);
-      seen.add(JSON.stringify(g.market));
-      g = { ...g, phase: "act" };
+  it("the market stays flat until the leader completes the first lap", () => {
+    let g = landOn(createGame(P, 1), board[5]!.id);
+    expect(Object.keys(g.market).sort()).toEqual(markets.map((m) => m.id).sort());
+    for (let i = 0; i < 4; i++) {
+      g = ok({ ...g, phase: "act" }, { type: "END_TURN", playerId: g.players[g.current]!.id });
+      expect(Object.values(g.market).every((v) => v === 0)).toBe(true);
     }
-    expect(seen.size).toBeGreaterThan(1);
+  });
+
+  it("only the leader passing Départ draws a new trend, between -30 and +30 %", () => {
+    const pass = (g: GameState, laps: number[]) => {
+      const s = structuredClone(g);
+      s.players.forEach((p, i) => (p.laps = laps[i]!));
+      s.players[s.current]!.position = board.length - 3;
+      return landOn(s, board[1]!.id);
+    };
+    const g = createGame(P, 1);
+    const lead = pass(g, [0, 0, 0]);
+    expect(lead.players[0]!.laps).toBe(1);
+    for (const v of Object.values(lead.market)) expect(Math.abs(v) >= 10 && Math.abs(v) <= 30).toBe(true);
+    const behind = pass(g, [0, 1, 0]);
+    expect(Object.values(behind.market).every((v) => v === 0)).toBe(true);
+    const tied = pass(g, [1, 2, 0]);
+    expect(Object.values(tied.market).every((v) => v === 0)).toBe(true);
   });
 
   it("fines go to the pot, and only the jackpot card wins it", () => {
