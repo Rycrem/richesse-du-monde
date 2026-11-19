@@ -83,26 +83,26 @@ describe("turn order", () => {
 describe("buying", () => {
   it("shows the city's stock and buys any split up to 30 %", () => {
     let g = at(createGame(P, 1), "pekin-hub");
-    expect(buyableStock(g)).toEqual({ appel: 25, netflox: 25 });
+    expect(buyableStock(g)).toEqual({ appel: 9, amazone: 15, tesler: 15, sonyx: 10 });
     const cash = g.players[0]!.cash;
-    g = ok(g, { type: "BUY", playerId: "a", purchases: { appel: 10 } });
-    expect(g.players[0]!.holdings.appel).toBe(10);
-    expect(g.players[0]!.cash).toBe(cash - 10 * price("appel"));
-    expect(g.stocks["pekin-hub"]!.appel).toBe(15);
+    g = ok(g, { type: "BUY", playerId: "a", purchases: { amazone: 10 } });
+    expect(g.players[0]!.holdings.amazone).toBe(10);
+    expect(g.players[0]!.cash).toBe(cash - 10 * price("amazone"));
+    expect(g.stocks["pekin-hub"]!.amazone).toBe(5);
   });
 
   it("caps the cumulative purchase at 30 % per landing", () => {
     let g = at(createGame(P, 1), "pekin-hub");
     g.players[0]!.cash = 1_000_000;
-    g = ok(g, { type: "BUY", playerId: "a", purchases: { appel: 20 } });
-    expect(err(g, { type: "BUY", playerId: "a", purchases: { netflox: 11 } })).toMatch(/30/);
-    g = ok(g, { type: "BUY", playerId: "a", purchases: { netflox: 10 } });
+    g = ok(g, { type: "BUY", playerId: "a", purchases: { amazone: 15, appel: 9 } });
+    expect(err(g, { type: "BUY", playerId: "a", purchases: { tesler: 7 } })).toMatch(/30/);
+    g = ok(g, { type: "BUY", playerId: "a", purchases: { tesler: 6 } });
     expect(g.boughtThisTurn).toBe(30);
   });
 
   it("refuses more than the city has, or more than the player can pay", () => {
     let g = at(createGame(P, 1), "paris");
-    expect(err(g, { type: "BUY", playerId: "a", purchases: { xiaomy: 16 } })).toMatch(/Stock/);
+    expect(err(g, { type: "BUY", playerId: "a", purchases: { xiaomy: 8 } })).toMatch(/Stock/);
     g.players[0]!.cash = 0;
     expect(err(g, { type: "BUY", playerId: "a", purchases: { xiaomy: 1 } })).toMatch(/argent/);
   });
@@ -114,7 +114,7 @@ describe("buying", () => {
 
   it("regional choice sells every company of the region, even on the first lap", () => {
     const g = at(createGame(P, 1), "choix-europe");
-    expect(buyableStock(g)).toEqual({ amb: 15, intol: 15, samsong: 15, nvidio: 15, xiaomy: 15, appel: 15, sonyx: 15, macrosoft: 15, spotifaille: 15, gogol: 15 });
+    expect(buyableStock(g)).toEqual({ amb: 23, sonyx: 10, appel: 9, netflox: 12, samsong: 9, spotifaille: 23, macrosoft: 12, meto: 9, xiaomy: 7, intol: 9, gogol: 9, tesler: 7, nvidio: 7, amazone: 7, oracul: 5, tsmb: 4 });
   });
 
   it("an Atout can be bought even with two players left", () => {
@@ -157,11 +157,11 @@ describe("spiral board", () => {
 describe("events", () => {
   it("records the roll, the card and the purchases of the turn, with growing ids", () => {
     let g = at(createGame(P, 1), "pekin-hub");
-    g = ok(g, { type: "BUY", playerId: "a", purchases: { appel: 10 } });
-    g = ok(g, { type: "BUY", playerId: "a", purchases: { appel: 5, netflox: 5 } });
+    g = ok(g, { type: "BUY", playerId: "a", purchases: { amazone: 10 } });
+    g = ok(g, { type: "BUY", playerId: "a", purchases: { amazone: 5, tesler: 5 } });
     g = ok(g, { type: "END_TURN", playerId: "a" });
     expect(g.events.map((e) => e.kind)).toEqual(["roll", "buys"]);
-    expect(g.events[1]).toMatchObject({ playerId: "a", items: [{ company: "appel", percent: 15, total: 15 }, { company: "netflox", percent: 5, total: 5 }] });
+    expect(g.events[1]).toMatchObject({ playerId: "a", items: [{ company: "amazone", percent: 15, total: 15 }, { company: "tesler", percent: 5, total: 5 }] });
     expect(g.events[1]!.id).toBeGreaterThan(g.events[0]!.id);
     expect(g.turnBuys).toEqual({});
   });
@@ -267,7 +267,7 @@ describe("royalties", () => {
     expect(alice.bankrupt).toBe(true);
     expect(g.eliminated).toEqual(["a"]);
     expect(g.players[g.current]!.id).toBe("b");
-    expect(g.stocks["sao-paulo"]!.sonyx).toBe(15);
+    expect(g.stocks["dubai"]!.sonyx).toBe(15);
   });
 });
 
