@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import { loadSettings, play, setSettings, unlock } from "./audio";
+import { applyTheme, loadTheme, THEMES } from "./theme";
 
-// Gear button with sound settings, available on every screen
+// Gear button with sound and theme settings, available on every screen
 export function Options() {
   const [open, setOpen] = useState(false);
   const [s, setS] = useState(loadSettings);
+  const [theme, setTheme] = useState(loadTheme);
+  useEffect(() => applyTheme(theme), [theme]);
   useEffect(() => setSettings(s), [s]);
   useEffect(() => {
     const onDown = () => unlock();
@@ -20,7 +23,8 @@ export function Options() {
     <div className="options">
       {open && (
         <div className="options-panel">
-          <h3>Options</h3>
+          <h3>Réglages</h3>
+          <h4>Son</h4>
           <label>
             Musique lofi
             <input type="range" min={0} max={1} step={0.05} value={s.music} onChange={(e) => setS({ ...s, music: Number(e.target.value) })} />
@@ -33,9 +37,22 @@ export function Options() {
             <input type="checkbox" checked={s.muted} onChange={(e) => setS({ ...s, muted: e.target.checked })} />
             Couper le son
           </label>
+          <h4>Thème</h4>
+          <div className="theme-list">
+            {THEMES.map((t) => (
+              <button key={t.id} className={`theme-choice ${t.id === theme ? "selected" : ""}`} onClick={() => setTheme(t.id)}>
+                <span className="swatch">
+                  {t.colors.map((c) => (
+                    <i key={c} style={{ background: c }} />
+                  ))}
+                </span>
+                {t.name}
+              </button>
+            ))}
+          </div>
         </div>
       )}
-      <button className="options-btn" aria-label="Options" onClick={() => setOpen(!open)}>
+      <button className="options-btn" aria-label="Réglages" onClick={() => setOpen(!open)}>
         {s.muted ? "🔇" : "⚙"}
       </button>
     </div>

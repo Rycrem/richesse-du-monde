@@ -16,8 +16,8 @@ export function Lobby({ room }: { room: RoomView }) {
   if (garage) return <Garage color={PLAYER_COLORS[myIndex] ?? PLAYER_COLORS[0]!} onClose={() => setGarage(false)} />;
 
   return (
-    <div className="setup">
-      <h1>Stonks Valley</h1>
+    <div className="setup lobby">
+      <h1 className="logo">Stonks Valley</h1>
       <div className="card">
         <h2>
           Code de la partie : <span className="code">{room.code}</span>

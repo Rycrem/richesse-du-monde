@@ -3,6 +3,10 @@ import { createRoot } from "react-dom/client";
 import { App } from "./App";
 import { Options } from "./Options";
 import "./styles.css";
+import "./themes.css";
+import { applyTheme, loadTheme } from "./theme";
+
+applyTheme(loadTheme());
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
