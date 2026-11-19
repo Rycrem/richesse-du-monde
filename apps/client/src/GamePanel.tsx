@@ -14,12 +14,17 @@ export function GamePanel({ game }: { game: GameState }) {
   const nameOf = (id: string) => game.players.find((p) => p.id === id)!.name;
   // phones: the panel is a bottom sheet, folded away, half open or pulled up
   const [sheet, setSheet] = useState<"min" | "mid" | "max">("mid");
-  const [dragY, setDragY] = useState<number | null>(null);
-  const SIZES = ["min", "mid", "max"] as const;
-  const moveSheet = (dy: number) => {
-    const i = SIZES.indexOf(sheet);
-    if (Math.abs(dy) < 25) setSheet(sheet === "mid" ? "max" : sheet === "max" ? "min" : "mid");
-    else setSheet(SIZES[Math.max(0, Math.min(2, i + (dy < 0 ? 1 : -1)))]!);
+  // the sheet follows the finger while dragged, then snaps to the closest size; a tap cycles the sizes
+  const [drag, setDrag] = useState<{ y: number; h: number; now: number } | null>(null);
+  const endDrag = (y: number) => {
+    if (!drag) return;
+    const dy = y - drag.y;
+    setDrag(null);
+    if (Math.abs(dy) < 8) return setSheet(sheet === "mid" ? "max" : sheet === "max" ? "min" : "mid");
+    const vh = window.innerHeight;
+    const sizes = [["min", 130], ["mid", vh * 0.38], ["max", vh * 0.78]] as const;
+    const h = drag.h - dy;
+    setSheet(sizes.reduce((a, b) => (Math.abs(b[1] - h) < Math.abs(a[1] - h) ? b : a))[0]);
   };
 
   if (game.phase === "gameOver") {
@@ -49,13 +54,18 @@ export function GamePanel({ game }: { game: GameState }) {
   }
 
   return (
-    <aside className={`panel sheet-${sheet}`}>
+    <aside className={`panel sheet-${sheet} ${drag ? "dragging" : ""}`} style={drag ? { height: Math.max(90, drag.now) } : undefined}>
       <button
         className="sheet-handle"
         aria-label={sheet === "max" ? "Ranger le panneau" : "Agrandir le panneau"}
-        onPointerDown={(e) => setDragY(e.clientY)}
-        onPointerUp={(e) => (dragY !== null && moveSheet(e.clientY - dragY), setDragY(null))}
-        onPointerCancel={() => setDragY(null)}
+        onPointerDown={(e) => {
+          e.currentTarget.setPointerCapture(e.pointerId);
+          const h = e.currentTarget.parentElement!.getBoundingClientRect().height;
+          setDrag({ y: e.clientY, h, now: h });
+        }}
+        onPointerMove={(e) => drag && setDrag({ ...drag, now: Math.min(window.innerHeight * 0.92, drag.h - (e.clientY - drag.y)) })}
+        onPointerUp={(e) => endDrag(e.clientY)}
+        onPointerCancel={() => setDrag(null)}
       >
         <i />
       </button>
