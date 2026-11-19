@@ -1,7 +1,7 @@
-import { config, type GameMode } from "@stonks/engine";
+import { config, STARTING_CASH_OPTIONS, type GameMode } from "@stonks/engine";
 import type { RoomView } from "@stonks/shared";
 import { useState } from "react";
-import { PLAYER_COLORS } from "./format";
+import { money, PLAYER_COLORS } from "./format";
 import { Garage } from "./Garage";
 import { pawnDataUrl } from "./pawn";
 import { useStore } from "./store";
@@ -9,6 +9,7 @@ import { useStore } from "./store";
 export function Lobby({ room }: { room: RoomView }) {
   const { you, startOnline, quit, kick, error } = useStore();
   const [mode, setMode] = useState<GameMode>("classique");
+  const [cash, setCash] = useState(config.startingCash);
   const [garage, setGarage] = useState(false);
   const link = `${location.origin}/?code=${room.code}`;
   const isHost = you === room.hostId;
@@ -56,7 +57,17 @@ export function Lobby({ room }: { room: RoomView }) {
               <input type="radio" checked={mode === "chrono"} onChange={() => setMode("chrono")} />
               Chrono : le plus riche gagne quand l'hôte arrête la partie
             </label>
-            <button className="primary" disabled={room.players.length < config.minPlayers} onClick={() => startOnline(mode)}>
+            <label className="row cash-pick">
+              Argent de départ
+              <select value={cash} onChange={(e) => setCash(Number(e.target.value))}>
+                {STARTING_CASH_OPTIONS.map((v) => (
+                  <option key={v} value={v}>
+                    {money(v)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button className="primary" disabled={room.players.length < config.minPlayers} onClick={() => startOnline(mode, cash)}>
               Lancer la partie
             </button>
           </>

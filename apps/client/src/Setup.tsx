@@ -1,6 +1,6 @@
-import { config, type GameMode } from "@stonks/engine";
+import { config, STARTING_CASH_OPTIONS, type GameMode } from "@stonks/engine";
 import { useState } from "react";
-import { PLAYER_COLORS } from "./format";
+import { money, PLAYER_COLORS } from "./format";
 import { useStore } from "./store";
 
 export function Setup({ solo = false }: { solo?: boolean }) {
@@ -8,6 +8,7 @@ export function Setup({ solo = false }: { solo?: boolean }) {
   const me = useStore((s) => s.profile.account || s.profile.name || "Toi");
   const [names, setNames] = useState(solo ? [me, "Bot 1", "Bot 2"] : ["Joueur 1", "Joueur 2"]);
   const [mode, setMode] = useState<GameMode>("classique");
+  const [cash, setCash] = useState(config.startingCash);
 
   return (
     <div className="card">
@@ -38,7 +39,17 @@ export function Setup({ solo = false }: { solo?: boolean }) {
         <input type="radio" checked={mode === "chrono"} onChange={() => setMode("chrono")} />
         Chrono : le plus riche gagne quand on arrête la partie
       </label>
-      <button className="primary" disabled={names.some((n) => !n.trim())} onClick={() => startLocal(names.map((n) => n.trim()), mode, names.map((_, i) => solo && i > 0))}>
+      <label className="row cash-pick">
+        Argent de départ
+        <select value={cash} onChange={(e) => setCash(Number(e.target.value))}>
+          {STARTING_CASH_OPTIONS.map((v) => (
+            <option key={v} value={v}>
+              {money(v)}
+            </option>
+          ))}
+        </select>
+      </label>
+      <button className="primary" disabled={names.some((n) => !n.trim())} onClick={() => startLocal(names.map((n) => n.trim()), mode, names.map((_, i) => solo && i > 0), cash)}>
         Lancer la partie
       </button>
     </div>

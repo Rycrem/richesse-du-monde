@@ -76,9 +76,9 @@ io.on("connection", (socket) => {
     ack(r);
   });
 
-  socket.on("room:start", (mode, ack) => {
+  socket.on("room:start", (mode, startingCash, ack) => {
     if (!session) return ack({ ok: false, error: "Pas dans une partie" });
-    ack(rooms.start(session.code, session.playerId, mode === "chrono" ? "chrono" : "classique"));
+    ack(rooms.start(session.code, session.playerId, mode === "chrono" ? "chrono" : "classique", startingCash));
   });
 
   socket.on("room:kick", (playerId, ack) => {

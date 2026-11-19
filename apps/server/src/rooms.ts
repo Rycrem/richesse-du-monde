@@ -1,5 +1,5 @@
 import { randomBytes, randomUUID } from "node:crypto";
-import { applyAction, config, createGame, ranking, rollTurnOrder, type Action, type GameMode, type GameState } from "@stonks/engine";
+import { applyAction, config, createGame, ranking, rollTurnOrder, STARTING_CASH_OPTIONS, type Action, type GameMode, type GameState } from "@stonks/engine";
 import { dmChannel, pointsForRank, SYSTEM_ACTIONS, type ChatGroup, type ChatMessage, type LobbyPlayer, type RoomView, type Session } from "@stonks/shared";
 import type { Profiles } from "./profiles";
 
@@ -123,17 +123,19 @@ export class Rooms {
     this.rooms.delete(room.code);
   }
 
-  start(code: string, playerId: string, mode: GameMode): Result<null> {
+  start(code: string, playerId: string, mode: GameMode, startingCash = config.startingCash): Result<null> {
     const room = this.get(code);
     if (!room) return { ok: false, error: "Partie introuvable" };
     if (room.hostId !== playerId) return { ok: false, error: "Seul l'hôte peut lancer la partie" };
     if (room.game) return { ok: false, error: "Déjà lancée" };
     if (room.members.length < config.minPlayers) return { ok: false, error: `Il faut au moins ${config.minPlayers} joueurs` };
+    if (!STARTING_CASH_OPTIONS.includes(startingCash)) return { ok: false, error: "Argent de départ invalide" };
     room.game = rollTurnOrder(
       createGame(
         room.members.map((m) => ({ id: m.id, name: m.name })),
         randomBytes(4).readUInt32LE(),
         mode,
+        startingCash,
       ),
     );
     this.onChange(room);

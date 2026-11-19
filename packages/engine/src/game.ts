@@ -28,10 +28,14 @@ export type Result = { ok: true; state: GameState } | { ok: false; error: string
 const companyById = new Map(companies.map((c) => [c.id, c]));
 const cityStockOrigin = board.flatMap((c) => (c.type === "city" ? [c] : []));
 
-export function createGame(players: { id: PlayerId; name: string }[], seed: number, mode: GameMode = "classique"): GameState {
+// Starting cash the host can pick before the game
+export const STARTING_CASH_OPTIONS = [5000, 8000, 10000, 12000, 15000, 20000, 30000];
+
+export function createGame(players: { id: PlayerId; name: string }[], seed: number, mode: GameMode = "classique", startingCash = config.startingCash): GameState {
   if (players.length < config.minPlayers || players.length > config.maxPlayers) {
     throw new Error(`Il faut entre ${config.minPlayers} et ${config.maxPlayers} joueurs`);
   }
+  if (!STARTING_CASH_OPTIONS.includes(startingCash)) throw new Error("Argent de départ invalide");
   let s = seed >>> 0;
   const tokens = companies.flatMap((c) => Array<CompanyId>(config.royaltyTokensPerCompany).fill(c.id));
   [s] = shuffle(tokens, s);
@@ -42,7 +46,7 @@ export function createGame(players: { id: PlayerId; name: string }[], seed: numb
   return {
     seed: s,
     mode,
-    players: players.map((p) => ({ ...p, cash: config.startingCash, position: 0, holdings: {}, atouts: 0, laps: 0, bankrupt: false })),
+    players: players.map((p) => ({ ...p, cash: startingCash, position: 0, holdings: {}, atouts: 0, laps: 0, bankrupt: false })),
     current: 0,
     phase: "roll",
     stocks: Object.fromEntries(cityStockOrigin.map((c) => [c.id, { ...c.stock }])),
