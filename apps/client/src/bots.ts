@@ -13,7 +13,9 @@ export function useBots(game: GameState | null) {
       if (!action) continue;
       const last = game.events.at(-1);
       let delay = 1400;
-      if (action.type === "BID") delay = 1500 + Math.random() * 3500;
+      // a bankruptcy just ended a turn: leave time to read it before the next player moves
+      if (last?.kind === "bankrupt") delay = 5000;
+      else if (action.type === "BID") delay = 1500 + Math.random() * 3500;
       else if (last?.kind === "roll" && game.phase === "act" && last.playerId === id && game.boughtThisTurn === 0) {
         delay = 2500 + ((last.to - last.from + board.length) % board.length) * 240;
       }

@@ -36,8 +36,8 @@ export function AuctionScreen({ game }: { game: GameState }) {
   const [pick, setPick] = useState<{ ownerId: string; company: string; max: number } | null>(null);
   const [pct, setPct] = useState(1);
   useEffect(() => {
-    if (game.auction) setShown({ a: game.auction, leaving: false });
     if (!game.auction?.company) setPick(null);
+    if (game.auction) setShown({ a: game.auction, leaving: false });
     else if (shown && !shown.leaving) {
       setShown({ ...shown, leaving: true });
       const t = setTimeout(() => setShown(null), LEAVE_MS);
