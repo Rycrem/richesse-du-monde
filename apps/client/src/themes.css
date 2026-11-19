@@ -16,7 +16,7 @@
 .setup, .garage { position: relative; }
 
 /* ---------- Cyberpunk ---------- */
-[data-theme="cyberpunk"] :is(.setup, .garage, .options, .panel) {
+[data-theme="cyberpunk"] :is(.setup, .garage, .options, .panel, .board-wrap) {
   --bg: #07060d; --panel: #0e0c1a; --card: #0e0c1ae6; --text: #e8f6ff; --muted: #7d8aa8; --accent: #05d9e8; --danger: #ff2a6d;
   --pink: #ff2a6d; --yel: #f9f002;
   font-family: Rajdhani, system-ui, sans-serif; font-weight: 600; color: var(--text);
@@ -35,13 +35,13 @@
 [data-theme="cyberpunk"] :is(.setup, .garage) h1 { font: 900 52px/1.05 Orbitron, sans-serif; text-transform: uppercase; letter-spacing: 2px; color: #fff; text-shadow: -3px 0 var(--pink), 3px 0 var(--accent), 0 0 30px #ff2a6d88; }
 [data-theme="cyberpunk"] .setup .logo::after { content: "\30B9\30C8\30F3\30AF\30B9\30FB\30D0\30EC\30FC"; display: block; margin-top: 8px; font: 700 16px sans-serif; letter-spacing: 8px; color: var(--pink); text-shadow: none; }
 [data-theme="cyberpunk"] .tagline { font-size: 19px; }
-[data-theme="cyberpunk"] :is(.setup, .garage, .options, .panel) :is(h2, h3, h4) { font-family: Orbitron, sans-serif; text-transform: uppercase; letter-spacing: 1px; }
+[data-theme="cyberpunk"] :is(.setup, .garage, .options, .panel, .board-wrap) :is(h2, h3, h4) { font-family: Orbitron, sans-serif; text-transform: uppercase; letter-spacing: 1px; }
 [data-theme="cyberpunk"] :is(.setup, .garage, .panel) .card { position: relative; border: 1px solid #05d9e855; border-radius: 0; background: linear-gradient(135deg, #ff2a6d14, transparent 40%), var(--card); backdrop-filter: blur(6px); clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px)); box-shadow: inset 0 2px 0 var(--accent); }
-[data-theme="cyberpunk"] :is(.setup, .garage, .options, .panel) button { border-radius: 0; border: 1px solid #05d9e888; background: #05d9e810; color: var(--accent); font-family: Orbitron, sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); }
-[data-theme="cyberpunk"] :is(.setup, .garage, .options, .panel) button.primary { background: var(--yel); color: #000; border: none; box-shadow: 0 0 24px #f9f00266; font-size: 15px; padding: 12px; }
-[data-theme="cyberpunk"] :is(.setup, .garage, .options, .panel) button.ghost { border-color: #ff2a6d88; color: var(--pink); background: transparent; }
-[data-theme="cyberpunk"] :is(.setup, .garage, .options, .panel) button.link { clip-path: none; border: none; background: none; text-transform: none; font: 400 13px "Share Tech Mono", monospace; color: var(--accent); }
-[data-theme="cyberpunk"] :is(.setup, .garage, .options, .panel) :is(input, select) { border-radius: 0; border: 1px solid #05d9e866; background: #000a; color: var(--yel); font-family: "Share Tech Mono", monospace; }
+[data-theme="cyberpunk"] :is(.setup, .garage, .options, .panel, .board-wrap) button { border-radius: 0; border: 1px solid #05d9e888; background: #05d9e810; color: var(--accent); font-family: Orbitron, sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); }
+[data-theme="cyberpunk"] :is(.setup, .garage, .options, .panel, .board-wrap) button.primary { background: var(--yel); color: #000; border: none; box-shadow: 0 0 24px #f9f00266; font-size: 15px; padding: 12px; }
+[data-theme="cyberpunk"] :is(.setup, .garage, .options, .panel, .board-wrap) button.ghost { border-color: #ff2a6d88; color: var(--pink); background: transparent; }
+[data-theme="cyberpunk"] :is(.setup, .garage, .options, .panel, .board-wrap) button.link { clip-path: none; border: none; background: none; text-transform: none; font: 400 13px "Share Tech Mono", monospace; color: var(--accent); }
+[data-theme="cyberpunk"] :is(.setup, .garage, .options, .panel, .board-wrap) :is(input, select) { border-radius: 0; border: 1px solid #05d9e866; background: #000a; color: var(--yel); font-family: "Share Tech Mono", monospace; }
 [data-theme="cyberpunk"] .options .theme-choice.selected { background: #ff2a6d33; color: #fff; border-color: var(--pink); }
 [data-theme="cyberpunk"] .tabs button.primary { background: linear-gradient(135deg, #ff2a6d55, #0e0c1a); color: #fff; border: 1px solid var(--pink); box-shadow: 0 0 20px #ff2a6d55; }
 [data-theme="cyberpunk"] .code { font-family: Orbitron, sans-serif; font-weight: 900; color: var(--yel); text-shadow: -2px 0 var(--pink), 2px 0 var(--accent); }
@@ -55,7 +55,7 @@
 [data-theme="cyberpunk"] .options-panel { border-radius: 0; border: 1px solid #ff2a6d66; background: #0e0c1af2; }
 
 /* ---------- Terminal de bourse ---------- */
-[data-theme="terminal"] :is(.setup, .garage, .options, .panel) {
+[data-theme="terminal"] :is(.setup, .garage, .options, .panel, .board-wrap) {
   --bg: #070d14; --panel: #0c1621; --card: #0c1621e6; --text: #d9f2ea; --muted: #6f8c99; --accent: #00e5a0; --danger: #ff4d6d; --line: #163042;
   font-family: "Space Grotesk", system-ui, sans-serif; color: var(--text);
 }
@@ -69,13 +69,13 @@
 [data-theme="terminal"] .setup.home::before { content: "NVIDEA +4.2%   TSMB -1.8%   AMB +0.9%   PALO ALTO +12.0%   MOUNTAIN VIEW -3.1%   SAN JOSE +2.4%"; display: block; font: 500 12px "JetBrains Mono", monospace; color: var(--accent); background: #050a10; border: 1px solid var(--line); padding: 8px 12px; margin-bottom: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 [data-theme="terminal"] :is(.setup, .garage) h1 { font: 700 52px/1 "Space Grotesk", sans-serif; letter-spacing: -2px; color: var(--accent); text-shadow: 0 0 24px #00e5a088; }
 [data-theme="terminal"] .setup .logo::after { content: "LIVE"; display: inline-block; vertical-align: middle; margin-left: 12px; font: 700 13px "JetBrains Mono", monospace; letter-spacing: 1px; border: 1px solid var(--accent); padding: 3px 8px; border-radius: 4px; text-shadow: none; }
-[data-theme="terminal"] :is(.setup, .garage, .options, .panel) :is(h2, h3, h4) { font: 700 12px "JetBrains Mono", monospace; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+[data-theme="terminal"] :is(.setup, .garage, .options, .panel, .board-wrap) :is(h2, h3, h4) { font: 700 12px "JetBrains Mono", monospace; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
 [data-theme="terminal"] :is(.setup, .garage, .panel) .card { border: 1px solid var(--line); border-radius: 6px; background: var(--card); backdrop-filter: blur(4px); }
-[data-theme="terminal"] :is(.setup, .garage, .options, .panel) button { border-radius: 4px; border: 1px solid var(--line); background: transparent; color: var(--text); font-weight: 700; }
-[data-theme="terminal"] :is(.setup, .garage, .options, .panel) button.primary { background: var(--accent); color: #04130d; border: none; box-shadow: 0 0 24px #00e5a055; text-transform: uppercase; letter-spacing: 1px; padding: 12px; }
-[data-theme="terminal"] :is(.setup, .garage, .options, .panel) button.ghost { border-color: #ff4d6d55; color: var(--danger); }
-[data-theme="terminal"] :is(.setup, .garage, .options, .panel) button.link { border: none; color: var(--accent); font-weight: 500; }
-[data-theme="terminal"] :is(.setup, .garage, .options, .panel) :is(input, select) { border-radius: 4px; border: 1px solid var(--line); background: #050a10; font-family: "JetBrains Mono", monospace; }
+[data-theme="terminal"] :is(.setup, .garage, .options, .panel, .board-wrap) button { border-radius: 4px; border: 1px solid var(--line); background: transparent; color: var(--text); font-weight: 700; }
+[data-theme="terminal"] :is(.setup, .garage, .options, .panel, .board-wrap) button.primary { background: var(--accent); color: #04130d; border: none; box-shadow: 0 0 24px #00e5a055; text-transform: uppercase; letter-spacing: 1px; padding: 12px; }
+[data-theme="terminal"] :is(.setup, .garage, .options, .panel, .board-wrap) button.ghost { border-color: #ff4d6d55; color: var(--danger); }
+[data-theme="terminal"] :is(.setup, .garage, .options, .panel, .board-wrap) button.link { border: none; color: var(--accent); font-weight: 500; }
+[data-theme="terminal"] :is(.setup, .garage, .options, .panel, .board-wrap) :is(input, select) { border-radius: 4px; border: 1px solid var(--line); background: #050a10; font-family: "JetBrains Mono", monospace; }
 [data-theme="terminal"] .tabs button.primary { background: linear-gradient(180deg, #00e5a018, transparent); color: var(--accent); border: 1px solid var(--accent); box-shadow: none; }
 [data-theme="terminal"] .code { font-family: "JetBrains Mono", monospace; text-shadow: 0 0 20px #00e5a088; }
 [data-theme="terminal"] .points { background: none; color: #ffd166; border: 1px solid #ffd166; border-radius: 4px; font-family: "JetBrains Mono", monospace; }
@@ -84,7 +84,7 @@
 [data-theme="terminal"] .options-panel { border: 1px solid var(--line); border-radius: 6px; }
 
 /* ---------- Pop cartoon ---------- */
-[data-theme="pop"] :is(.setup, .garage, .options, .panel) {
+[data-theme="pop"] :is(.setup, .garage, .options, .panel, .board-wrap) {
   --bg: #fff6e6; --panel: #ffffff; --card: #ffffff; --text: #1a1a2e; --muted: #5c5c70; --accent: #06d6a0; --danger: #ef476f; --ink: #1a1a2e;
   font-family: Nunito, system-ui, sans-serif; font-weight: 700; color: var(--text);
 }
@@ -98,14 +98,14 @@
 [data-theme="pop"] :is(.setup, .garage) h1 { font: 800 52px/1 "Bricolage Grotesque", sans-serif; letter-spacing: -2px; color: var(--ink); }
 [data-theme="pop"] .setup .logo { display: inline-block; background: var(--accent); border: 4px solid var(--ink); border-radius: 18px; box-shadow: 6px 6px 0 var(--ink); padding: 2px 16px; transform: rotate(-2deg); margin-bottom: 8px; }
 [data-theme="pop"] .tagline { font-size: 18px; color: var(--ink); }
-[data-theme="pop"] :is(.setup, .garage, .options, .panel) :is(h2, h3) { font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; }
+[data-theme="pop"] :is(.setup, .garage, .options, .panel, .board-wrap) :is(h2, h3) { font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; }
 [data-theme="pop"] :is(.setup, .garage, .panel) .card { border: 3px solid var(--ink); border-radius: 20px; background: #fff; box-shadow: 6px 6px 0 var(--ink); padding: 18px; }
-[data-theme="pop"] :is(.setup, .garage, .options, .panel) button { border: 3px solid var(--ink); border-radius: 14px; background: #fff; color: var(--ink); font-weight: 900; box-shadow: 3px 3px 0 var(--ink); }
-[data-theme="pop"] :is(.setup, .garage, .options, .panel) button:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
-[data-theme="pop"] :is(.setup, .garage, .options, .panel) button.primary { background: var(--accent); color: var(--ink); border: 3px solid var(--ink); font-size: 17px; padding: 12px; }
-[data-theme="pop"] :is(.setup, .garage, .options, .panel) button.ghost { background: var(--danger); color: #fff; }
-[data-theme="pop"] :is(.setup, .garage, .options, .panel) button.link { border: none; box-shadow: none; background: none; color: var(--ink); }
-[data-theme="pop"] :is(.setup, .garage, .options, .panel) :is(input, select) { border: 3px solid var(--ink); border-radius: 12px; background: #fff6e6; color: var(--ink); font-weight: 800; padding: 8px 10px; }
+[data-theme="pop"] :is(.setup, .garage, .options, .panel, .board-wrap) button { border: 3px solid var(--ink); border-radius: 14px; background: #fff; color: var(--ink); font-weight: 900; box-shadow: 3px 3px 0 var(--ink); }
+[data-theme="pop"] :is(.setup, .garage, .options, .panel, .board-wrap) button:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
+[data-theme="pop"] :is(.setup, .garage, .options, .panel, .board-wrap) button.primary { background: var(--accent); color: var(--ink); border: 3px solid var(--ink); font-size: 17px; padding: 12px; }
+[data-theme="pop"] :is(.setup, .garage, .options, .panel, .board-wrap) button.ghost { background: var(--danger); color: #fff; }
+[data-theme="pop"] :is(.setup, .garage, .options, .panel, .board-wrap) button.link { border: none; box-shadow: none; background: none; color: var(--ink); }
+[data-theme="pop"] :is(.setup, .garage, .options, .panel, .board-wrap) :is(input, select) { border: 3px solid var(--ink); border-radius: 12px; background: #fff6e6; color: var(--ink); font-weight: 800; padding: 8px 10px; }
 [data-theme="pop"] .tabs button.primary { background: #ffd166; transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--ink); }
 [data-theme="pop"] .setup .my-pawn { background: #9b5de5; color: #fff; }
 [data-theme="pop"] .setup .my-pawn small { color: #fff; }
@@ -117,7 +117,7 @@
 [data-theme="pop"] .options-panel { border: 3px solid var(--ink); border-radius: 18px; box-shadow: 5px 5px 0 var(--ink); background: #fff; }
 
 /* ---------- Journal financier ---------- */
-[data-theme="journal"] :is(.setup, .garage, .options, .panel) {
+[data-theme="journal"] :is(.setup, .garage, .options, .panel, .board-wrap) {
   --bg: #f3ecdc; --panel: #f3ecdc; --card: transparent; --text: #161310; --muted: #5d554a; --accent: #b3261e; --danger: #b3261e; --ink: #161310;
   font-family: "Old Standard TT", Georgia, serif; color: var(--text);
 }
@@ -129,14 +129,14 @@
 [data-theme="journal"] .setup .logo::after { content: " Times"; }
 [data-theme="journal"] .tagline { text-align: center; font-style: italic; color: var(--muted); }
 [data-theme="journal"] .garage h1 { text-align: left; }
-[data-theme="journal"] :is(.setup, .garage, .options, .panel) :is(h2, h3) { font-family: "Playfair Display", Georgia, serif; font-weight: 900; }
-[data-theme="journal"] :is(.setup, .garage, .options, .panel) h4 { font: 700 11px "IBM Plex Mono", monospace; color: var(--accent); }
+[data-theme="journal"] :is(.setup, .garage, .options, .panel, .board-wrap) :is(h2, h3) { font-family: "Playfair Display", Georgia, serif; font-weight: 900; }
+[data-theme="journal"] :is(.setup, .garage, .options, .panel, .board-wrap) h4 { font: 700 11px "IBM Plex Mono", monospace; color: var(--accent); }
 [data-theme="journal"] :is(.setup, .garage, .panel) .card { border-radius: 0; border-top: 3px double var(--ink); padding: 14px 0; background: none; }
-[data-theme="journal"] :is(.setup, .garage, .options, .panel) button { border-radius: 0; border: 2px solid var(--ink); background: transparent; color: var(--ink); font: 700 13px "IBM Plex Mono", monospace; text-transform: uppercase; letter-spacing: 1px; }
-[data-theme="journal"] :is(.setup, .garage, .options, .panel) button.primary { background: var(--ink); color: #f3ecdc; padding: 12px; }
-[data-theme="journal"] :is(.setup, .garage, .options, .panel) button.ghost { background: var(--accent); border-color: var(--accent); color: #fff; }
-[data-theme="journal"] :is(.setup, .garage, .options, .panel) button.link { border: none; text-transform: none; font: italic 400 14px "Old Standard TT", serif; color: var(--ink); letter-spacing: 0; }
-[data-theme="journal"] :is(.setup, .garage, .options, .panel) :is(input, select) { border: none; border-bottom: 2px solid var(--ink); border-radius: 0; background: transparent; color: var(--ink); font-family: "IBM Plex Mono", monospace; }
+[data-theme="journal"] :is(.setup, .garage, .options, .panel, .board-wrap) button { border-radius: 0; border: 2px solid var(--ink); background: transparent; color: var(--ink); font: 700 13px "IBM Plex Mono", monospace; text-transform: uppercase; letter-spacing: 1px; }
+[data-theme="journal"] :is(.setup, .garage, .options, .panel, .board-wrap) button.primary { background: var(--ink); color: #f3ecdc; padding: 12px; }
+[data-theme="journal"] :is(.setup, .garage, .options, .panel, .board-wrap) button.ghost { background: var(--accent); border-color: var(--accent); color: #fff; }
+[data-theme="journal"] :is(.setup, .garage, .options, .panel, .board-wrap) button.link { border: none; text-transform: none; font: italic 400 14px "Old Standard TT", serif; color: var(--ink); letter-spacing: 0; }
+[data-theme="journal"] :is(.setup, .garage, .options, .panel, .board-wrap) :is(input, select) { border: none; border-bottom: 2px solid var(--ink); border-radius: 0; background: transparent; color: var(--ink); font-family: "IBM Plex Mono", monospace; }
 [data-theme="journal"] .tabs { border-bottom: 1px solid var(--ink); padding-bottom: 10px; }
 [data-theme="journal"] .tabs button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
 [data-theme="journal"] .setup .my-pawn { background: #f6d6c8; }
@@ -148,7 +148,7 @@
 [data-theme="journal"] .options-panel { border-radius: 0; border: 2px solid var(--ink); background: #f3ecdc; box-shadow: 4px 4px 0 #0003; }
 
 /* ---------- Stonks OS ---------- */
-[data-theme="os"] :is(.setup, .garage, .options, .panel) {
+[data-theme="os"] :is(.setup, .garage, .options, .panel, .board-wrap) {
   --bg: #2a7d7b; --panel: #c3c3c3; --card: #c3c3c3; --text: #000; --muted: #404040; --accent: #0a246a; --danger: #a00;
   --hi: #fff; --sh: #7b7b7b; --dk: #000;
   font-family: "Pixelify Sans", system-ui, sans-serif; color: var(--text);
@@ -169,16 +169,16 @@
 }
 [data-theme="os"] .options-panel::before { content: "R\E9 glages"; margin: -12px -14px 4px; }
 [data-theme="os"] .options-panel h3 { display: none; }
-[data-theme="os"] :is(.setup, .garage, .options, .panel) :is(h2, h3, h4) { font-weight: 700; font-size: 17px; color: #000; }
-[data-theme="os"] :is(.setup, .garage, .options, .panel) button {
+[data-theme="os"] :is(.setup, .garage, .options, .panel, .board-wrap) :is(h2, h3, h4) { font-weight: 700; font-size: 17px; color: #000; }
+[data-theme="os"] :is(.setup, .garage, .options, .panel, .board-wrap) button {
   border-radius: 0; background: #c3c3c3; color: #000; border: 2px solid; border-color: var(--hi) var(--dk) var(--dk) var(--hi);
   box-shadow: inset -1px -1px 0 var(--sh); font-family: "Pixelify Sans", sans-serif; font-weight: 600;
 }
-[data-theme="os"] :is(.setup, .garage, .options, .panel) button:active, [data-theme="os"] .tabs button.primary { border-color: var(--dk) var(--hi) var(--hi) var(--dk); box-shadow: inset 1px 1px 0 var(--sh); }
-[data-theme="os"] :is(.setup, .garage, .options, .panel) button.primary { outline: 2px solid #000; outline-offset: -5px; padding: 10px; }
+[data-theme="os"] :is(.setup, .garage, .options, .panel, .board-wrap) button:active, [data-theme="os"] .tabs button.primary { border-color: var(--dk) var(--hi) var(--hi) var(--dk); box-shadow: inset 1px 1px 0 var(--sh); }
+[data-theme="os"] :is(.setup, .garage, .options, .panel, .board-wrap) button.primary { outline: 2px solid #000; outline-offset: -5px; padding: 10px; }
 [data-theme="os"] .tabs button.primary { outline: none; background: repeating-conic-gradient(#fff 0 25%, #c3c3c3 0 50%) 0 0 / 2px 2px; font-weight: 700; }
-[data-theme="os"] :is(.setup, .garage, .options, .panel) button.link { border: none; box-shadow: none; background: none; color: #0a246a; }
-[data-theme="os"] :is(.setup, .garage, .options, .panel) :is(input, select) { border-radius: 0; background: #fff; color: #000; border: 2px solid; border-color: var(--sh) var(--hi) var(--hi) var(--sh); box-shadow: inset 1px 1px 0 #000; font: 400 20px VT323, monospace; }
+[data-theme="os"] :is(.setup, .garage, .options, .panel, .board-wrap) button.link { border: none; box-shadow: none; background: none; color: #0a246a; }
+[data-theme="os"] :is(.setup, .garage, .options, .panel, .board-wrap) :is(input, select) { border-radius: 0; background: #fff; color: #000; border: 2px solid; border-color: var(--sh) var(--hi) var(--hi) var(--sh); box-shadow: inset 1px 1px 0 #000; font: 400 20px VT323, monospace; }
 [data-theme="os"] .setup .my-pawn { background: #c3c3c3; color: #000; }
 [data-theme="os"] .code { font-family: VT323, monospace; font-size: 34px; color: #0a246a; }
 [data-theme="os"] .points { border-radius: 0; background: #fff; border: 2px solid; border-color: var(--sh) var(--hi) var(--hi) var(--sh); font: 400 22px VT323, monospace; }
@@ -243,3 +243,48 @@
 /* themed buttons do not apply to the sheet handle and the market chips of the game panel */
 [data-theme] .panel button.sheet-handle { background: none; border: none; box-shadow: none; clip-path: none; padding: 0; }
 [data-theme] .panel button.trend { border: none; box-shadow: none; clip-path: none; padding: 3px 8px; font-size: 12px; text-transform: none; letter-spacing: 0; border-radius: 999px; }
+
+/* ---------- Everything over the board (popups, animated cards, auctions, chat) follows the theme; the 3D board keeps its colors ---------- */
+[data-theme] :is(.inspect, .event-card, .buys, .big-dice, .chat, .win-card, .auction-screen, .hover-tip) { color: var(--text); }
+[data-theme] :is(.event-card, .auction-screen) :is(.sub, .party small, .parties .arrow, .lot) { color: var(--muted); }
+[data-theme] .board-wrap button.close { background: #0003; color: #fff; border: none; box-shadow: none; clip-path: none; border-radius: 999px; width: 28px; height: 28px; padding: 0; font-size: 18px; }
+[data-theme] .board-wrap .market-company { text-transform: none; letter-spacing: 0; font-size: 14px; clip-path: none; }
+[data-theme] .board-wrap .recenter-btn { width: 40px; height: 40px; padding: 0; font-size: 22px; }
+
+[data-theme="cyberpunk"] :is(.inspect, .event-card, .buys, .big-dice, .chat, .win-card, .auction-screen, .hover-tip) {
+  background: linear-gradient(135deg, #ff2a6d14, transparent 40%), #0e0c1af2; border: 1px solid #05d9e855; border-radius: 0; box-shadow: inset 0 2px 0 #05d9e8, 0 18px 40px #000b;
+  clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+}
+[data-theme="cyberpunk"] .hover-tip { clip-path: none; }
+[data-theme="cyberpunk"] :is(.event-card .head, .auction-top, .inspect header) { font-family: Orbitron, sans-serif; text-transform: uppercase; letter-spacing: 1px; }
+[data-theme="cyberpunk"] :is(.party, .auction-bid .bid, .auction-pct, .order-row, .market-company) { background: #05d9e80f; border: 1px solid #05d9e833; border-radius: 0; }
+[data-theme="cyberpunk"] :is(.big-dice .eq, .win-card .win-title, .event-card .amount.plus) { color: #f9f002; text-shadow: 0 0 14px #f9f00288; }
+
+[data-theme="terminal"] :is(.inspect, .event-card, .buys, .big-dice, .chat, .win-card, .auction-screen, .hover-tip) { background: #0c1621f2; border: 1px solid #163042; border-radius: 6px; box-shadow: 0 0 30px #00e5a01a, 0 18px 40px #000b; }
+[data-theme="terminal"] :is(.event-card .head, .auction-top) { font-family: "JetBrains Mono", monospace; }
+[data-theme="terminal"] :is(.party, .auction-bid .bid, .auction-pct, .order-row, .market-company) { background: #050a10; border: 1px solid #163042; border-radius: 4px; }
+[data-theme="terminal"] :is(.event-card .amount, .big-dice .eq, .auction-bid .bid) { font-family: "JetBrains Mono", monospace; }
+
+[data-theme="pop"] :is(.inspect, .event-card, .buys, .big-dice, .chat, .win-card, .auction-screen, .hover-tip) { background: #fff; border: 3px solid #1a1a2e; border-radius: 20px; box-shadow: 6px 6px 0 #1a1a2e; }
+[data-theme="pop"] .hover-tip { border-width: 2px; border-radius: 12px; box-shadow: 3px 3px 0 #1a1a2e; }
+[data-theme="pop"] :is(.event-card .head, .auction-top, .inspect header) { border-bottom: 3px solid #1a1a2e; font-family: "Bricolage Grotesque", sans-serif; }
+[data-theme="pop"] :is(.party, .auction-bid .bid, .auction-pct, .order-row, .market-company) { background: #fff6e6; border: 2px solid #1a1a2e; border-radius: 12px; }
+
+[data-theme="journal"] :is(.inspect, .event-card, .buys, .big-dice, .chat, .win-card, .auction-screen, .hover-tip) { background: #f3ecdc; border: 2px solid #161310; border-top: 4px double #161310; border-radius: 0; box-shadow: 0 14px 34px #0007; }
+[data-theme="journal"] :is(.event-card .head, .auction-top) { font-family: "IBM Plex Mono", monospace; }
+[data-theme="journal"] :is(.event-card .text, .win-card .who, .inspect header strong) { font-family: "Playfair Display", Georgia, serif; }
+[data-theme="journal"] :is(.party, .auction-bid .bid, .auction-pct, .order-row, .market-company) { background: transparent; border: 1px solid #161310; border-radius: 0; }
+
+[data-theme="os"] :is(.inspect, .event-card, .buys, .big-dice, .chat, .win-card, .auction-screen, .hover-tip) {
+  background: #c3c3c3; border: 2px solid; border-color: #fff #000 #000 #fff; border-radius: 0; box-shadow: inset -2px -2px 0 #7b7b7b, inset 2px 2px 0 #dfdfdf, 6px 6px 0 #0005;
+}
+[data-theme="os"] :is(.event-card .head, .auction-top, .inspect header) { background: linear-gradient(90deg, #0a246a, #1084d0) !important; font-family: Silkscreen, monospace; }
+[data-theme="os"] :is(.party, .auction-bid .bid, .auction-pct, .order-row, .market-company) { background: #fff; border: 2px solid; border-color: #7b7b7b #fff #fff #7b7b7b; border-radius: 0; }
+
+/* light themes: the texts that were light on the old dark cards take the theme ink */
+:is([data-theme="pop"], [data-theme="journal"], [data-theme="os"]) :is(.buys .who, .buys-title, .order-row, .inspect-body h4, .hover-tip small, .tray-item.deal small, .holder-value, .auction-bid .bid) { color: var(--text); }
+:is([data-theme="pop"], [data-theme="journal"], [data-theme="os"]) :is(.inspect, .event-card) .plus { color: #0a7d4f; }
+:is([data-theme="pop"], [data-theme="journal"], [data-theme="os"]) :is(.inspect, .event-card) .minus { color: #c0283c; }
+:is([data-theme="pop"], [data-theme="journal"], [data-theme="os"]) :is(.big-dice .eq, .win-card .win-title) { color: #b8860b; }
+:is([data-theme="pop"], [data-theme="journal"], [data-theme="os"]) .auction-bid .bar { background: #0002; }
+:is([data-theme="cyberpunk"], [data-theme="terminal"]) .party { background: #ffffff10; }
