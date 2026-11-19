@@ -11,7 +11,7 @@ export type Action =
   | { type: "OFFER"; playerId: PlayerId; ownerId: PlayerId; company: CompanyId; percent: number; price: number }
   | { type: "RESPOND_OFFER"; playerId: PlayerId; accept: boolean; counterPrice?: number }
   | { type: "OFFER_TIMEOUT" }
-  | { type: "AUCTION_CHOOSE"; playerId: PlayerId; ownerId: PlayerId; company: CompanyId }
+  | { type: "AUCTION_CHOOSE"; playerId: PlayerId; ownerId: PlayerId; company: CompanyId; percent?: number }
   | { type: "SETTLE_DEBT"; playerId: PlayerId }
   | { type: "USE_ATOUT"; playerId: PlayerId }
   | { type: "BID"; playerId: PlayerId; amount: number }
@@ -247,6 +247,9 @@ function payRoyalty(state: GameState, payer: Player, cellId: string): void {
   if (max === 0) return;
   const name = companyById.get(company)!.name;
   const payerGroup = allianceOf(state, payer.id)?.id ?? payer.id;
+  // a payer who holds as much as the biggest holder (alone or with allies) owes nothing
+  const payerMembers = activePlayers(state).filter((p) => (allianceOf(state, p.id)?.id ?? p.id) === payerGroup);
+  if (payerMembers.reduce((a, p) => a + (p.holdings[company] ?? 0), 0) === max) return;
   for (const members of winners) {
     if ((allianceOf(state, members[0]!.id)?.id ?? members[0]!.id) === payerGroup) continue;
     charge(state, payer, share);
@@ -512,7 +515,10 @@ export function applyAction(prev: GameState, action: Action): Result {
       if (held <= 0) return { ok: false, error: "Ce joueur ne détient pas cette entreprise" };
       a.sellerId = owner.id;
       a.company = action.company;
-      a.percent = Math.min(held, a.percentToSell);
+      const most = Math.min(held, a.percentToSell);
+      const pct = action.percent ?? most;
+      if (!Number.isInteger(pct) || pct < 1 || pct > most) return { ok: false, error: `Entre 1 et ${most} %` };
+      a.percent = pct;
       a.startPrice = bankPrice(action.company, a.percent);
       return { ok: true, state };
     }

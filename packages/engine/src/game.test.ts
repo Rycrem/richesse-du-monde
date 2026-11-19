@@ -221,6 +221,17 @@ describe("royalties", () => {
     expect(g.players[2]!.cash).toBe(c);
   });
 
+  it("a payer who holds as much as the biggest holder pays nothing", () => {
+    let g = withRoyalty("nvidio");
+    g.players[0]!.holdings = { nvidio: 30 };
+    g.players[1]!.holdings = { nvidio: 30 };
+    const [a, b] = g.players.map((p) => p.cash);
+    g = at(g, "berlin");
+    expect(g.players[0]!.cash).toBe(a);
+    expect(g.players[1]!.cash).toBe(b);
+    expect(g.events.some((e) => e.kind === "royalty")).toBe(false);
+  });
+
   it("splits a tie equally", () => {
     let g = withRoyalty("nvidio");
     g.players[1]!.holdings = { nvidio: 30 };
@@ -331,6 +342,15 @@ describe("auctions", () => {
     expect(g.phase).toBe("act");
     expect(g.players[1]!.holdings.appel).toBe(50);
     expect(g.players[1]!.atouts).toBe(0);
+  });
+
+  it("the lander may put fewer percent up for auction, never more than the dice allow", () => {
+    let g = auction();
+    const most = g.auction!.percentToSell;
+    expect(err(g, { type: "AUCTION_CHOOSE", playerId: "a", ownerId: "b", company: "appel", percent: most + 1 })).toMatch(/Entre 1/);
+    expect(err(g, { type: "AUCTION_CHOOSE", playerId: "a", ownerId: "b", company: "appel", percent: 0 })).toMatch(/Entre 1/);
+    g = ok(g, { type: "AUCTION_CHOOSE", playerId: "a", ownerId: "b", company: "appel", percent: 1 });
+    expect(g.auction!.percent).toBe(1);
   });
 
   it("works from the first lap, and does nothing when no opponent holds anything", () => {

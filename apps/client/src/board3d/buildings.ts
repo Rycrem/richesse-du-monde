@@ -124,3 +124,25 @@ export function emptyLot(hub: boolean, color: string, logo?: THREE.Texture) {
   logoPanel(g, logo, 0.16, 0, 0.34, 0.017);
   return g;
 }
+
+// Neon trim in the color of the biggest holder: a glowing pad and ring around the base, and a beacon on top
+export function ownerGlow(building: THREE.Group, color: string) {
+  const box = new THREE.Box3().setFromObject(building);
+  const size = box.getSize(new THREE.Vector3());
+  const neon = new THREE.MeshBasicMaterial({ color });
+  const r = Math.max(size.x, size.z) / 2 + 0.04;
+  const pad = new THREE.Mesh(new THREE.CircleGeometry(r, 40), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.35, depthWrite: false }));
+  pad.rotation.x = -Math.PI / 2;
+  pad.position.y = 0.012;
+  building.add(pad);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(r, 0.035, 8, 48), neon);
+  ring.rotation.x = Math.PI / 2;
+  ring.position.y = 0.05;
+  building.add(ring);
+  const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.06, 16, 12), neon);
+  beacon.position.y = box.max.y + 0.08;
+  building.add(beacon);
+  const halo = new THREE.Mesh(new THREE.SphereGeometry(0.13, 16, 12), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.3, depthWrite: false }));
+  halo.position.copy(beacon.position);
+  building.add(halo);
+}

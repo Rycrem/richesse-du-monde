@@ -32,6 +32,7 @@ function Holders({ game, company }: { game: GameState; company: string }) {
           {allianceOf(game, p.id) && <small className="muted">alliance</small>}
           <span className="spacer" />
           <strong>{p.holdings[company]} %</strong>
+          <span className="holder-value">{money(p.holdings[company]! * companyById.get(company)!.pricePerPercent)}</span>
         </div>
       ))}
     </div>
@@ -56,11 +57,12 @@ function CompanyHead({ company }: { company: string }) {
 function landingCost(game: GameState, company: string) {
   const q = royaltyQuote(game, company);
   if (q.max === 0) return <p>Tomber ici est gratuit : personne ne détient {companyById.get(company)!.name}.</p>;
+  const tie = <small className="muted"> Gratuit pour un joueur qui en détient autant.</small>;
   const names = q.winners.map((g) => g.map((p) => p.name).join(" + ")).join(", ");
   return (
     <p>
       Tomber ici coûte <strong>{money(q.share * q.winners.length)}</strong>, payés à {names} ({q.max} %
-      {q.max === 100 ? `, monopole x${config.monopolyMultiplier}` : ""}).
+      {q.max === 100 ? `, monopole x${config.monopolyMultiplier}` : ""}).{tie}
     </p>
   );
 }
@@ -98,11 +100,19 @@ function CellBody({ game, cell }: { game: GameState; cell: Cell }) {
 
 function CompanyBody({ game, company }: { game: GameState; company: string }) {
   const c = companyById.get(company)!;
-  const cities = board.filter((cell) => cell.type === "city" && (cell.stock[company] ?? 0) > 0) as Extract<Cell, { type: "city" }>[];
+  const cities = board.filter((cell) => cell.type === "city" && (game.stocks[cell.id]![company] ?? 0) > 0) as Extract<Cell, { type: "city" }>[];
   const royaltyCells = board.filter((cell) => game.royalties[cell.id] === company);
   return (
     <>
       <CompanyHead company={company} />
+      <div className="legend">
+        <span>
+          <i className="buy" /> Cases où acheter
+        </span>
+        <span>
+          <i className="pay" /> Cases qui rapportent
+        </span>
+      </div>
       <p>
         Le plus gros détenteur touche {money(c.royaltyPerPercent)} par % détenu chaque fois qu'un joueur tombe sur une case {c.name} (x
         {config.monopolyMultiplier} à 100 %). La banque rachète {money(Math.floor(c.pricePerPercent * config.bankBuybackRatio))} / %.
