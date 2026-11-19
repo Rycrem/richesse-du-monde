@@ -386,7 +386,7 @@ export function createBoardScene(host: HTMLElement, events: BoardEvents = {}): B
   const side = mat("#d9cfb8", { roughness: 0.7 });
   const decos: THREE.Group[] = [];
   const cellGroups: THREE.Group[] = [];
-  const marks: { fill: THREE.Mesh; frame: THREE.Mesh }[] = [];
+  const marks: { fill: THREE.Mesh; frame: THREE.Mesh; top: THREE.MeshStandardMaterial }[] = [];
   let marked = false;
   board.forEach((cell, i) => {
     const p = cellPose(i);
@@ -427,7 +427,7 @@ export function createBoardScene(host: HTMLElement, events: BoardEvents = {}): B
     frame.position.y = 0.18;
     frame.visible = false;
     g.add(frame);
-    marks.push({ fill, frame });
+    marks.push({ fill, frame, top });
     const deco = new THREE.Group();
     deco.position.set(0, 0.16, -p.d * 0.2);
     g.add(deco);
@@ -525,6 +525,8 @@ export function createBoardScene(host: HTMLElement, events: BoardEvents = {}): B
     });
     const was = marked;
     marked = buy.length + pay.length > 0;
+    // grey out every other cell so the highlighted ones stand out
+    marks.forEach((m, i) => m.top.color.set(marked && !buy.includes(i) && !pay.includes(i) ? "#4a4f5c" : "#ffffff"));
     // step back to the overview so every highlighted cell is in sight
     if (marked && !was) recenter(true);
     dirty = true;
