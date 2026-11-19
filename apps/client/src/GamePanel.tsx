@@ -1,4 +1,4 @@
-import { activePlayers, allianceOf, board, buyableStock, config, currentPlayer, netWorth, ranking, type GameState } from "@stonks/engine";
+import { activePlayers, allianceOf, board, buyableStock, config, currentPlayer, netWorth, ranking, type GameEvent, type GameState } from "@stonks/engine";
 import { useEffect, useState } from "react";
 import { companyById, money, PLAYER_COLORS } from "./format";
 import { AnimatedMoney } from "./Overlay";
@@ -12,8 +12,15 @@ export function GamePanel({ game }: { game: GameState }) {
   const cell = board[me.position]!;
   const colorOf = (id: string) => PLAYER_COLORS[game.players.findIndex((p) => p.id === id)]!;
   const nameOf = (id: string) => game.players.find((p) => p.id === id)!.name;
-  // phones: the panel is a bottom sheet that can be pulled up
-  const [expanded, setExpanded] = useState(false);
+  // phones: the panel is a bottom sheet, folded away, half open or pulled up
+  const [sheet, setSheet] = useState<"min" | "mid" | "max">("mid");
+  const [dragY, setDragY] = useState<number | null>(null);
+  const SIZES = ["min", "mid", "max"] as const;
+  const moveSheet = (dy: number) => {
+    const i = SIZES.indexOf(sheet);
+    if (Math.abs(dy) < 25) setSheet(sheet === "mid" ? "max" : sheet === "max" ? "min" : "mid");
+    else setSheet(SIZES[Math.max(0, Math.min(2, i + (dy < 0 ? 1 : -1)))]!);
+  };
 
   if (game.phase === "gameOver") {
     return (
@@ -42,8 +49,14 @@ export function GamePanel({ game }: { game: GameState }) {
   }
 
   return (
-    <aside className={`panel ${expanded ? "expanded" : ""}`}>
-      <button className="sheet-handle" aria-label={expanded ? "Réduire le panneau" : "Agrandir le panneau"} onClick={() => setExpanded(!expanded)}>
+    <aside className={`panel sheet-${sheet}`}>
+      <button
+        className="sheet-handle"
+        aria-label={sheet === "max" ? "Ranger le panneau" : "Agrandir le panneau"}
+        onPointerDown={(e) => setDragY(e.clientY)}
+        onPointerUp={(e) => (dragY !== null && moveSheet(e.clientY - dragY), setDragY(null))}
+        onPointerCancel={() => setDragY(null)}
+      >
         <i />
       </button>
       <div className="turn" style={{ borderColor: colorOf(me.id) }}>
@@ -58,7 +71,7 @@ export function GamePanel({ game }: { game: GameState }) {
       )}
 
       {game.phase === "roll" && myTurn && (
-        <button className="primary" onClick={() => dispatch({ type: "ROLL", playerId: me.id })}>
+        <button className="primary roll-btn" onClick={() => dispatch({ type: "ROLL", playerId: me.id })}>
           Lancer les dés
         </button>
       )}
@@ -94,11 +107,7 @@ export function GamePanel({ game }: { game: GameState }) {
 
       <Players game={game} colorOf={colorOf} />
 
-      <div className="log">
-        {game.log.slice(-6).map((l, i) => (
-          <div key={i}>{l}</div>
-        ))}
-      </div>
+      <Journal game={game} colorOf={colorOf} nameOf={nameOf} />
 
       {game.mode === "chrono" && (!room || you === room.hostId) && (
         <button className="ghost" onClick={() => dispatch({ type: "END_GAME" })}>
@@ -413,5 +422,78 @@ function Countdown({ prefix = "Expire dans" }: { prefix?: string }) {
     <p className="timer">
       {prefix} {Math.max(0, Math.ceil((deadline - now) / 1000))} s
     </p>
+  );
+}
+
+const ICONS: Partial<Record<GameEvent["kind"], string>> = { roll: "🎲", actu: "📰", levee: "💰", ipo: "🔔", krach: "📉", lap: "🏁", atout: "⭐", royalty: "💸", buys: "🛒", auction: "⚖", bankrupt: "☠", win: "🏆", order: "🎲" };
+
+function Signed({ amount }: { amount: number }) {
+  return <span className={amount >= 0 ? "plus" : "minus"}>{amount >= 0 ? "+" : "-"}{money(Math.abs(amount))}</span>;
+}
+
+// Game journal: every event of the last turns, newest first, with who, where and how much
+function Journal({ game, colorOf, nameOf }: { game: GameState; colorOf: (id: string) => string; nameOf: (id: string) => string }) {
+  const name = (c: string) => companyById.get(c)!.name;
+  const line = (e: GameEvent) => {
+    switch (e.kind) {
+      case "order":
+        return <>Ordre de passage : {e.rolls.map((r) => `${nameOf(r.playerId)} (${r.dice[0] + r.dice[1]})`).join(", ")}</>;
+      case "roll":
+        return <>fait {e.dice[0]} + {e.dice[1]} = {e.dice[0] + e.dice[1]} et arrive à <b>{board[e.to]!.name}</b></>;
+      case "royalty":
+        return <>paie la redevance {name(e.company)} à {e.to.map(nameOf).join(" + ")} <Signed amount={-e.amount} /></>;
+      case "buys": {
+        const bought = e.items.map((it) => `${it.percent} % ${name(it.company)}`).join(", ");
+        return (
+          <>
+            {bought ? <>achète {bought} ({money(e.items.reduce((t, it) => t + it.percent * companyById.get(it.company)!.pricePerPercent, 0))})</> : "n'achète rien"}
+            {e.deals.map((d, i) => (
+              <span key={i} className="journal-deal">
+                {nameOf(d.sellerId)} vend {d.percent} % {name(d.company)} à {d.buyerId ? nameOf(d.buyerId) : "la banque"} pour {money(d.price)}
+              </span>
+            ))}
+          </>
+        );
+      }
+      case "auction":
+        return e.cancelled ? (
+          <>annule l'enchère sur {e.percent} % {name(e.company)} de {nameOf(e.sellerId)} avec un Atout</>
+        ) : (
+          <>
+            lance une enchère sur {e.percent} % {name(e.company)} de {nameOf(e.sellerId)} :{" "}
+            {e.winnerId ? <>adjugé à {nameOf(e.winnerId)} pour {money(e.price)}</> : "aucune offre"}
+          </>
+        );
+      case "bankrupt":
+        return <>fait faillite</>;
+      case "win":
+        return <>remporte la partie</>;
+      default:
+        return (
+          <>
+            {e.text} <Signed amount={e.amount} /> <small>({money(e.after)})</small>
+          </>
+        );
+    }
+  };
+  const events = [...game.events].reverse();
+  return (
+    <details className="card journal" open>
+      <summary>Journal de la partie</summary>
+      <div className="journal-list">
+        {events.length === 0 && <p className="muted">Rien pour l'instant.</p>}
+        {events.map((e) => (
+          <div key={e.id} className="journal-row">
+            <span className="journal-icon">{ICONS[e.kind]}</span>
+            <div>
+              {"playerId" in e && (
+                <strong style={{ color: colorOf(e.playerId) }}>{nameOf(e.playerId)} </strong>
+              )}
+              {line(e)}
+            </div>
+          </div>
+        ))}
+      </div>
+    </details>
   );
 }
