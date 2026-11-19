@@ -502,6 +502,7 @@ function Journal({ game, colorOf, nameOf }: { game: GameState; colorOf: (id: str
 
 // The stock exchange tower: this turn's royalty trend of each market, and the pot won with the jackpot card
 function Market({ game }: { game: GameState }) {
+  const setInspect = useStore((s) => s.setInspect);
   return (
     <div className="card market">
       <div className="row">
@@ -515,9 +516,9 @@ function Market({ game }: { game: GameState }) {
         {markets.map((m) => {
           const t = game.market[m.id] ?? 0;
           return (
-            <span key={m.id} className={`trend ${t >= 0 ? "up" : "down"}`} title={m.companies.map((c) => companyById.get(c)!.name).join(", ")}>
+            <button key={m.id} className={`trend ${t >= 0 ? "up" : "down"}`} title={m.companies.map((c) => companyById.get(c)!.name).join(", ")} onClick={() => setInspect({ market: m.id })}>
               {m.name} {t >= 0 ? "▲" : "▼"} {Math.abs(t)} %
-            </span>
+            </button>
           );
         })}
       </div>

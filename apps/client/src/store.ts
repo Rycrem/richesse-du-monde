@@ -72,8 +72,8 @@ interface Store {
   sendChat: (channel: string, text: string) => void;
   createGroup: (name: string, members: string[]) => Promise<string | null>;
   leaveGroup: (groupId: string) => void;
-  inspect: { cell: number } | { company: string } | null;
-  setInspect: (i: { cell: number } | { company: string } | null) => void;
+  inspect: { cell: number } | { company: string } | { market: string } | null;
+  setInspect: (i: { cell: number } | { company: string } | { market: string } | null) => void;
   clearError: () => void;
   quit: () => void;
 }
