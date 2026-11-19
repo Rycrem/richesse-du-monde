@@ -76,7 +76,7 @@ En début de partie, chaque joueur lance 2 dés : le plus haut total commence, p
 1. **Dés** : le joueur actif lance 2 dés et avance. Un double rapporte 100 k$.
 2. **Paiement** (ville) : il paie le plus gros détenteur de l'entreprise de redevance de la case (voir "Paiements").
 3. **Achats** : le joueur actif, et **lui seul** :
-   - voit le stock de la case (ex. "Paris : Xiaomy 7 %, Intol 9 %, Gogol 9 %, Tesler 7 %") et choisit combien de % il achète de chaque entreprise, **au maximum 30 % cumulés** par achat (ex. 9 % d'Intol + 9 % de Gogol + 7 % de Tesler) ;
+   - voit le stock de la case (ex. "Paris : Xiaomy 7 %, Intol 9 %, Gogol 9 %, Tesler 7 %") et choisit combien de % il achète de chaque entreprise, **au maximum 30 % cumulés** par achat (ex. 9 % d'Intol + 9 % de Gogol + 7 % de Tesler). Au-delà de 50 % détenus d'une entreprise, chaque % acheté à la banque coûte 5 % de plus que le précédent ;
    - peut proposer de racheter un pourcentage à **n'importe quel autre joueur** (ex. 10 % de ses Nvidio pour 3 M). Le propriétaire accepte, refuse ou fait une contre-offre (délai de 15 s). Les autres joueurs ne peuvent ni acheter ni lancer de transaction pendant ce tour.
 4. **Fin du tour** : une carte récapitule pour tout le monde les achats, les ventes à la banque et les échanges entre joueurs du tour, puis on passe au joueur suivant.
 
@@ -123,7 +123,7 @@ En début de partie, chaque joueur lance 2 dés : le plus haut total commence, p
 
 ## Alliances
 
-- Un joueur propose une alliance à un autre, qui accepte ou refuse. On peut s'allier à plusieurs, mais il doit toujours rester au moins un adversaire hors de l'alliance.
+- Un joueur propose une alliance à un autre, qui accepte ou refuse. On peut s'allier à plusieurs, mais il doit toujours rester au moins un adversaire hors de l'alliance. Les deux joueurs les plus riches ne peuvent pas s'allier.
 - Les alliés additionnent leurs % d'une même entreprise pour être le plus gros détenteur. La redevance est partagée entre eux selon leurs %.
 - Les alliés ne se paient pas de redevance entre eux.
 - On quitte l'alliance quand on veut ; elle disparaît quand il reste moins de 2 membres, ou quand elle contient tous les joueurs encore en jeu. Un joueur en faillite la quitte.

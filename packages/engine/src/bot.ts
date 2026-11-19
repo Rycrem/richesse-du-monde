@@ -1,5 +1,5 @@
 import { companies, config } from "./data";
-import { activePlayers, buyableStock, currentPlayer, type Action } from "./game";
+import { activePlayers, buyableStock, buyCost, currentPlayer, type Action } from "./game";
 import type { GameState, PlayerId } from "./state";
 
 const RESERVE = 1500;
@@ -46,11 +46,13 @@ export function botAction(g: GameState, id: PlayerId): Action | null {
   const purchases: Record<string, number> = {};
   const stock = Object.entries(buyableStock(g)).sort((x, y) => pricePer(y[0]) - pricePer(x[0]));
   for (const [company, available] of stock) {
-    const pct = Math.min(available, left, Math.floor(cash / pricePer(company)));
+    const held = me.holdings[company] ?? 0;
+    let pct = Math.min(available, left, Math.floor(cash / pricePer(company)));
+    while (pct > 0 && buyCost(company, held, pct) > cash) pct--;
     if (pct <= 0) continue;
     purchases[company] = pct;
     left -= pct;
-    cash -= pct * pricePer(company);
+    cash -= buyCost(company, held, pct);
   }
   if (Object.keys(purchases).length) return { type: "BUY", playerId: id, purchases };
   if (g.canBuyAtout && me.atouts === 0 && me.cash > config.atoutPrice * 3) return { type: "BUY_ATOUT", playerId: id };

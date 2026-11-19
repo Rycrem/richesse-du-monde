@@ -148,6 +148,14 @@ function percentPrice(company: CompanyId, percent: number): number {
   return companyById.get(company)!.pricePerPercent * percent;
 }
 
+// Buying from the bank: past dominanceFrom % held, each further % costs dominanceGrowth times the previous one
+export function buyCost(company: CompanyId, held: number, percent: number): number {
+  const base = companyById.get(company)!.pricePerPercent;
+  let cost = 0;
+  for (let k = 1; k <= percent; k++) cost += base * config.dominanceGrowth ** Math.max(0, held + k - config.dominanceFrom);
+  return Math.round(cost);
+}
+
 function bankPrice(company: CompanyId, percent: number): number {
   return Math.floor(percentPrice(company, percent) * config.bankBuybackRatio);
 }
@@ -174,7 +182,8 @@ function removeHolding(p: Player, company: CompanyId, percent: number): void {
 }
 
 function liquidation(p: Player): number {
-  return p.cash + Object.entries(p.holdings).reduce((a, [c, pct]) => a + bankPrice(c, pct), 0);
+  // priced 1 % at a time, as autoSell sells them, so rounding never leaves a debt uncovered
+  return p.cash + Object.entries(p.holdings).reduce((a, [c, pct]) => a + bankPrice(c, 1) * pct, 0);
 }
 
 // Sells holdings to the bank, cheapest first, until cash is back to `target`
@@ -453,7 +462,7 @@ export function applyAction(prev: GameState, action: Action): Result {
       for (const [company, pct] of wanted) {
         const have = (stock[company] ?? []).reduce((a, x) => a + x.percent, 0);
         if (pct > have) return { ok: false, error: `Stock insuffisant pour ${company}` };
-        cost += percentPrice(company, pct);
+        cost += buyCost(company, cur.holdings[company] ?? 0, pct);
       }
       if (cost > cur.cash) return { ok: false, error: "Pas assez d'argent" };
       for (const [company, pct] of wanted) {
@@ -627,6 +636,7 @@ export function applyAction(prev: GameState, action: Action): Result {
       const size = allianceOf(state, from.id)?.members.length ?? 1;
       if (size + 1 >= activePlayers(state).length) return { ok: false, error: "Il doit rester au moins un adversaire hors de l'alliance" };
       if (state.allianceInvites.some((i) => i.from === from.id && i.to === to.id)) return { ok: false, error: "Invitation déjà envoyée" };
+      if (leadersTogether(state, [...(allianceOf(state, from.id)?.members ?? [from.id]), to.id])) return { ok: false, error: "Les deux joueurs en tête ne peuvent pas s'allier" };
       state.allianceInvites.push({ from: from.id, to: to.id });
       state.log.push(`${from.name} propose une alliance à ${to.name}`);
       return { ok: true, state };
@@ -643,6 +653,7 @@ export function applyAction(prev: GameState, action: Action): Result {
         return { ok: true, state };
       }
       const existing = allianceOf(state, from.id);
+      if (leadersTogether(state, [...(existing?.members ?? [from.id]), to.id])) return { ok: false, error: "Les deux joueurs en tête ne peuvent pas s'allier" };
       if (allianceOf(state, to.id) || (existing?.members.length ?? 1) + 1 >= activePlayers(state).length) {
         return { ok: false, error: "Cette alliance n'est plus possible" };
       }
@@ -687,6 +698,14 @@ export function applyAction(prev: GameState, action: Action): Result {
 }
 
 // Final order: winner, then remaining players by net worth, then eliminated players (last eliminated first)
+// The two richest players may never share an alliance
+function leadersTogether(state: GameState, members: PlayerId[]): boolean {
+  const [first, second, third] = [...activePlayers(state)].sort((a, b) => netWorth(b) - netWorth(a));
+  // a tie for second place leaves no clear pair of leaders
+  if (!first || !second || (third && netWorth(third) >= netWorth(second))) return false;
+  return members.includes(first.id) && members.includes(second.id);
+}
+
 export function ranking(state: GameState): PlayerId[] {
   const alive = activePlayers(state)
     .filter((p) => p.id !== state.winner)

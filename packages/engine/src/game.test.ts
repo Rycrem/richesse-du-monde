@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { board, companies, config, markets } from "./data";
-import { applyAction, buyableStock, createGame, rollTurnOrder, royaltyQuote, type Action } from "./game";
+import { applyAction, buyableStock, buyCost, createGame, rollTurnOrder, royaltyQuote, type Action } from "./game";
 import { rollDie } from "./rng";
 import type { GameState } from "./state";
 
@@ -136,6 +136,13 @@ describe("buying", () => {
     g.players[0]!.holdings = { amb: 5 };
     g = at(g, "mondial-1");
     expect(buyableStock(g)).toEqual({});
+  });
+  it("past 50 % held, each further % from the bank costs more and more", () => {
+    const base = price("nvidio");
+    expect(buyCost("nvidio", 0, 10)).toBe(10 * base);
+    expect(buyCost("nvidio", 50, 1)).toBe(Math.round(base * config.dominanceGrowth));
+    expect(buyCost("nvidio", 60, 10)).toBeGreaterThan(buyCost("nvidio", 50, 10));
+    expect(buyCost("nvidio", 50, 10)).toBeGreaterThan(10 * base);
   });
 });
 
@@ -533,6 +540,18 @@ describe("alliances", () => {
     g = ok(g, { type: "ALLIANCE_ANSWER", playerId: "b", fromId: "a", accept: true });
     expect(err(g, { type: "ALLIANCE_INVITE", playerId: "a", targetId: "c" })).toMatch(/adversaire/);
     expect(err(g, { type: "ALLIANCE_INVITE", playerId: "c", targetId: "a" })).toMatch(/déjà dans une alliance/);
+  });
+
+  it("the two richest players cannot ally", () => {
+    let g = createGame(P4, 1);
+    g.players.find((p) => p.id === "a")!.cash += 5000;
+    g.players.find((p) => p.id === "d")!.cash += 3000;
+    expect(err(g, { type: "ALLIANCE_INVITE", playerId: "a", targetId: "d" })).toMatch(/en tête/);
+    g = ok(g, { type: "ALLIANCE_INVITE", playerId: "a", targetId: "b" });
+    g = ok(g, { type: "ALLIANCE_INVITE", playerId: "d", targetId: "c" });
+    // d became second richest... the invite from a to b stays valid while b is not a leader
+    g = ok(g, { type: "ALLIANCE_ANSWER", playerId: "b", fromId: "a", accept: true });
+    expect(err(g, { type: "ALLIANCE_INVITE", playerId: "b", targetId: "d" })).toMatch(/en tête/);
   });
 
   it("allies add up their % to beat a bigger solo holder and split the royalty by %", () => {

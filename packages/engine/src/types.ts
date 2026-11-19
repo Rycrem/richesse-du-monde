@@ -40,6 +40,8 @@ export interface Market {
 export interface GameConfig {
   startingCash: number;
   doubleBonus: number;
+  dominanceFrom: number;
+  dominanceGrowth: number;
   maxPurchasePercent: number;
   leveeFundsPerPip: number;
   auctionPercentPerPip: number;

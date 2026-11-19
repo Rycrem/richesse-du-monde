@@ -15,5 +15,7 @@
   "ipoBonus": 1000,
   "krachPercent": 10,
   "lapBonus": 2000,
-  "doubleBonus": 100
+  "doubleBonus": 100,
+  "dominanceFrom": 50,
+  "dominanceGrowth": 1.05
 }
