@@ -8,6 +8,12 @@ import { pawnDataUrl } from "./pawn";
 import { Setup } from "./Setup";
 import { hasSavedSession, useStore } from "./store";
 
+const MODES = [
+  { id: "online", icon: "🌐", title: "En ligne", text: "Avec tes amis, chacun sur son appareil" },
+  { id: "local", icon: "📱", title: "Sur cet écran", text: "À plusieurs sur le même appareil" },
+  { id: "solo", icon: "🤖", title: "Solo", text: "Seul contre des bots" },
+] as const;
+
 export function Home() {
   const { createRoom, joinRoom, resume, error, notice, profile, loadProfile } = useStore();
   const [garage, setGarage] = useState(false);
@@ -20,6 +26,7 @@ export function Home() {
   const [name, setName] = useState("");
   const [code, setCode] = useState(params.get("code") ?? "");
   const [resetToken, setResetToken] = useState(params.get("reset"));
+  const [showLogin, setShowLogin] = useState(false);
   useEffect(() => {
     if (profile.account) setName(profile.account);
     else if (profile.name && !name) setName(profile.name);
@@ -30,40 +37,57 @@ export function Home() {
 
   return (
     <div className="setup home">
-      <h1 className="logo">Stonks Valley</h1>
-      <p className="tagline">Achète des parts, encaisse les redevances, ruine tes amis.</p>
+      <header className="hero">
+        <h1 className="logo">Stonks Valley</h1>
+        <p className="tagline">Achète des parts, encaisse les redevances, ruine tes amis.</p>
+      </header>
       <Install />
-      <button className="my-pawn" onClick={() => setGarage(true)}>
-        <img src={pawnDataUrl(profile.look, PLAYER_COLORS[0]!, 40)} alt="" />
-        <span>
-          <strong>Mon pion</strong>
-          <small>{profile.points} pts</small>
-        </span>
-      </button>
       {error && <div className="error">{error}</div>}
       {notice && <div className="notice">{notice}</div>}
-      {resetToken ? (
-        <ResetPassword
-          resetToken={resetToken}
-          onDone={() => {
-            setResetToken(null);
-            history.replaceState(null, "", "/");
-          }}
-        />
-      ) : (
-        <Account onAdmin={() => setAdmin(true)} />
-      )}
-      <div className="tabs">
-        <button className={tab === "online" ? "primary" : ""} onClick={() => setTab("online")}>
-          En ligne
-        </button>
-        <button className={tab === "local" ? "primary" : ""} onClick={() => setTab("local")}>
-          Sur cet écran
-        </button>
-        <button className={tab === "solo" ? "primary" : ""} onClick={() => setTab("solo")}>
-          Solo contre des bots
-        </button>
-      </div>
+
+      <section className="home-section">
+        <div className="profile-strip">
+          <button className="my-pawn" onClick={() => setGarage(true)}>
+            <img src={pawnDataUrl(profile.look, PLAYER_COLORS[0]!, 40)} alt="" />
+            <span>
+              <strong>Mon pion</strong>
+              <small>{profile.points} pts</small>
+            </span>
+          </button>
+          {!profile.account && !resetToken && (
+            <button className={showLogin ? "primary" : ""} onClick={() => setShowLogin(!showLogin)}>
+              {showLogin ? "Fermer" : "Se connecter"}
+            </button>
+          )}
+        </div>
+        {!profile.account && !resetToken && !showLogin && <p className="hint">Connecte-toi pour garder tes points et tes objets d'une partie à l'autre.</p>}
+        {resetToken ? (
+          <ResetPassword
+            resetToken={resetToken}
+            onDone={() => {
+              setResetToken(null);
+              history.replaceState(null, "", "/");
+            }}
+          />
+        ) : (
+          (profile.account || showLogin) && <Account onAdmin={() => setAdmin(true)} />
+        )}
+      </section>
+
+      <section className="home-section">
+        <h2>Comment veux-tu jouer ?</h2>
+        <div className="modes">
+          {MODES.map((m) => (
+            <button key={m.id} className={`mode ${tab === m.id ? "primary" : ""}`} onClick={() => setTab(m.id)}>
+              <span className="mode-icon">{m.icon}</span>
+              <span className="mode-text">
+                <strong>{m.title}</strong>
+                <small>{m.text}</small>
+              </span>
+            </button>
+          ))}
+        </div>
+      </section>
       {tab !== "online" ? (
         <Setup key={tab} solo={tab === "solo"} />
       ) : (
