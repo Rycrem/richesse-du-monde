@@ -291,40 +291,41 @@
 
 /* ---------- Liquid Glass (default) ---------- */
 [data-theme="glass"] :is(.setup, .garage, .options, .panel, .board-wrap) {
-  --bg: #1b1f4b; --panel: #ffffff14; --card: #ffffff1f; --text: #ffffff; --muted: #ffffffb3; --accent: #7cc4ff; --danger: #ff6b8b;
+  --bg: #1b1f4b; --panel: #ffffff14; --card: #ffffff1f; --text: #ffffff; --muted: #ffffffd9; --accent: #7cc4ff; --danger: #ff6b8b;
   --glass: #ffffff1f; --glass-strong: #ffffff2e; --rim: #ffffff59;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", Inter, system-ui, sans-serif; color: var(--text); letter-spacing: -0.01em;
 }
 [data-theme="glass"]:has(.setup, .garage), [data-theme="glass"] body:has(.layout) {
   background:
-    radial-gradient(circle at 15% 20%, #ff8ad8aa 0, transparent 38%) fixed,
-    radial-gradient(circle at 85% 15%, #7cc4ffaa 0, transparent 40%) fixed,
-    radial-gradient(circle at 70% 85%, #8a7dffaa 0, transparent 42%) fixed,
-    radial-gradient(circle at 10% 90%, #4fe3c188 0, transparent 38%) fixed,
+    radial-gradient(circle at 15% 20%, #ff8ad877 0, transparent 38%) fixed,
+    radial-gradient(circle at 85% 15%, #7cc4ff77 0, transparent 40%) fixed,
+    radial-gradient(circle at 70% 85%, #8a7dff77 0, transparent 42%) fixed,
+    radial-gradient(circle at 10% 90%, #4fe3c166 0, transparent 38%) fixed,
     linear-gradient(160deg, #1b1f4b, #2b1b4b 50%, #12324b) fixed;
 }
 [data-theme="glass"] :is(.setup, .garage) h1 { font: 800 50px/1.05 -apple-system, BlinkMacSystemFont, Inter, system-ui, sans-serif; letter-spacing: -2px; background: linear-gradient(180deg, #fff, #ffffffaa); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 4px 18px #7cc4ff66); }
-[data-theme="glass"] .tagline { color: #ffffffcc; }
+[data-theme="glass"] .tagline { color: #ffffffe6; text-shadow: 0 1px 3px #0006; }
 [data-theme="glass"] :is(.setup, .garage, .options, .panel, .board-wrap) :is(h2, h3, h4) { font-weight: 700; letter-spacing: -0.02em; }
 [data-theme="glass"] :is(:is(.setup, .garage, .panel) .card, .players .player, .options-panel, .inspect, .event-card, .buys, .big-dice, .chat, .win-card, .auction-screen, .hover-tip) {
-  background: linear-gradient(135deg, #ffffff38, #ffffff10 60%); border: 1px solid var(--rim); border-radius: 22px;
-  -webkit-backdrop-filter: blur(24px) saturate(180%); backdrop-filter: blur(24px) saturate(180%);
-  box-shadow: inset 0 1px 0 #ffffff80, inset 0 -1px 0 #ffffff1a, 0 10px 40px #0004; color: #fff;
+  /* tinted glass: a dark base under the frost keeps white text readable over bright backgrounds and the board */
+  background: linear-gradient(135deg, #ffffff26, #ffffff08 60%), #161b44b3; border: 1px solid var(--rim); border-radius: 22px;
+  -webkit-backdrop-filter: blur(28px) saturate(120%); backdrop-filter: blur(28px) saturate(120%);
+  box-shadow: inset 0 1px 0 #ffffff66, inset 0 -1px 0 #ffffff1a, 0 10px 40px #0005; color: #fff; text-shadow: 0 1px 2px #0005;
 }
-[data-theme="glass"] .panel { background: #ffffff10; -webkit-backdrop-filter: blur(30px) saturate(160%); backdrop-filter: blur(30px) saturate(160%); border-left: 1px solid #ffffff33; }
+[data-theme="glass"] .panel { background: #12163ad9; -webkit-backdrop-filter: blur(30px) saturate(120%); backdrop-filter: blur(30px) saturate(120%); border-left: 1px solid #ffffff33; }
 [data-theme="glass"] .hover-tip { border-radius: 14px; }
 [data-theme="glass"] :is(.setup, .garage, .options, .panel, .board-wrap) button {
   border-radius: 999px; border: 1px solid #ffffff55; color: #fff; font-weight: 600;
-  background: linear-gradient(180deg, #ffffff40, #ffffff14); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
-  box-shadow: inset 0 1px 0 #ffffff99, 0 4px 14px #0003;
+  background: linear-gradient(180deg, #ffffff33, #ffffff0f), #161b4499; -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+  box-shadow: inset 0 1px 0 #ffffff80, 0 4px 14px #0004; text-shadow: 0 1px 2px #0005;
 }
-[data-theme="glass"] :is(.setup, .garage, .options, .panel, .board-wrap) button.primary { background: linear-gradient(180deg, #ffffffee, #ffffffbb); color: #1b1f4b; border-color: #fff; box-shadow: inset 0 1px 0 #fff, 0 6px 24px #7cc4ff66; font-weight: 700; }
-[data-theme="glass"] :is(.setup, .garage, .options, .panel, .board-wrap) button.ghost { background: #ff6b8b33; border-color: #ff9fb488; }
+[data-theme="glass"] :is(.setup, .garage, .options, .panel, .board-wrap) button.primary { background: linear-gradient(180deg, #fffffff7, #ffffffd9); color: #12163a; border-color: #fff; box-shadow: inset 0 1px 0 #fff, 0 6px 24px #7cc4ff66; font-weight: 700; text-shadow: none; }
+[data-theme="glass"] :is(.setup, .garage, .options, .panel, .board-wrap) button.ghost { background: #ff6b8b4d; border-color: #ff9fb4aa; }
 [data-theme="glass"] :is(.setup, .garage, .options, .panel, .board-wrap) button.link { background: none; border: none; box-shadow: none; color: #cfe8ff; }
 [data-theme="glass"] :is(.setup, .garage, .options, .panel, .board-wrap) button:disabled { opacity: 0.5; }
 [data-theme="glass"] .mode { border-radius: 22px; }
-[data-theme="glass"] :is(.setup, .garage, .options, .panel, .board-wrap) :is(input, select) { border-radius: 14px; border: 1px solid #ffffff44; background: #ffffff1a; color: #fff; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
-[data-theme="glass"] :is(input, select)::placeholder { color: #ffffff88; }
+[data-theme="glass"] :is(.setup, .garage, .options, .panel, .board-wrap) :is(input, select) { border-radius: 14px; border: 1px solid #ffffff55; background: #0b0f2e80; color: #fff; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+[data-theme="glass"] :is(input, select)::placeholder { color: #ffffffa6; }
 [data-theme="glass"] select option { color: #1b1f4b; }
 [data-theme="glass"] .options .options-btn { background: #ffffff26; border-radius: 999px; -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
 [data-theme="glass"] .options-panel { border-radius: 22px; }
@@ -332,17 +333,17 @@
 [data-theme="glass"] .points { background: #ffffff26; border: 1px solid #ffffff55; border-radius: 999px; color: #fff; }
 [data-theme="glass"] .podium { background: radial-gradient(ellipse 45% 6% at 50% 94%, #ffffff88 0 40%, transparent 100%), #ffffff14; border: 1px solid #ffffff44; border-radius: 26px; }
 [data-theme="glass"] .players .player .money { color: #fff; font-weight: 700; }
-[data-theme="glass"] .players .player :is(.muted, small) { color: #ffffffb3; }
-[data-theme="glass"] :is(.party, .auction-bid .bid, .auction-pct, .order-row, .market-company, .market-move) { background: #ffffff1a; border: 1px solid #ffffff33; border-radius: 14px; }
+[data-theme="glass"] .players .player :is(.muted, small) { color: #ffffffd9; }
+[data-theme="glass"] :is(.party, .auction-bid .bid, .auction-pct, .order-row, .market-company, .market-move) { background: #0b0f2e66; border: 1px solid #ffffff40; border-radius: 14px; }
 [data-theme="glass"] :is(.event-card .head, .auction-top, .inspect header) { -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
 [data-theme="glass"] .event-card .plus, [data-theme="glass"] .inspect .plus, [data-theme="glass"] .panel .plus { color: #7dffc4; }
 [data-theme="glass"] .event-card .minus, [data-theme="glass"] .inspect .minus, [data-theme="glass"] .panel .minus { color: #ff9fb4; }
-[data-theme="glass"] .trend { background: #ffffff1f; }
+[data-theme="glass"] .trend { background: #0b0f2e80; }
 [data-theme="glass"] .trend.up { color: #7dffc4; }
 [data-theme="glass"] .trend.down { color: #ff9fb4; }
 [data-theme="glass"] .board-wrap .recenter-btn { background: #ffffff26; }
 [data-theme="glass"] .panel button.trend { box-shadow: none; }
 [data-theme="glass"] .setup .my-pawn { border-radius: 22px; }
 /* popups float over the busy 3D board: darker tint keeps text readable (:not(.x) matches the card rule specificity) */
-[data-theme="glass"] :is(.inspect, .event-card, .hover-tip, .win-card, .auction-screen):not(.x) { background: linear-gradient(135deg, #2a2f6ecc, #1b1f4bcc 60%); }
+[data-theme="glass"] :is(.inspect, .event-card, .hover-tip, .win-card, .auction-screen):not(.x) { background: linear-gradient(135deg, #2a2f6ee6, #1b1f4be6 60%); }
 [data-theme="glass"] .overlay-slot .who { color: #ffffffcc; }
