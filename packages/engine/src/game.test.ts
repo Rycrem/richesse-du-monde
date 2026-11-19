@@ -64,6 +64,13 @@ describe("setup", () => {
   });
 });
 
+describe("starting cash", () => {
+  it("uses the chosen amount and rejects others", () => {
+    expect(createGame(P, 1, "classique", 30000).players.every((p) => p.cash === 30000)).toBe(true);
+    expect(() => createGame(P, 1, "classique", 7)).toThrow(/invalide/);
+  });
+});
+
 describe("turn order", () => {
   it("only the current player can roll", () => {
     const g = createGame(P, 1);

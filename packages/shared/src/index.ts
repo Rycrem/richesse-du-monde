@@ -79,7 +79,7 @@ export interface ClientToServer {
   "room:create": (name: string, profileToken: string, ack: Ack<Session>) => void;
   "room:join": (code: string, name: string, profileToken: string, ack: Ack<Session>) => void;
   "room:rejoin": (code: string, token: string, ack: Ack<Session>) => void;
-  "room:start": (mode: GameMode, ack: Ack<null>) => void;
+  "room:start": (mode: GameMode, startingCash: number, ack: Ack<null>) => void;
   "room:leave": () => void;
   "room:kick": (playerId: string, ack: Ack<null>) => void;
   "game:action": (action: Action, ack: Ack<null>) => void;

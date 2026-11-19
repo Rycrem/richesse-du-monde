@@ -62,11 +62,11 @@ interface Store {
   buy: (itemId: string) => void;
   equip: (slot: Slot, itemId: string) => void;
   bots: string[];
-  startLocal: (names: string[], mode: GameMode, bots?: boolean[]) => void;
+  startLocal: (names: string[], mode: GameMode, bots?: boolean[], startingCash?: number) => void;
   createRoom: (name: string) => void;
   joinRoom: (code: string, name: string) => void;
   resume: () => void;
-  startOnline: (mode: GameMode) => void;
+  startOnline: (mode: GameMode, startingCash: number) => void;
   kick: (playerId: string) => void;
   dispatch: (action: Action) => boolean;
   sendChat: (channel: string, text: string) => void;
@@ -167,7 +167,7 @@ export const useStore = create<Store>((set, get) => {
     buy: (itemId) => connect().emit("profile:buy", profileToken(), itemId, onProfile),
     equip: (slot, itemId) => connect().emit("profile:equip", profileToken(), slot, itemId, onProfile),
     bots: [],
-    startLocal: (names, mode, bots = []) =>
+    startLocal: (names, mode, bots = [], startingCash) =>
       set({
         online: false,
         // solo: the screen belongs to the only human, bots play the other seats
@@ -179,6 +179,7 @@ export const useStore = create<Store>((set, get) => {
             names.map((name, i) => ({ id: `p${i + 1}`, name })),
             Math.floor(Math.random() * 2 ** 31),
             mode,
+            startingCash,
           ),
         ),
         error: null,
@@ -197,8 +198,8 @@ export const useStore = create<Store>((set, get) => {
       set({ online: true });
       connect().emit("room:rejoin", s.code, s.token, onSession);
     },
-    startOnline: (mode) =>
-      socket?.emit("room:start", mode, (res) => {
+    startOnline: (mode, startingCash) =>
+      socket?.emit("room:start", mode, startingCash, (res) => {
         if (!res.ok) set({ error: res.error });
       }),
     kick: (playerId) =>
