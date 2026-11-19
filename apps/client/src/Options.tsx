@@ -51,7 +51,7 @@ export function Options() {
             ))}
           <h4>Son</h4>
           <label>
-            Musique lofi
+            Musique jazz
             <input type="range" min={0} max={1} step={0.05} value={s.music} onChange={(e) => setS({ ...s, music: Number(e.target.value) })} />
           </label>
           <label>
