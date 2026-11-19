@@ -174,3 +174,9 @@ Tout ce qui change l'argent ou les parts s'affiche à tous les joueurs sous form
 - écran de victoire avec confettis.
 
 Rien n'apparaît ni ne disparaît d'un coup : les cartes entrent et sortent en animation, les bâtiments grandissent, les montants du panneau défilent jusqu'à leur nouvelle valeur.
+
+## Mobile et application installable
+
+- Sur téléphone, le plateau occupe le haut de l'écran et le panneau de jeu devient un tiroir en bas, qu'on agrandit en touchant la poignée. En paysage, le panneau repasse sur le côté.
+- Le plateau se manipule au doigt (glisser pour tourner, pincer pour zoomer, toucher une case pour ses détails). Un bouton en haut à droite recentre la vue. En portrait, la caméra prend une vue plus plongeante pour que le plateau tienne dans l'écran.
+- Le jeu est une PWA : manifeste, icônes, service worker. Il s'installe sur l'écran d'accueil (bouton "Installer l'application" sur Android et ordinateur, explication pour iPhone). Les pages viennent du réseau en priorité, le cache sert de secours ; les parties "sur cet écran" et en solo marchent hors ligne une fois le jeu chargé.

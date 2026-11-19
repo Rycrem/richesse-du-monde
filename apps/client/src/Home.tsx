@@ -3,6 +3,7 @@ import { Account, ResetPassword } from "./Account";
 import { Admin } from "./Admin";
 import { PLAYER_COLORS } from "./format";
 import { Garage } from "./Garage";
+import { Install } from "./Install";
 import { pawnDataUrl } from "./pawn";
 import { Setup } from "./Setup";
 import { hasSavedSession, useStore } from "./store";
@@ -31,6 +32,7 @@ export function Home() {
     <div className="setup">
       <h1>Stonks Valley</h1>
       <p className="tagline">Achète des parts, encaisse les redevances, ruine tes amis.</p>
+      <Install />
       <button className="my-pawn" onClick={() => setGarage(true)}>
         <img src={pawnDataUrl(profile.look, PLAYER_COLORS[0]!, 40)} alt="" />
         <span>
