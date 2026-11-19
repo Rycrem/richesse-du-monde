@@ -13,6 +13,15 @@ export function botAction(g: GameState, id: PlayerId): Action | null {
   const invite = g.allianceInvites.find((i) => i.to === id);
   if (invite) return { type: "ALLIANCE_ANSWER", playerId: id, fromId: invite.from, accept: true };
 
+  const d = g.debt;
+  if (d?.offer && d.creditorId === id) {
+    const value = Object.entries(d.offer).reduce((a, [c, pct]) => a + pct * pricePer(c), 0);
+    return { type: "DEBT_DEAL_ANSWER", playerId: id, accept: value >= d.amount };
+  }
+
+  const loan = g.loanOffers.find((l) => l.borrowerId === id);
+  if (loan) return { type: "LOAN_ANSWER", playerId: id, lenderId: loan.lenderId, accept: me.cash < 0 };
+
   const o = g.offer;
   if (o && o.awaiting === id) {
     const value = o.percent * pricePer(o.company);

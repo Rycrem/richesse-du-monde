@@ -248,7 +248,7 @@ function Card({ e, nameOf, colorOf }: { e: GameEvent; nameOf: (id: string) => st
       <div className="body">
         {who}
         {e.kind === "bankrupt" ? (
-          <div className="text">fait faillite. Ses actions retournent à la banque.</div>
+          <div className="text">fait faillite. {e.heirs.length ? "Ses actions sont réparties entre les autres joueurs." : "Ses actions retournent à la banque."}</div>
         ) : (
           <>
             <div className="text">{e.text}</div>

@@ -27,7 +27,10 @@ function botTurn(state: GameState): GameState {
       g = step(g, { type: "AUCTION_CLOSE" });
     }
   }
-  if (currentPlayer(g).cash < 0) g = step(g, { type: "SETTLE_DEBT", playerId: currentPlayer(g).id });
+  if (currentPlayer(g).cash < 0) {
+    g = step(g, { type: "SETTLE_DEBT", playerId: me.id });
+    if (g.phase === "gameOver" || currentPlayer(g).id !== me.id) return g;
+  }
   const self = currentPlayer(g);
   let budget = config.maxPurchasePercent;
   for (const [company, available] of Object.entries(buyableStock(g))) {

@@ -17,5 +17,7 @@
   "lapBonus": 2000,
   "doubleBonus": 100,
   "dominanceFrom": 50,
-  "dominanceGrowth": 1.05
+  "dominanceGrowth": 1.05,
+  "loanShare": 15,
+  "loanCap": 120
 }
