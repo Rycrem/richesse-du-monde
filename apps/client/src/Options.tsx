@@ -50,8 +50,15 @@ export function Options() {
               <button onClick={() => setConfirmQuit(true)}>Retour au menu</button>
             ))}
           <h4>Son</h4>
+          <div className="music-style">
+            {(["jazz", "lofi"] as const).map((style) => (
+              <button key={style} className={s.style === style ? "primary" : ""} onClick={() => setS({ ...s, style })}>
+                {style === "jazz" ? "Jazz" : "Lofi"}
+              </button>
+            ))}
+          </div>
           <label>
-            Musique jazz
+            Musique
             <input type="range" min={0} max={1} step={0.05} value={s.music} onChange={(e) => setS({ ...s, music: Number(e.target.value) })} />
           </label>
           <label>

@@ -1,12 +1,15 @@
-// Every sound is synthesized with Web Audio: no files to load. The music is a generative jazz loop.
+// Every sound is synthesized with Web Audio: no files to load. The music is a generative loop, jazz or lofi.
+export type MusicStyle = "jazz" | "lofi";
+
 export interface AudioSettings {
+  style: MusicStyle;
   music: number;
   sfx: number;
   muted: boolean;
 }
 
 const KEY = "stonks-audio";
-const DEFAULTS: AudioSettings = { music: 0.5, sfx: 0.7, muted: false };
+const DEFAULTS: AudioSettings = { style: "jazz", music: 0.5, sfx: 0.7, muted: false };
 
 export function loadSettings(): AudioSettings {
   try {
@@ -144,6 +147,15 @@ export function steps(n: number, delay: number, every: number) {
 
 // Generative jazz combo: swung ii-V-I changes, walking bass, ride cymbal, piano comping, a horn section
 // (trumpet, sax, trombone) and a soloist that switches between vibraphone and trumpet
+let started = false;
+
+function startMusic() {
+  if (started || !ctx) return;
+  started = true;
+  startJazz(ctx);
+  startLofi(ctx);
+}
+
 const QUALITY = {
   maj7: { chord: [0, 4, 7, 11], scale: [0, 2, 4, 7, 9, 11] },
   m7: { chord: [0, 3, 7, 10], scale: [0, 2, 3, 5, 7, 9, 10] },
@@ -157,21 +169,17 @@ const PROGRESSIONS: Chord[][] = [
   [[0, "m7"], [5, "7"], [10, "maj7"], [7, "7"]],
   [[11, "m7b5"], [4, "7"], [9, "m7"], [2, "7"]],
 ];
-const BPM = 116;
-let started = false;
+const JAZZ_BPM = 116;
 
 const pick = <T>(a: T[]): T => a[Math.floor(Math.random() * a.length)]!;
 const inRange = (pc: number, lo: number) => lo + ((pc - lo) % 12 + 12) % 12;
 
-function startMusic() {
-  if (started || !ctx) return;
-  started = true;
-  const c = ctx;
+function startJazz(c: AudioContext) {
   const filter = c.createBiquadFilter();
   filter.type = "lowpass";
   filter.frequency.value = 3200;
   filter.connect(musicBus);
-  const beat = 60 / BPM;
+  const beat = 60 / JAZZ_BPM;
   let barStart = c.currentTime + 0.2;
   let bar = 0;
   let prog = PROGRESSIONS[0]!;
@@ -238,6 +246,10 @@ function startMusic() {
   const ride = (at: number, accent: boolean) => hiss(at, 0.45, { type: "highpass", freq: 6000, gain: accent ? 0.07 : 0.045, out: musicBus });
 
   const schedule = () => {
+    if (settings.style !== "jazz") {
+      barStart = c.currentTime + 0.1;
+      return;
+    }
     while (barStart < c.currentTime + 0.6) {
       if (bar % 4 === 0) {
         if (Math.random() < 0.35) prog = pick(PROGRESSIONS);
@@ -302,4 +314,63 @@ function startMusic() {
   };
   schedule();
   setInterval(schedule, 150);
+}
+
+// Generative lofi: a jazzy 4-chord loop picked at random, soft drums with swing, a wandering pentatonic melody and vinyl crackle
+const LOFI_PROGRESSIONS = [
+  [[50, 53, 57, 60], [55, 59, 62, 65], [48, 52, 55, 59], [45, 48, 52, 55]],
+  [[53, 57, 60, 64], [52, 55, 59, 62], [50, 53, 57, 60], [55, 59, 62, 65]],
+  [[45, 48, 52, 55], [50, 53, 57, 60], [43, 47, 50, 53], [48, 52, 55, 59]],
+];
+const SCALE = [0, 2, 4, 7, 9];
+const LOFI_BPM = 74;
+
+function startLofi(c: AudioContext) {
+  const filter = c.createBiquadFilter();
+  filter.type = "lowpass";
+  filter.frequency.value = 1400;
+  filter.connect(musicBus);
+  const beat = 60 / LOFI_BPM;
+  let next = c.currentTime + 0.2;
+  let step = 0;
+  let prog = LOFI_PROGRESSIONS[0]!;
+  let note = 72;
+
+  const schedule = () => {
+    if (settings.style !== "lofi") {
+      next = c.currentTime + 0.1;
+      return;
+    }
+    while (next < c.currentTime + 0.5) {
+      const bar = Math.floor(step / 8) % 4;
+      const eighth = step % 8;
+      const swing = eighth % 2 ? beat * 0.12 : 0;
+      const at = next + swing;
+      if (step % 32 === 0 && Math.random() < 0.4) prog = LOFI_PROGRESSIONS[Math.floor(Math.random() * LOFI_PROGRESSIONS.length)]!;
+      const chord = prog[bar]!;
+      if (eighth === 0) {
+        for (const n of chord) tone(midi(n), at, beat * 4, { gain: 0.06, type: "triangle", attack: 0.08, out: filter });
+        tone(midi(chord[0]! - 12), at, beat * 1.8, { gain: 0.22, out: filter });
+      }
+      if (eighth === 5 && Math.random() < 0.5) tone(midi(chord[0]! - 12), at, beat, { gain: 0.16, out: filter });
+      // drums: kick on 1 and the "and" of 3, snare on 2 and 4, hats on every eighth
+      if (eighth === 0 || (eighth === 5 && Math.random() < 0.6)) tone(110, at, 0.3, { gain: 0.5, to: 40, out: filter });
+      if (eighth === 2 || eighth === 6) hiss(at, 0.18, { freq: 1800, gain: 0.18, out: filter });
+      hiss(at, 0.04, { type: "highpass", freq: 7000, gain: eighth % 2 ? 0.04 : 0.07, out: musicBus });
+      // melody: a step or two through the pentatonic scale, with rests
+      if (Math.random() < 0.35) {
+        const root = 60 + (chord[0]! % 12);
+        const options = [-12, 0, 12].flatMap((o) => SCALE.map((s) => root + o + s)).filter((n) => n >= 64 && n <= 84);
+        const near = options.filter((n) => Math.abs(n - note) <= 5);
+        note = near[Math.floor(Math.random() * near.length)] ?? options[Math.floor(options.length / 2)]!;
+        tone(midi(note), at, beat * (Math.random() < 0.3 ? 1.5 : 0.7), { gain: 0.07, out: filter });
+        tone(midi(note) * 2, at, beat * 0.4, { gain: 0.015, out: filter });
+      }
+      if (Math.random() < 0.3) hiss(at + Math.random() * beat * 0.5, 0.01, { type: "highpass", freq: 3000, gain: 0.05, out: musicBus });
+      next += beat / 2;
+      step++;
+    }
+  };
+  schedule();
+  setInterval(schedule, 100);
 }

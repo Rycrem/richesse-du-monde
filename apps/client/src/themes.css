@@ -1,6 +1,8 @@
 /* Menu themes: html[data-theme] skins the menu screens (home, lobby, garage, admin, settings). The game screen keeps its own colors. */
 .options-panel { max-height: calc(100vh - 90px); overflow-y: auto; width: 250px; }
 .options-panel h4 { margin: 4px 0 0; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.music-style { display: flex; gap: 6px; }
+.music-style button { flex: 1; }
 .quit-confirm { display: flex; flex-direction: column; gap: 6px; }
 .quit-confirm .row > button { flex: 1; }
 .theme-list { display: flex; flex-direction: column; gap: 6px; }
