@@ -68,6 +68,7 @@ export type GameEvent =
   | { id: number; kind: "buys"; playerId: PlayerId; items: { company: string; percent: number; total: number }[]; deals: Deal[] }
   | { id: number; kind: "auction"; playerId: PlayerId; sellerId: PlayerId; company: string; percent: number; price: number; winnerId: PlayerId | null; cancelled: boolean }
   | { id: number; kind: "order"; rolls: { playerId: PlayerId; dice: [number, number] }[] }
+  | { id: number; kind: "market"; playerId: PlayerId; market: Record<string, number> }
   | { id: number; kind: "bankrupt"; playerId: PlayerId }
   | { id: number; kind: "win"; playerId: PlayerId };
 export type NewGameEvent = GameEvent extends infer E ? (E extends GameEvent ? Omit<E, "id"> : never) : never;

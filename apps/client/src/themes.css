@@ -333,7 +333,7 @@
 [data-theme="glass"] .podium { background: radial-gradient(ellipse 45% 6% at 50% 94%, #ffffff88 0 40%, transparent 100%), #ffffff14; border: 1px solid #ffffff44; border-radius: 26px; }
 [data-theme="glass"] .players .player .money { color: #fff; font-weight: 700; }
 [data-theme="glass"] .players .player :is(.muted, small) { color: #ffffffb3; }
-[data-theme="glass"] :is(.party, .auction-bid .bid, .auction-pct, .order-row, .market-company) { background: #ffffff1a; border: 1px solid #ffffff33; border-radius: 14px; }
+[data-theme="glass"] :is(.party, .auction-bid .bid, .auction-pct, .order-row, .market-company, .market-move) { background: #ffffff1a; border: 1px solid #ffffff33; border-radius: 14px; }
 [data-theme="glass"] :is(.event-card .head, .auction-top, .inspect header) { -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
 [data-theme="glass"] .event-card .plus, [data-theme="glass"] .inspect .plus, [data-theme="glass"] .panel .plus { color: #7dffc4; }
 [data-theme="glass"] .event-card .minus, [data-theme="glass"] .inspect .minus, [data-theme="glass"] .panel .minus { color: #ff9fb4; }
@@ -345,3 +345,4 @@
 [data-theme="glass"] .setup .my-pawn { border-radius: 22px; }
 /* popups float over the busy 3D board: darker tint keeps text readable (:not(.x) matches the card rule specificity) */
 [data-theme="glass"] :is(.inspect, .event-card, .hover-tip, .win-card, .auction-screen):not(.x) { background: linear-gradient(135deg, #2a2f6ecc, #1b1f4bcc 60%); }
+[data-theme="glass"] .overlay-slot .who { color: #ffffffcc; }

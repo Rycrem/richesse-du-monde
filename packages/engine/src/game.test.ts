@@ -243,8 +243,10 @@ describe("stock exchange tower", () => {
     const g = createGame(P, 1);
     const lead = pass(g, [0, 0, 0]);
     expect(lead.players[0]!.laps).toBe(1);
+    expect(lead.events.at(-1)).toMatchObject({ kind: "market", playerId: lead.players[0]!.id, market: lead.market });
     for (const v of Object.values(lead.market)) expect(Math.abs(v) >= 10 && Math.abs(v) <= 30).toBe(true);
     const behind = pass(g, [0, 1, 0]);
+    expect(behind.events.some((e) => e.kind === "market")).toBe(false);
     expect(Object.values(behind.market).every((v) => v === 0)).toBe(true);
     const tied = pass(g, [1, 2, 0]);
     expect(Object.values(tied.market).every((v) => v === 0)).toBe(true);
