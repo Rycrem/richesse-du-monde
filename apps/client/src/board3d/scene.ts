@@ -386,7 +386,7 @@ export function createBoardScene(host: HTMLElement, events: BoardEvents = {}): B
   const side = mat("#d9cfb8", { roughness: 0.7 });
   const decos: THREE.Group[] = [];
   const cellGroups: THREE.Group[] = [];
-  const marks: { fill: THREE.Mesh; frame: THREE.Mesh; top: THREE.MeshStandardMaterial }[] = [];
+  const marks: { fill: THREE.Mesh; frame: THREE.Mesh; top: THREE.MeshStandardMaterial; g: THREE.Group; rot: number; flipped: boolean }[] = [];
   let marked = false;
   board.forEach((cell, i) => {
     const p = cellPose(i);
@@ -427,7 +427,7 @@ export function createBoardScene(host: HTMLElement, events: BoardEvents = {}): B
     frame.position.y = 0.18;
     frame.visible = false;
     g.add(frame);
-    marks.push({ fill, frame, top });
+    marks.push({ fill, frame, top, g, rot: p.rot, flipped: false });
     const deco = new THREE.Group();
     deco.position.set(0, 0.16, -p.d * 0.2);
     g.add(deco);
@@ -759,6 +759,17 @@ export function createBoardScene(host: HTMLElement, events: BoardEvents = {}): B
       }
     }
     if (controls.update() || dirty) {
+      // turn each cell around so its name always reads upright from where the camera looks
+      const fx = controls.target.x - camera.position.x;
+      const fz = controls.target.z - camera.position.z;
+      const fl = Math.hypot(fx, fz) || 1;
+      for (const m of marks) {
+        const facing = (-Math.sin(m.rot) * fx - Math.cos(m.rot) * fz) / fl;
+        if (facing < -0.2 !== m.flipped && Math.abs(facing) > 0.2) {
+          m.flipped = !m.flipped;
+          m.g.rotation.y = m.rot + (m.flipped ? Math.PI : 0);
+        }
+      }
       dirty = false;
       renderer.render(scene, camera);
     }

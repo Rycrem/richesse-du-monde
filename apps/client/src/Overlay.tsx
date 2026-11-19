@@ -36,6 +36,7 @@ function timing(e: GameEvent): [number, number] {
   if (e.kind === "buys") return [3200 + e.deals.length * 600, 0];
   if (e.kind === "royalty") return [2400, 0];
   if (e.kind === "market") return [4200, 0];
+  if (e.kind === "bankrupt") return [4500, 600];
   return [2800, 0];
 }
 
@@ -321,11 +322,15 @@ export function EventOverlay({ game }: { game: GameState }) {
       setWinner({ id: e!.playerId, leaving: false });
       return;
     }
-    // catch up quickly when many events piled up, but never cut a pawn walk short
-    const speed = rest.length > 4 ? 0.4 : 1;
+    // catch up when events piled up, but never cut a pawn walk short
+    const speed = rest.length >= 4 ? 0.35 : rest.length >= 2 ? 0.6 : 1;
     const [show, gap] = timing(e!);
     setCurrent({ e: e!, leaving: false, show: show * speed, gap: e!.kind === "roll" ? gap : gap * speed });
   }, [queue, current]);
+
+  // a card removed under the pointer never fires pointerleave: release the hold for the next one
+  const shownId = current?.e.id;
+  useEffect(() => setHeld(false), [shownId]);
 
   useEffect(() => {
     if (!current || held) return;
