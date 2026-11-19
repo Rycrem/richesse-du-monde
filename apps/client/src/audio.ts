@@ -142,7 +142,8 @@ export function steps(n: number, delay: number, every: number) {
   for (let i = 0; i < n; i++) tone(220, t + i * every, 0.08, { gain: 0.12, type: "triangle", to: 160 });
 }
 
-// Generative jazz trio: swung ii-V-I changes, walking bass, ride cymbal, piano comping and a vibraphone line
+// Generative jazz combo: swung ii-V-I changes, walking bass, ride cymbal, piano comping, a horn section
+// (trumpet, sax, trombone) and a soloist that switches between vibraphone and trumpet
 const QUALITY = {
   maj7: { chord: [0, 4, 7, 11], scale: [0, 2, 4, 7, 9, 11] },
   m7: { chord: [0, 3, 7, 10], scale: [0, 2, 3, 5, 7, 9, 10] },
@@ -191,11 +192,57 @@ function startMusic() {
     tone(midi(n), at, dur, { gain: 0.07, attack: 0.004, out: filter });
     tone(midi(n) * 4, at, dur * 0.3, { gain: 0.008, out: filter });
   };
+  // brass: detuned saws through a lowpass that opens on the attack ("blat"), with a slow vibrato on long notes
+  const brass = (n: number, at: number, dur: number, gain: number, bright = 2600) => {
+    const g = c.createGain();
+    const f = c.createBiquadFilter();
+    f.type = "lowpass";
+    f.Q.value = 2;
+    f.frequency.setValueAtTime(300, at);
+    f.frequency.exponentialRampToValueAtTime(bright, at + 0.05);
+    f.frequency.exponentialRampToValueAtTime(bright * 0.5, at + dur);
+    g.gain.setValueAtTime(0, at);
+    g.gain.linearRampToValueAtTime(gain, at + 0.04);
+    g.gain.setValueAtTime(gain * 0.8, at + Math.max(0.05, dur - 0.06));
+    g.gain.exponentialRampToValueAtTime(0.0001, at + dur + 0.08);
+    f.connect(g).connect(musicBus);
+    const lfo = c.createOscillator();
+    const depth = c.createGain();
+    lfo.frequency.value = 5.5;
+    depth.gain.setValueAtTime(0, at);
+    depth.gain.linearRampToValueAtTime(dur > beat ? 18 : 0, at + dur);
+    lfo.connect(depth);
+    for (const detune of [-7, 7]) {
+      const o = c.createOscillator();
+      o.type = "sawtooth";
+      o.frequency.value = midi(n);
+      o.detune.value = detune;
+      depth.connect(o.detune);
+      o.connect(f);
+      o.start(at);
+      o.stop(at + dur + 0.1);
+    }
+    lfo.start(at);
+    lfo.stop(at + dur + 0.1);
+  };
+  // horn section voicing: trombone on the 3rd or 7th, sax on the 5th or 9th, trumpet on top
+  const horns = (root: number, q: (typeof QUALITY)[keyof typeof QUALITY], at: number, dur: number, gain: number) => {
+    const top = inRange(root + pick([q.chord[3]!, 14, q.chord[1]!]), 70);
+    const mid = inRange(root + pick([q.chord[2]!, 14]), 62);
+    const lowN = inRange(root + pick([q.chord[1]!, q.chord[3]!]), 50);
+    brass(top, at, dur, gain, 3200);
+    brass(mid, at, dur, gain * 0.8, 2200);
+    brass(lowN, at, dur, gain * 0.9, 1400);
+  };
+  let soloist: "vibes" | "trumpet" = "vibes";
   const ride = (at: number, accent: boolean) => hiss(at, 0.45, { type: "highpass", freq: 6000, gain: accent ? 0.07 : 0.045, out: musicBus });
 
   const schedule = () => {
     while (barStart < c.currentTime + 0.6) {
-      if (bar % 4 === 0 && Math.random() < 0.35) prog = pick(PROGRESSIONS);
+      if (bar % 4 === 0) {
+        if (Math.random() < 0.35) prog = pick(PROGRESSIONS);
+        soloist = Math.random() < 0.5 ? "vibes" : "trumpet";
+      }
       const [root, quality] = prog[bar % 4]!;
       const [nextRoot] = prog[(bar + 1) % 4]!;
       const q = QUALITY[quality];
@@ -225,7 +272,14 @@ function startMusic() {
       piano(voicing, at(...pick(spots)), beat * 0.7);
       if (Math.random() < 0.5) piano(voicing, at(...pick(spots)), beat * 0.4);
 
-      // vibraphone: phrases of swung eighths through the chord scale, landing on chord tones
+      // horns: a shout chorus of syncopated stabs on the turnaround bar, soft held pads behind the trumpet otherwise
+      if (bar % 4 === 3 && Math.random() < 0.7) {
+        horns(root, q, at(1, true), beat * 0.45, 0.035);
+        horns(root, q, at(2, true), beat * 0.3, 0.03);
+        horns(root, q, at(3), beat * 1.1, 0.04);
+      } else if (soloist === "vibes" && Math.random() < 0.4) horns(root, q, at(0), beat * 3.6, 0.014);
+
+      // soloist (vibraphone or trumpet): phrases of swung eighths through the chord scale, landing on chord tones
       if (phrase === 0 && Math.random() < 0.45) phrase = 1 + Math.floor(Math.random() * 2);
       if (phrase > 0) {
         const options = [60, 72, 84].flatMap((o) => q.scale.map((s) => o + ((root + s) % 12))).filter((n) => n >= 67 && n <= 86);
@@ -235,7 +289,9 @@ function startMusic() {
           const pool = e % 2 === 0 ? tones : options;
           const near = pool.filter((n) => Math.abs(n - note) <= 4 && n !== note);
           note = near.length ? pick(near) : pick(pool);
-          vibes(note, at(Math.floor(e / 2), e % 2 === 1), beat * (e === 7 ? 1.2 : 0.6));
+          const t = at(Math.floor(e / 2), e % 2 === 1);
+          if (soloist === "vibes") vibes(note, t, beat * (e === 7 ? 1.2 : 0.6));
+          else brass(note - 5, t, beat * (e === 7 ? 1.4 : 0.55), 0.05, 3000);
         }
         phrase--;
       }
