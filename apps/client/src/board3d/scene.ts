@@ -367,6 +367,7 @@ export function createBoardScene(host: HTMLElement, events: BoardEvents = {}): B
   controls.maxPolarAngle = 1.3;
   controls.minDistance = 5;
   controls.maxDistance = 45;
+  controls.zoomToCursor = true;
   // rotation is handled below so the view turns around the central tower, not the focused point
   controls.enableRotate = false;
 
