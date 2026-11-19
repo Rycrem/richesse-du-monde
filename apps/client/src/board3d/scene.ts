@@ -367,6 +367,8 @@ export function createBoardScene(host: HTMLElement, events: BoardEvents = {}): B
   controls.maxPolarAngle = 1.3;
   controls.minDistance = 5;
   controls.maxDistance = 45;
+  // rotation is handled below so the view turns around the central tower, not the focused point
+  controls.enableRotate = false;
 
   // table, slab and raised inner plateau
   const table = new THREE.Mesh(new THREE.CircleGeometry(60, 64), mat("#16202e", { roughness: 0.95 }));
@@ -780,6 +782,37 @@ export function createBoardScene(host: HTMLElement, events: BoardEvents = {}): B
     downAt = null;
   };
   const onLeave = () => events.onHover?.(null, 0, 0);
+
+  // one-finger or left-button drag: sideways turns camera and target around the tower axis, up/down tilts
+  const pointers = new Map<number, { x: number; y: number }>();
+  const yAxis = new THREE.Vector3(0, 1, 0);
+  const onOrbitDown = (e: PointerEvent) => {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  };
+  const onOrbitMove = (e: PointerEvent) => {
+    const last = pointers.get(e.pointerId);
+    if (!last) return;
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.size !== 1) return;
+    const h = renderer.domElement.clientHeight || 1;
+    const yaw = (-2 * Math.PI * (e.clientX - last.x)) / h;
+    const pitch = (-2 * Math.PI * (e.clientY - last.y)) / h;
+    if (!yaw && !pitch) return;
+    follow = false;
+    camera.position.applyAxisAngle(yAxis, yaw);
+    controls.target.applyAxisAngle(yAxis, yaw);
+    const offset = camera.position.clone().sub(controls.target);
+    const sph = new THREE.Spherical().setFromVector3(offset);
+    sph.phi = THREE.MathUtils.clamp(sph.phi + pitch, 0.05, controls.maxPolarAngle);
+    camera.position.copy(controls.target).add(offset.setFromSpherical(sph));
+    dirty = true;
+  };
+  const onOrbitUp = (e: PointerEvent) => pointers.delete(e.pointerId);
+  renderer.domElement.addEventListener("pointerdown", onOrbitDown);
+  window.addEventListener("pointermove", onOrbitMove);
+  window.addEventListener("pointerup", onOrbitUp);
+  window.addEventListener("pointercancel", onOrbitUp);
   renderer.domElement.addEventListener("pointermove", onMove);
   renderer.domElement.addEventListener("pointerdown", onDown);
   renderer.domElement.addEventListener("pointerup", onUp);
@@ -798,6 +831,10 @@ export function createBoardScene(host: HTMLElement, events: BoardEvents = {}): B
       cancelAnimationFrame(frame);
       ro.disconnect();
       renderer.domElement.removeEventListener("pointermove", onMove);
+      renderer.domElement.removeEventListener("pointerdown", onOrbitDown);
+      window.removeEventListener("pointermove", onOrbitMove);
+      window.removeEventListener("pointerup", onOrbitUp);
+      window.removeEventListener("pointercancel", onOrbitUp);
       renderer.domElement.removeEventListener("pointerdown", onDown);
       renderer.domElement.removeEventListener("pointerup", onUp);
       renderer.domElement.removeEventListener("pointerleave", onLeave);
