@@ -273,7 +273,7 @@ function BuyPanel({ game }: { game: GameState }) {
               {wanted[c] ?? 0} / {available} %
             </span>
             <small>
-              {money(company.pricePerPercent)} / % · rapporte {money(company.royaltyPerPercent)} / % à chaque passage
+              {money(company.pricePerPercent)} / % · rapporte {money(company.royaltyPerPercent)} / % à chaque passage · tu en as <strong>{me.holdings[c] ?? 0} %</strong>
               {wanted[c]
                 ? ` · avec ${(me.holdings[c] ?? 0) + wanted[c]!} %, tu toucherais ${money(company.royaltyPerPercent * ((me.holdings[c] ?? 0) + wanted[c]!))} par passage en étant le plus gros détenteur`
                 : ""}
