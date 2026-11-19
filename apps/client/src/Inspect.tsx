@@ -220,12 +220,14 @@ export function HoverTip({ hover, game }: { hover: { cell: number; x: number; y:
   if (!hover) return null;
   const cell = board[hover.cell]!;
   const company = cell.type === "city" ? companyById.get(game.royalties[cell.id]!)! : null;
+  const owners = company ? royaltyQuote(game, company.id).winners.flat() : [];
   return (
     <div className="hover-tip" style={{ left: hover.x + 14, top: hover.y + 14 }}>
       {company && <img src={`/logos/${company.id}.svg`} alt="" />}
       <div>
         <strong>{company ? company.name : cell.name}</strong>
         {company && <small>{cell.name}</small>}
+        {owners.length > 0 && <small className="owner-name">à {owners.map((p) => `${p.name} (${p.holdings[company!.id]} %)`).join(", ")}</small>}
       </div>
     </div>
   );

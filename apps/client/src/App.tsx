@@ -4,6 +4,7 @@ import { Board } from "./Board";
 import { Chat } from "./Chat";
 import { GamePanel } from "./GamePanel";
 import { Home } from "./Home";
+import { CashHud, TurnBanner } from "./Hud";
 import { InspectPanel } from "./Inspect";
 import { Lobby } from "./Lobby";
 import { EventOverlay } from "./Overlay";
@@ -21,6 +22,8 @@ export function App() {
       <div className="board-wrap">
         <Board game={game} looks={game.players.map((p, i) => room?.players.find((m) => m.id === p.id)?.look ?? STARTER_LOOKS[i % STARTER_LOOKS.length]!)} />
         <EventOverlay game={game} />
+        <CashHud game={game} />
+        <TurnBanner game={game} />
         <AuctionScreen game={game} />
         <AtoutOffer game={game} />
         <InspectPanel game={game} />
