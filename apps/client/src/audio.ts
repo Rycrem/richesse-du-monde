@@ -100,7 +100,7 @@ function hiss(at: number, dur: number, opts: { type?: BiquadFilterType; freq?: n
   src.stop(at + dur + 0.05);
 }
 
-export type Sfx = "click" | "dice" | "card" | "coin" | "loss" | "buy" | "bid" | "win" | "bankrupt";
+export type Sfx = "click" | "dice" | "card" | "coin" | "loss" | "buy" | "bid" | "win" | "bankrupt" | "cash";
 
 export function play(name: Sfx) {
   if (!ctx || ctx.state !== "running") return;
@@ -136,6 +136,13 @@ export function play(name: Sfx) {
       break;
     case "bankrupt":
       tone(220, t, 1.2, { gain: 0.25, type: "sawtooth", to: 55 });
+      break;
+    case "cash":
+      // cash register: drawer clunk, bell, then a cascade of coins
+      hiss(t, 0.08, { type: "lowpass", freq: 400, gain: 0.5 });
+      tone(midi(96), t + 0.06, 0.9, { gain: 0.16 });
+      tone(midi(103), t + 0.06, 0.7, { gain: 0.08 });
+      for (let i = 0; i < 8; i++) tone(midi(86 + ((i * 5) % 12)), t + 0.25 + i * 0.06, 0.18, { gain: 0.1, type: "square" });
       break;
   }
 }

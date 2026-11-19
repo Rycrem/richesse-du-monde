@@ -2,6 +2,7 @@ import { board, markets, type GameEvent, type GameState } from "@stonks/engine";
 import { useEffect, useRef, useState } from "react";
 import { play, steps, type Sfx } from "./audio";
 import { companyById, money, PLAYER_COLORS } from "./format";
+import { useStore } from "./store";
 
 const WALK_DELAY = 2.2;
 const STEP = 0.24;
@@ -19,7 +20,9 @@ const HEAD: Record<string, { color: string; icon: string; title: string }> = {
   jackpot: { color: "#e8c45a", icon: "🏦", title: "CAGNOTTE DE LA BOURSE" },
 };
 
-function sound(e: GameEvent) {
+function sound(e: GameEvent, you: string | null) {
+  // someone landed on one of my cells: the till rings
+  if (e.kind === "royalty" && you && e.to.includes(you)) return play("cash");
   if (e.kind === "roll") {
     play("dice");
     return steps((e.to - e.from + board.length) % board.length, WALK_DELAY, STEP);
@@ -317,7 +320,7 @@ export function EventOverlay({ game }: { game: GameState }) {
     if (current || !queue.length) return;
     const [e, ...rest] = queue;
     setQueue(rest);
-    sound(e!);
+    sound(e!, useStore.getState().you);
     if (e!.kind === "win") {
       setWinner({ id: e!.playerId, leaving: false });
       return;
