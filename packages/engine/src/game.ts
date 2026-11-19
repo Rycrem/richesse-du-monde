@@ -1,4 +1,4 @@
-import { actuCards, board, companies, config } from "./data";
+import { actuCards, board, companies, config, markets } from "./data";
 import { nextRandom, rollDie } from "./rng";
 import type { Deal, GameMode, GameState, NewGameEvent, Player, PlayerId } from "./state";
 import type { CompanyId } from "./types";
@@ -43,8 +43,12 @@ export function createGame(players: { id: PlayerId; name: string }[], seed: numb
   [s] = shuffle(deck, s);
   const royalties: Record<string, CompanyId> = {};
   cityStockOrigin.forEach((city, i) => (royalties[city.id] = tokens[i]!));
+  const market: Record<string, number> = {};
+  s = moveMarket(market, s);
   return {
     seed: s,
+    market,
+    pot: 0,
     mode,
     players: players.map((p) => ({ ...p, cash: startingCash, position: 0, holdings: {}, atouts: 0, laps: 0, bankrupt: false })),
     current: 0,
@@ -104,10 +108,14 @@ function emit(state: GameState, e: NewGameEvent): void {
 }
 
 // Cash change shown on a card: who, why, how much, before and after
-function money(state: GameState, p: Player, kind: "actu" | "ipo" | "krach" | "lap" | "atout", text: string, amount: number): void {
+function money(state: GameState, p: Player, kind: "actu" | "ipo" | "krach" | "lap" | "atout" | "double" | "jackpot", text: string, amount: number): void {
   const before = p.cash;
   if (amount >= 0) p.cash += amount;
-  else charge(state, p, -amount);
+  else {
+    // fines and taxes pile up in the stock exchange tower
+    state.pot += -amount;
+    charge(state, p, -amount);
+  }
   emit(state, { kind, playerId: p.id, text, amount, before, after: p.cash });
 }
 
@@ -242,7 +250,7 @@ export function royaltyQuote(state: GameState, company: CompanyId): { winners: P
   if (max === 0) return { winners: [], max: 0, share: 0 };
   const winners = [...groups.values()].filter((g) => total(g) === max);
   const multiplier = max === 100 ? config.monopolyMultiplier : 1;
-  const amount = companyById.get(company)!.royaltyPerPercent * max * multiplier;
+  const amount = Math.floor((companyById.get(company)!.royaltyPerPercent * max * multiplier * (100 + trendOf(state, company))) / 100);
   return { winners, max, share: Math.floor(amount / winners.length) };
 }
 
@@ -297,7 +305,11 @@ function landOn(state: GameState, p: Player, pips: number): void {
       state.actuDeck.push(id);
       const card = actuCards.find((c) => c.id === id)!;
       state.log.push(`${p.name} : ${card.text}`);
-      money(state, p, "actu", card.text, card.amount);
+      if (card.jackpot) {
+        const pot = state.pot;
+        state.pot = 0;
+        money(state, p, "jackpot", pot > 0 ? card.text : "Délit d'initié réussi... mais la cagnotte de la Bourse est vide.", pot);
+      } else money(state, p, "actu", card.text, card.amount);
       break;
     }
     case "encheres": {
@@ -359,7 +371,26 @@ export function buyableStock(state: GameState): Record<CompanyId, number> {
   return Object.fromEntries(Object.entries(stock).map(([c, list]) => [c, list.reduce((a, x) => a + x.percent, 0)]));
 }
 
+const TRENDS = [-30, -25, -20, -15, -10, 10, 15, 20, 25, 30];
+
+// Each market gets a new trend, so royalties change from one turn to the next
+function moveMarket(market: Record<string, number>, seed: number): number {
+  let s = seed;
+  for (const m of markets) {
+    const [r, next] = nextRandom(s);
+    s = next;
+    market[m.id] = TRENDS[Math.floor(r * TRENDS.length)]!;
+  }
+  return s;
+}
+
+export function trendOf(state: GameState, company: CompanyId): number {
+  const m = markets.find((x) => x.companies.includes(company));
+  return m ? (state.market[m.id] ?? 0) : 0;
+}
+
 function nextTurn(state: GameState): void {
+  state.seed = moveMarket(state.market, state.seed);
   const n = state.players.length;
   let i = state.current;
   do i = (i + 1) % n;
@@ -394,6 +425,7 @@ export function applyAction(prev: GameState, action: Action): Result {
       const to = cur.position + d1 + d2;
       emit(state, { kind: "roll", playerId: cur.id, dice: [d1, d2], from: cur.position, to: to % board.length });
       cur.position = to % board.length;
+      if (d1 === d2) money(state, cur, "double", `Double ${d1} ! La Bourse vous récompense.`, config.doubleBonus);
       if (to >= board.length) {
         cur.laps += 1;
         money(state, cur, "lap", "Vous repassez par le Départ.", config.lapBonus);

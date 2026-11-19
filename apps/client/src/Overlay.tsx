@@ -15,6 +15,8 @@ const HEAD: Record<string, { color: string; icon: string; title: string }> = {
   lap: { color: "#0a9d6e", icon: "🏁", title: "TOUR COMPLET" },
   atout: { color: "#e8b93a", icon: "⭐", title: "ATOUT" },
   bankrupt: { color: "#3a3f4b", icon: "💸", title: "FAILLITE" },
+  double: { color: "#9b5de5", icon: "🎲", title: "DOUBLE" },
+  jackpot: { color: "#e8c45a", icon: "🏦", title: "CAGNOTTE DE LA BOURSE" },
 };
 
 function sound(e: GameEvent) {

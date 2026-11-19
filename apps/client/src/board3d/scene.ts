@@ -1,4 +1,4 @@
-import { allianceOf, board, regions, type Cell, type GameState } from "@stonks/engine";
+import { allianceOf, board, markets, regions, type Cell, type GameState } from "@stonks/engine";
 import type { Look } from "@stonks/shared";
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
@@ -264,17 +264,28 @@ function center(scene: THREE.Scene) {
     ty += h;
   }
   add(c, new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.7, 4), mat("#e8c45a", { metalness: 0.9, roughness: 0.2 })), 0, ty + 0.35, 0);
-  const tickTex = canvasTexture(2048, 96, (g) => {
+  // live ticker: the trend of each market and the pot of fines held by the tower
+  const tickCanvas = document.createElement("canvas");
+  tickCanvas.width = 2048;
+  tickCanvas.height = 96;
+  const tickTex = new THREE.CanvasTexture(tickCanvas);
+  tickTex.colorSpace = THREE.SRGBColorSpace;
+  tickTex.anisotropy = 8;
+  const drawTicker = (market: Record<string, number>, pot: number) => {
+    const g = tickCanvas.getContext("2d")!;
     g.fillStyle = "#081018";
     g.fillRect(0, 0, 2048, 96);
-    g.font = "800 52px Inter, Arial";
+    g.font = "800 46px Inter, Arial";
     let x = 20;
-    for (const it of ["NVDO ▲ 4,2 %", "APPL ▲ 1,1 %", "GOGL ▼ 0,8 %", "TSLR ▲ 9,6 %", "AMZN ▲ 2,3 %", "MSFT ▲ 0,4 %", "METO ▼ 3,1 %", "SNYX ▲ 0,9 %"]) {
-      g.fillStyle = it.includes("▼") ? "#ff4d6d" : "#3fd17b";
-      g.fillText(it, x, 66);
-      x += g.measureText(it).width + 60;
+    const items = markets.map((m) => ({ text: `${m.name.toUpperCase()} ${market[m.id]! >= 0 ? "▲" : "▼"} ${Math.abs(market[m.id] ?? 0)} %`, color: (market[m.id] ?? 0) >= 0 ? "#3fd17b" : "#ff4d6d" }));
+    items.push({ text: `CAGNOTTE ${pot.toLocaleString("fr-FR")} k$`, color: "#e8c45a" });
+    for (const it of items) {
+      g.fillStyle = it.color;
+      g.fillText(it.text, x, 64);
+      x += g.measureText(it.text).width + 56;
     }
-  });
+    tickTex.needsUpdate = true;
+  };
   const ticker = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.62, 0.22, 64, 1, true), new THREE.MeshStandardMaterial({ map: tickTex, emissive: "#ffffff", emissiveMap: tickTex, emissiveIntensity: 0.8, side: THREE.DoubleSide }));
   ticker.position.y = 1.55;
   ticker.rotation.y = -0.6;
@@ -285,7 +296,14 @@ function center(scene: THREE.Scene) {
   const head = add(c, new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.42, 16), green), pts[5]!.x, pts[5]!.y, pts[5]!.z);
   head.lookAt(new THREE.Vector3(2.5, 4.0, 0.6));
   head.rotateX(Math.PI / 2);
-  return c;
+  // the tower glows green when the markets rise on average, red when they fall
+  const setMarket = (market: Record<string, number>, pot: number) => {
+    drawTicker(market, pot);
+    const avg = Object.values(market).reduce((a, v) => a + v, 0) / Math.max(1, Object.values(market).length);
+    tower.emissive.set(avg > 0 ? "#1f8f4f" : avg < 0 ? "#a3202f" : "#1f4f7f");
+    tower.emissiveIntensity = 0.35 + Math.min(0.5, Math.abs(avg) / 40);
+  };
+  return { group: c, setMarket };
 }
 
 function disposeTree(o: THREE.Object3D) {
@@ -421,7 +439,7 @@ export function createBoardScene(host: HTMLElement, events: BoardEvents = {}): B
   floorLabel(scene, "VERS LES HUBS", "#3fd17b", MOAT, 2.4, Math.PI / 2);
   floorLabel(scene, "RETOUR AU DÉPART", "#ffcf4a", 1.2, MOAT, 0);
 
-  const mid = center(scene);
+  const { group: mid, setMarket } = center(scene);
   const diceMats = new Map<number, THREE.MeshStandardMaterial>();
   const dieMat = (n: number) => diceMats.get(n) ?? diceMats.set(n, new THREE.MeshStandardMaterial({ map: pipTexture(n), roughness: 0.3 })).get(n)!;
   const dice = [[1.2, 1.9, 0.5], [1.75, 1.55, 1.1]].map(([x, z, r]) => {
@@ -567,6 +585,8 @@ export function createBoardScene(host: HTMLElement, events: BoardEvents = {}): B
   }
 
   function update(game: GameState, looks: Look[]) {
+    setMarket(game.market, game.pot);
+    dirty = true;
     board.forEach((cell, i) => {
       if (cell.type !== "city") return;
       const company = companyById.get(game.royalties[cell.id]!)!;

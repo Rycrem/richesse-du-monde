@@ -1,4 +1,4 @@
-import { allianceOf, board, config, regions, royaltyQuote, type Cell, type GameState } from "@stonks/engine";
+import { allianceOf, board, config, markets, regions, royaltyQuote, trendOf, type Cell, type GameState } from "@stonks/engine";
 import { useEffect, useState } from "react";
 import { companyById, money, PLAYER_COLORS } from "./format";
 import { useStore } from "./store";
@@ -8,10 +8,10 @@ const SPECIAL: Record<string, string> = {
   mondial: "Achète jusqu'à 30 % dans les entreprises que tu possèdes déjà, partout dans le monde. Valable après un premier tour complet.",
   encheres: "Choisis un adversaire et une de ses actions : elle part aux enchères pendant 30 s. Tout le monde peut enchérir, sauf le vendeur.",
   atout: `Achète un Atout pour ${config.atoutPrice.toLocaleString("fr-FR")} k$. Il permet d'annuler une enchère qui te vise.`,
-  actu: "Une actualité tech tombe : gain ou perte pour le joueur, montré à tout le monde.",
+  actu: "Une actualité tech tombe : gain ou perte pour le joueur, montré à tout le monde. Les pertes vont dans la cagnotte de la Bourse, que seule la carte Délit d'initié permet de rafler.",
   levee: `Levée de fonds : tu reçois ${config.leveeFundsPerPip} k$ par point de dés.`,
   ipo: `Introduction en Bourse : +${config.ipoBonus.toLocaleString("fr-FR")} k$.`,
-  krach: `Krach boursier : tu perds ${config.krachPercent} % de ta trésorerie.`,
+  krach: `Krach boursier : tu perds ${config.krachPercent} % de ta trésorerie, qui part dans la cagnotte de la Bourse.`,
 };
 
 const regionName = (id: string) => regions.find((r) => r.id === id)?.name ?? id;
@@ -54,6 +54,17 @@ function CompanyHead({ company }: { company: string }) {
   );
 }
 
+function Trend({ game, company }: { game: GameState; company: string }) {
+  const m = markets.find((x) => x.companies.includes(company));
+  const t = trendOf(game, company);
+  if (!m) return null;
+  return (
+    <p>
+      Marché {m.name} ce tour : <strong className={t >= 0 ? "plus" : "minus"}>{t >= 0 ? `+${t}` : t} %</strong> sur les redevances.
+    </p>
+  );
+}
+
 function landingCost(game: GameState, company: string) {
   const q = royaltyQuote(game, company);
   if (q.max === 0) return <p>Tomber ici est gratuit : personne ne détient {companyById.get(company)!.name}.</p>;
@@ -75,6 +86,7 @@ function CellBody({ game, cell }: { game: GameState; cell: Cell }) {
       <>
         <h4>Redevance de la case</h4>
         <CompanyHead company={company} />
+        <Trend game={game} company={company} />
         {landingCost(game, company)}
         <h4>En vente ici</h4>
         {stock.length === 0 ? (
@@ -113,6 +125,7 @@ function CompanyBody({ game, company }: { game: GameState; company: string }) {
           <i className="pay" /> Cases qui rapportent
         </span>
       </div>
+      <Trend game={game} company={company} />
       <p>
         Le plus gros détenteur touche {money(c.royaltyPerPercent)} par % détenu chaque fois qu'un joueur tombe sur une case {c.name} (x
         {config.monopolyMultiplier} à 100 %). La banque rachète {money(Math.floor(c.pricePerPercent * config.bankBuybackRatio))} / %.

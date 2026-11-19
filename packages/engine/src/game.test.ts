@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { board, companies, config } from "./data";
-import { applyAction, buyableStock, createGame, rollTurnOrder, type Action } from "./game";
+import { board, companies, config, markets } from "./data";
+import { applyAction, buyableStock, createGame, rollTurnOrder, royaltyQuote, type Action } from "./game";
 import { rollDie } from "./rng";
 import type { GameState } from "./state";
 
@@ -22,7 +22,7 @@ function err(state: GameState, action: Action): string {
   return r.error;
 }
 
-// Finds a seed whose next two dice move the current player onto `cellId`
+// Finds a seed whose next two dice (not a double) move the current player onto `cellId`
 function landOn(state: GameState, cellId: string): GameState {
   const target = board.findIndex((c) => c.id === cellId);
   const pos = state.players[state.current]!.position;
@@ -30,15 +30,17 @@ function landOn(state: GameState, cellId: string): GameState {
   for (let seed = 1; seed < 100000; seed++) {
     const [d1, s1] = rollDie(seed);
     const [d2] = rollDie(s1);
-    if (d1 + d2 === need) return ok({ ...state, seed }, { type: "ROLL", playerId: state.players[state.current]!.id });
+    if (d1 + d2 === need && d1 !== d2) return ok({ ...state, seed }, { type: "ROLL", playerId: state.players[state.current]!.id });
   }
   throw new Error(`no seed lands on ${cellId}`);
 }
 
 function at(state: GameState, cellId: string): GameState {
   const s = structuredClone(state);
-  // place the player 2 cells before so a roll of 2 reaches the target
-  s.players[s.current]!.position = (board.findIndex((c) => c.id === cellId) - 2 + board.length) % board.length;
+  // a flat market keeps royalties at their base value
+  s.market = {};
+  // place the player 3 cells before so a roll of 1 + 2 reaches the target
+  s.players[s.current]!.position = (board.findIndex((c) => c.id === cellId) - 3 + board.length) % board.length;
   return landOn(s, cellId);
 }
 
@@ -140,7 +142,7 @@ describe("buying", () => {
 describe("spiral board", () => {
   it("goes from the outer ring straight into the hubs, then back to Départ with a new lap", () => {
     let g = createGame(P, 3);
-    g.players[0]!.position = 46;
+    g.players[0]!.position = 45;
     g = landOn(g, "ipo-1");
     expect(g.players[0]!.laps).toBe(0);
     g = ok(g, { type: "END_TURN", playerId: "a" });
@@ -206,7 +208,60 @@ describe("events", () => {
   it("a Levée de fonds card shows the dice and the cash before and after", () => {
     const g = at(createGame(P, 1), "levee-1");
     const e = g.events.at(-1)!;
-    expect(e).toMatchObject({ kind: "levee", amount: 2 * config.leveeFundsPerPip, dice: g.lastRoll, before: config.startingCash, after: config.startingCash + 2 * config.leveeFundsPerPip });
+    expect(e).toMatchObject({ kind: "levee", amount: 3 * config.leveeFundsPerPip, dice: g.lastRoll, before: config.startingCash, after: config.startingCash + 3 * config.leveeFundsPerPip });
+  });
+});
+
+describe("stock exchange tower", () => {
+  it("a market trend raises or lowers the royalty of its companies", () => {
+    let g = createGame(P, 1);
+    g.royalties.berlin = "nvidio";
+    g.players[1]!.holdings = { nvidio: 40 };
+    const a = g.players[0]!.cash;
+    g = at(g, "berlin");
+    g = { ...g, market: { puces: 20 } };
+    expect(royaltyQuote(g, "nvidio").share).toBe(Math.floor((40 * royalty("nvidio") * 120) / 100));
+    expect(g.players[0]!.cash).toBe(a - 40 * royalty("nvidio"));
+  });
+
+  it("every turn draws a new trend for each market, between -30 and +30 %", () => {
+    let g = at(createGame(P, 1), "berlin");
+    const seen = new Set<string>();
+    for (let i = 0; i < 6; i++) {
+      g = ok(g, { type: "END_TURN", playerId: g.players[g.current]!.id });
+      expect(Object.keys(g.market).sort()).toEqual(markets.map((m) => m.id).sort());
+      for (const v of Object.values(g.market)) expect(Math.abs(v) >= 10 && Math.abs(v) <= 30).toBe(true);
+      seen.add(JSON.stringify(g.market));
+      g = { ...g, phase: "act" };
+    }
+    expect(seen.size).toBeGreaterThan(1);
+  });
+
+  it("fines go to the pot, and only the jackpot card wins it", () => {
+    let g = at(createGame(P, 1), "krach-1");
+    const loss = Math.floor((config.startingCash * config.krachPercent) / 100);
+    expect(g.pot).toBe(loss);
+    g = ok(g, { type: "END_TURN", playerId: "a" });
+    const b = g.players[g.current]!;
+    g.actuDeck = ["actu-jackpot", ...g.actuDeck.filter((id) => id !== "actu-jackpot")];
+    const before = b.cash;
+    g = at(g, "actu-1");
+    expect(g.players.find((p) => p.id === b.id)!.cash).toBe(before + loss);
+    expect(g.pot).toBe(0);
+    expect(g.events.at(-1)).toMatchObject({ kind: "jackpot", amount: loss });
+  });
+
+  it("a double earns a bonus", () => {
+    let g = createGame(P, 1);
+    for (let seed = 1; ; seed++) {
+      const [d1, s1] = rollDie(seed);
+      const [d2] = rollDie(s1);
+      if (d1 === d2) {
+        g = ok({ ...g, seed }, { type: "ROLL", playerId: "a" });
+        break;
+      }
+    }
+    expect(g.events.find((e) => e.kind === "double")).toMatchObject({ playerId: "a", amount: config.doubleBonus });
   });
 });
 

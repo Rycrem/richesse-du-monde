@@ -58,5 +58,11 @@
     "id": "actu-12",
     "text": "Licenciement d'un PDG : indemnités.",
     "amount": -500
+  },
+  {
+    "id": "actu-jackpot",
+    "text": "Délit d'initié réussi : vous raflez la cagnotte de la Bourse.",
+    "amount": 0,
+    "jackpot": true
   }
 ]

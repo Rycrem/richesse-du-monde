@@ -1,0 +1,6 @@
+[
+  { "id": "puces", "name": "Puces & IA", "companies": ["nvidio", "tsmb", "amb", "intol"] },
+  { "id": "cloud", "name": "Cloud & logiciels", "companies": ["macrosoft", "amazone", "oracul", "gogol"] },
+  { "id": "appareils", "name": "Appareils", "companies": ["appel", "samsong", "xiaomy", "sonyx"] },
+  { "id": "medias", "name": "Médias & mobilité", "companies": ["netflox", "meto", "spotifaille", "tesler"] }
+]
