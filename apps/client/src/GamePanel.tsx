@@ -1,4 +1,4 @@
-import { activePlayers, allianceOf, board, buyableStock, config, currentPlayer, netWorth, ranking, type GameEvent, type GameState } from "@stonks/engine";
+import { activePlayers, allianceOf, board, buyableStock, config, currentPlayer, markets, netWorth, ranking, type GameEvent, type GameState } from "@stonks/engine";
 import { useEffect, useState } from "react";
 import { companyById, money, PLAYER_COLORS } from "./format";
 import { AnimatedMoney } from "./Overlay";
@@ -104,6 +104,8 @@ export function GamePanel({ game }: { game: GameState }) {
       {game.offer && <OfferPanel game={game} nameOf={nameOf} />}
 
       {you && <AlliancePanel game={game} you={you} nameOf={nameOf} />}
+
+      <Market game={game} />
 
       <Players game={game} colorOf={colorOf} />
 
@@ -425,7 +427,7 @@ function Countdown({ prefix = "Expire dans" }: { prefix?: string }) {
   );
 }
 
-const ICONS: Partial<Record<GameEvent["kind"], string>> = { roll: "🎲", actu: "📰", levee: "💰", ipo: "🔔", krach: "📉", lap: "🏁", atout: "⭐", royalty: "💸", buys: "🛒", auction: "⚖", bankrupt: "☠", win: "🏆", order: "🎲" };
+const ICONS: Partial<Record<GameEvent["kind"], string>> = { double: "🎲", jackpot: "🏦", roll: "🎲", actu: "📰", levee: "💰", ipo: "🔔", krach: "📉", lap: "🏁", atout: "⭐", royalty: "💸", buys: "🛒", auction: "⚖", bankrupt: "☠", win: "🏆", order: "🎲" };
 
 function Signed({ amount }: { amount: number }) {
   return <span className={amount >= 0 ? "plus" : "minus"}>{amount >= 0 ? "+" : "-"}{money(Math.abs(amount))}</span>;
@@ -495,5 +497,30 @@ function Journal({ game, colorOf, nameOf }: { game: GameState; colorOf: (id: str
         ))}
       </div>
     </details>
+  );
+}
+
+// The stock exchange tower: this turn's royalty trend of each market, and the pot won with the jackpot card
+function Market({ game }: { game: GameState }) {
+  return (
+    <div className="card market">
+      <div className="row">
+        <h3>Bourse</h3>
+        <span className="spacer" />
+        <span className="pot" title="Amendes et taxes accumulées, gagnées avec la carte Délit d'initié">
+          Cagnotte {money(game.pot)}
+        </span>
+      </div>
+      <div className="market-list">
+        {markets.map((m) => {
+          const t = game.market[m.id] ?? 0;
+          return (
+            <span key={m.id} className={`trend ${t >= 0 ? "up" : "down"}`} title={m.companies.map((c) => companyById.get(c)!.name).join(", ")}>
+              {m.name} {t >= 0 ? "▲" : "▼"} {Math.abs(t)} %
+            </span>
+          );
+        })}
+      </div>
+    </div>
   );
 }

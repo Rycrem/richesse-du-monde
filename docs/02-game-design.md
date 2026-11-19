@@ -73,7 +73,7 @@ Toute la répartition (quelle région et quelle ville détient combien de % de c
 
 En début de partie, chaque joueur lance 2 dés : le plus haut total commence, puis l'ordre suit les totaux (égalités départagées au hasard). Une carte montre les lancers à tout le monde.
 
-1. **Dés** : le joueur actif lance 2 dés et avance. Les doubles n'ont pas d'effet particulier.
+1. **Dés** : le joueur actif lance 2 dés et avance. Un double rapporte 100 k$.
 2. **Paiement** (ville) : il paie le plus gros détenteur de l'entreprise de redevance de la case (voir "Paiements").
 3. **Achats** : le joueur actif, et **lui seul** :
    - voit le stock de la case (ex. "Paris : Xiaomy 7 %, Intol 9 %, Gogol 9 %, Tesler 7 %") et choisit combien de % il achète de chaque entreprise, **au maximum 30 % cumulés** par achat (ex. 9 % d'Intol + 9 % de Gogol + 7 % de Tesler) ;
@@ -114,6 +114,12 @@ En début de partie, chaque joueur lance 2 dés : le plus haut total commence, p
 - Chaque joueur commence avec la même somme (valeurs à équilibrer, toutes dans le JSON).
 - Un joueur peut revendre à la banque n'importe quel % à 75 % du prix d'achat. Les % retournent dans le stock des villes d'origine de l'entreprise.
 - Un paiement plus grand que la trésorerie laisse le joueur en dette si ses parts suffisent à la couvrir : il choisit ce qu'il revend avant de finir son tour (ou laisse la vente automatique vendre les moins chères). Sinon, il fait faillite.
+
+## Tour de la Bourse (centre du plateau)
+
+- **Cours vivants** : les 16 entreprises sont réparties en 4 marchés (Puces & IA, Cloud & logiciels, Appareils, Médias & mobilité). À chaque nouveau tour, chaque marché tire une tendance entre -30 et +30 % (jamais entre -10 et +10). Les redevances des entreprises du marché sont augmentées ou baissées d'autant.
+- Le bandeau de la tour affiche les tendances et la cagnotte ; la tour brille en vert quand les marchés montent en moyenne, en rouge quand ils baissent.
+- **Cagnotte** : les pertes des cartes Actu et du Krach s'accumulent au centre. Seule la carte Actu « Délit d'initié » permet de la rafler en entier.
 
 ## Alliances
 

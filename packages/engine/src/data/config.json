@@ -14,5 +14,6 @@
   "maxPlayers": 6,
   "ipoBonus": 1000,
   "krachPercent": 10,
-  "lapBonus": 2000
+  "lapBonus": 2000,
+  "doubleBonus": 100
 }

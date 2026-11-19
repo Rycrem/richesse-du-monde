@@ -62,7 +62,7 @@ export interface Deal {
 // Everything worth showing as an animated card, in order; clients play the ones they have not seen yet
 export type GameEvent =
   | { id: number; kind: "roll"; playerId: PlayerId; dice: [number, number]; from: number; to: number }
-  | { id: number; kind: "actu" | "ipo" | "krach" | "lap" | "atout"; playerId: PlayerId; text: string; amount: number; before: number; after: number }
+  | { id: number; kind: "actu" | "ipo" | "krach" | "lap" | "atout" | "double" | "jackpot"; playerId: PlayerId; text: string; amount: number; before: number; after: number }
   | { id: number; kind: "levee"; playerId: PlayerId; text: string; amount: number; dice: [number, number]; before: number; after: number }
   | { id: number; kind: "royalty"; playerId: PlayerId; company: string; amount: number; to: PlayerId[] }
   | { id: number; kind: "buys"; playerId: PlayerId; items: { company: string; percent: number; total: number }[]; deals: Deal[] }
@@ -102,4 +102,8 @@ export interface GameState {
   eliminated: PlayerId[];
   winner: PlayerId | null;
   log: string[];
+  // royalty trend of each market this turn, in percent (-30 to +30)
+  market: Record<string, number>;
+  // fines and taxes collected by the stock exchange tower, won with the jackpot card
+  pot: number;
 }

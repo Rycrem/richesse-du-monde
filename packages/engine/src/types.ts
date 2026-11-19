@@ -26,10 +26,20 @@ export interface ActuCard {
   id: string;
   text: string;
   amount: number;
+  // wins the pot of fines held by the stock exchange tower
+  jackpot?: boolean;
+}
+
+// A group of companies whose royalties rise or fall together, turn after turn
+export interface Market {
+  id: string;
+  name: string;
+  companies: string[];
 }
 
 export interface GameConfig {
   startingCash: number;
+  doubleBonus: number;
   maxPurchasePercent: number;
   leveeFundsPerPip: number;
   auctionPercentPerPip: number;
