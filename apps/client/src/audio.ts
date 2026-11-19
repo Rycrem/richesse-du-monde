@@ -8,8 +8,9 @@ export interface AudioSettings {
   muted: boolean;
 }
 
-const KEY = "stonks-audio";
-const DEFAULTS: AudioSettings = { style: "jazz", music: 0.5, sfx: 0.7, muted: false };
+// v2: lofi became the default, earlier saved choices start over
+const KEY = "stonks-audio-v2";
+const DEFAULTS: AudioSettings = { style: "lofi", music: 0.5, sfx: 0.7, muted: false };
 
 export function loadSettings(): AudioSettings {
   try {
