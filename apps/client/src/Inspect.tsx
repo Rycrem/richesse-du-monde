@@ -146,6 +146,36 @@ function CompanyBody({ game, company }: { game: GameState; company: string }) {
   );
 }
 
+function MarketBody({ game, market }: { game: GameState; market: string }) {
+  const setInspect = useStore((s) => s.setInspect);
+  const m = markets.find((x) => x.id === market)!;
+  const t = game.market[m.id] ?? 0;
+  return (
+    <>
+      <p>
+        Ce tour, les redevances des entreprises de ce marché sont <strong className={t >= 0 ? "plus" : "minus"}>{t >= 0 ? `en hausse de ${t}` : `en baisse de ${-t}`} %</strong>. La tendance change à chaque tour.
+      </p>
+      <h4>Entreprises impactées</h4>
+      <div className="market-companies">
+        {m.companies.map((id) => {
+          const c = companyById.get(id)!;
+          return (
+            <button key={id} className="market-company" onClick={() => setInspect({ company: id })}>
+              <span className="chip" style={{ background: c.color }}>
+                <img src={`/logos/${id}.svg`} alt="" />
+                {c.name}
+              </span>
+              <span className="spacer" />
+              <small className="muted">{money(c.royaltyPerPercent)}</small>
+              <strong className={t >= 0 ? "plus" : "minus"}>{money(Math.floor((c.royaltyPerPercent * (100 + t)) / 100))} / %</strong>
+            </button>
+          );
+        })}
+      </div>
+    </>
+  );
+}
+
 // Keeps the last content on screen while the panel slides out
 export function InspectPanel({ game }: { game: GameState }) {
   const { inspect, setInspect } = useStore();
@@ -164,8 +194,10 @@ export function InspectPanel({ game }: { game: GameState }) {
   if (!shown) return null;
 
   const cell = "cell" in shown ? board[shown.cell]! : null;
-  const title = cell ? cell.name : companyById.get((shown as { company: string }).company)!.name;
-  const color = cell ? ("region" in cell ? regionColor(cell.region) : "#5c6b8a") : companyById.get((shown as { company: string }).company)!.color;
+  const market = "market" in shown ? markets.find((m) => m.id === shown.market)! : null;
+  const title = cell ? cell.name : market ? `Marché ${market.name}` : companyById.get((shown as { company: string }).company)!.name;
+  const trend = market ? (game.market[market.id] ?? 0) : 0;
+  const color = cell ? ("region" in cell ? regionColor(cell.region) : "#5c6b8a") : market ? (trend >= 0 ? "#0a9d6e" : "#c0283c") : companyById.get((shown as { company: string }).company)!.color;
   return (
     <div className={`inspect ${leaving ? "leaving" : ""}`} key={JSON.stringify(shown)}>
       <header style={{ background: color }}>
@@ -177,7 +209,9 @@ export function InspectPanel({ game }: { game: GameState }) {
           ×
         </button>
       </header>
-      <div className="inspect-body">{cell ? <CellBody game={game} cell={cell} /> : <CompanyBody game={game} company={(shown as { company: string }).company} />}</div>
+      <div className="inspect-body">
+        {cell ? <CellBody game={game} cell={cell} /> : market ? <MarketBody game={game} market={market.id} /> : <CompanyBody game={game} company={(shown as { company: string }).company} />}
+      </div>
     </div>
   );
 }
