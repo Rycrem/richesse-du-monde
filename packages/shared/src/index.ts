@@ -81,6 +81,7 @@ export interface ClientToServer {
   "room:rejoin": (code: string, token: string, ack: Ack<Session>) => void;
   "room:start": (mode: GameMode, ack: Ack<null>) => void;
   "room:leave": () => void;
+  "room:kick": (playerId: string, ack: Ack<null>) => void;
   "game:action": (action: Action, ack: Ack<null>) => void;
   "chat:send": (channel: string, text: string, ack: Ack<null>) => void;
   "chat:group": (name: string, members: string[], ack: Ack<string>) => void;
@@ -99,7 +100,8 @@ export interface ClientToServer {
 
 export interface ServerToClient {
   "room:state": (room: RoomView) => void;
+  "room:kicked": () => void;
 }
 
 // Actions only the server may trigger (timers, end of game)
-export const SYSTEM_ACTIONS = ["OFFER_TIMEOUT", "AUCTION_CLOSE", "END_GAME"] as const;
+export const SYSTEM_ACTIONS = ["OFFER_TIMEOUT", "AUCTION_CLOSE", "END_GAME", "KICK"] as const;

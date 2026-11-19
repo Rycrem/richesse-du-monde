@@ -189,3 +189,4 @@
 [data-theme="os"] .thumb.selected { background: #0a246a; color: #fff; outline: 1px dotted #000; }
 [data-theme="os"] .thumb.selected small { color: #fff; }
 [data-theme="os"] .options .options-btn { border-radius: 0; }
+.kick-btn { color: var(--danger) !important; }

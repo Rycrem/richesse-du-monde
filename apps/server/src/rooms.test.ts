@@ -56,6 +56,24 @@ describe("rooms", () => {
     expect(rooms.get(host.code)!.members).toHaveLength(1);
   });
 
+  it("only the host kicks, from the lobby or during a game", () => {
+    const { rooms, host, guest } = setup();
+    const third = rooms.join(host.code, "Chloé", "tok-c");
+    if (!third.ok) throw new Error();
+    expect(rooms.kick(host.code, guest.playerId, host.playerId).ok).toBe(false);
+    expect(rooms.kick(host.code, host.playerId, host.playerId).ok).toBe(false);
+    expect(rooms.kick(host.code, host.playerId, third.data.playerId).ok).toBe(true);
+    expect(rooms.get(host.code)!.members).toHaveLength(2);
+    const fourth = rooms.join(host.code, "Dan", "tok-d");
+    if (!fourth.ok) throw new Error();
+    rooms.start(host.code, host.playerId, "classique");
+    expect(rooms.kick(host.code, host.playerId, guest.playerId).ok).toBe(true);
+    const room = rooms.get(host.code)!;
+    expect(room.game!.players.find((p) => p.id === guest.playerId)!.bankrupt).toBe(true);
+    expect(rooms.rejoin(host.code, guest.token).ok).toBe(false);
+    expect(rooms.sendChat(host.code, guest.playerId, "public", "coucou").ok).toBe(false);
+  });
+
   it("expires an offer after the timeout", () => {
     vi.useFakeTimers();
     const { rooms, host } = setup();

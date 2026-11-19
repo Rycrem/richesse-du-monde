@@ -159,7 +159,8 @@ function AlliancePanel({ game, you, nameOf }: { game: GameState; you: string; na
 }
 
 function Players({ game, colorOf }: { game: GameState; colorOf: (id: string) => string }) {
-  const { room, you, dispatch, setInspect } = useStore();
+  const { room, you, dispatch, setInspect, kick } = useStore();
+  const canKick = (id: string) => !!room && room.hostId === you && id !== you && game.phase !== "gameOver" && !game.players.find((p) => p.id === id)!.bankrupt;
   const offline = new Set(room?.players.filter((p) => !p.connected).map((p) => p.id));
   const alive = activePlayers(game);
   const mine = you ? allianceOf(game, you) : null;
@@ -179,7 +180,7 @@ function Players({ game, colorOf }: { game: GameState; colorOf: (id: string) => 
           <div className="row">
             <span className="dot" style={{ background: colorOf(p.id) }} />
             <strong>{p.name}</strong>
-            {offline.has(p.id) && <span className="offline">déconnecté</span>}
+            {offline.has(p.id) && !p.bankrupt && <span className="offline">déconnecté</span>}
             {allianceOf(game, p.id) && <span className="chip alliance">Alliance {allianceOf(game, p.id)!.id.slice(1)}</span>}
             {sent.includes(p.id) && <small className="muted">invité</small>}
             {canInvite(p.id) && (
@@ -187,8 +188,13 @@ function Players({ game, colorOf }: { game: GameState; colorOf: (id: string) => 
                 Alliance ?
               </button>
             )}
+            {canKick(p.id) && (
+              <button className="ally-btn kick-btn" title="Exclure ce joueur" onClick={() => confirm(`Exclure ${p.name} de la partie ? Ses parts retournent à la banque.`) && kick(p.id)}>
+                Exclure
+              </button>
+            )}
             <span className="spacer" />
-            {p.bankrupt ? "en faillite" : <AnimatedMoney value={p.cash} />}
+            {p.bankrupt ? (game.eliminated.includes(p.id) && game.log.includes(`${p.name} est exclu de la partie`) ? "exclu" : "en faillite") : <AnimatedMoney value={p.cash} />}
           </div>
           <div className="chips">
             {Object.entries(p.holdings)

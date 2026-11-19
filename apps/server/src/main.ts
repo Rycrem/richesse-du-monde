@@ -81,6 +81,18 @@ io.on("connection", (socket) => {
     ack(rooms.start(session.code, session.playerId, mode === "chrono" ? "chrono" : "classique"));
   });
 
+  socket.on("room:kick", (playerId, ack) => {
+    if (!session) return ack({ ok: false, error: "Pas dans une partie" });
+    const { code } = session;
+    const target = String(playerId ?? "");
+    const r = rooms.kick(code, session.playerId, target);
+    if (r.ok) {
+      io.to(`${code}:${target}`).emit("room:kicked");
+      io.in(`${code}:${target}`).socketsLeave(`${code}:${target}`);
+    }
+    ack(r);
+  });
+
   socket.on("game:action", (action, ack) => {
     if (!session) return ack({ ok: false, error: "Pas dans une partie" });
     ack(rooms.act(session.code, session.playerId, action));

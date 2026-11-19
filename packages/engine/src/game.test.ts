@@ -396,6 +396,27 @@ describe("game end", () => {
   });
 });
 
+describe("kick", () => {
+  it("removes the current player and passes the turn", () => {
+    const g = createGame(P, 1);
+    g.players[0]!.holdings = { nvidio: 10 };
+    const r = applyAction(g, { type: "KICK", targetId: g.players[0]!.id });
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.state.players[0]!.bankrupt).toBe(true);
+    expect(r.state.players[0]!.holdings).toEqual({});
+    expect(r.state.current).toBe(1);
+    expect(r.state.phase).toBe("roll");
+  });
+
+  it("ends the game when one player is left", () => {
+    const g = createGame(P, 1);
+    const r1 = applyAction(g, { type: "KICK", targetId: "b" });
+    const r2 = r1.ok ? applyAction(r1.state, { type: "KICK", targetId: "c" }) : r1;
+    expect(r2.ok && r2.state.winner).toBe("a");
+  });
+});
+
 describe("ranking", () => {
   it("orders winner, survivors by net worth, then last eliminated first", async () => {
     const { ranking } = await import("./game");

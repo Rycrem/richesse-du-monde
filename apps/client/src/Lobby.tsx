@@ -7,7 +7,7 @@ import { pawnDataUrl } from "./pawn";
 import { useStore } from "./store";
 
 export function Lobby({ room }: { room: RoomView }) {
-  const { you, startOnline, quit, error } = useStore();
+  const { you, startOnline, quit, kick, error } = useStore();
   const [mode, setMode] = useState<GameMode>("classique");
   const [garage, setGarage] = useState(false);
   const link = `${location.origin}/?code=${room.code}`;
@@ -35,6 +35,14 @@ export function Lobby({ room }: { room: RoomView }) {
             {p.name}
             {p.id === room.hostId && <small>(hôte)</small>}
             {p.id === you && <small>(toi)</small>}
+            {isHost && p.id !== you && (
+              <>
+                <span className="spacer" />
+                <button className="ghost kick-btn" onClick={() => confirm(`Exclure ${p.name} du salon ?`) && kick(p.id)}>
+                  Exclure
+                </button>
+              </>
+            )}
           </div>
         ))}
         {error && <div className="error">{error}</div>}
