@@ -347,3 +347,41 @@
 /* popups float over the busy 3D board: darker tint keeps text readable (:not(.x) matches the card rule specificity) */
 [data-theme="glass"] :is(.inspect, .event-card, .hover-tip, .win-card, .auction-screen):not(.x) { background: linear-gradient(135deg, #2a2f6ee6, #1b1f4be6 60%); }
 [data-theme="glass"] .overlay-slot .who { color: #ffffffcc; }
+
+/* ---------- Pop cartoon noir: the pop rules, on black with white ink ---------- */
+[data-variant="noir"][data-theme="pop"] :is(.setup, .garage, .options, .panel, .board-wrap) {
+  --bg: #0e0e14; --panel: #1b1b26; --card: #1b1b26; --text: #f4f4f8; --muted: #a6a6bd; --ink: #f4f4f8;
+}
+[data-variant="noir"][data-theme="pop"]:has(.setup, .garage), [data-variant="noir"][data-theme="pop"] body {
+  background:
+    radial-gradient(circle at 100% 0, #ffd16633 0 260px, transparent 261px) fixed,
+    radial-gradient(circle at 0 100%, #06d6a033 0 200px, transparent 201px) fixed,
+    radial-gradient(#ffffff14 1.5px, transparent 1.5px) 0 0 / 22px 22px,
+    #0e0e14;
+}
+[data-variant="noir"][data-theme="pop"] :is(.setup, .garage, .panel) .card,
+[data-variant="noir"][data-theme="pop"] :is(.players .player, .options-panel, .options .options-btn, .inspect, .event-card, .buys, .big-dice, .chat, .win-card, .auction-screen, .hover-tip, .cash-hud, .turn-banner) {
+  background: #1b1b26; color: #f4f4f8; border-color: #f4f4f8; box-shadow: 6px 6px 0 #ef476f;
+}
+[data-variant="noir"][data-theme="pop"] .panel { background: #0e0e14; }
+[data-variant="noir"][data-theme="pop"] :is(.setup, .garage, .options, .panel, .board-wrap) button { background: #1b1b26; color: #f4f4f8; border-color: #f4f4f8; box-shadow: 3px 3px 0 #06d6a0; }
+[data-variant="noir"][data-theme="pop"] :is(.setup, .garage, .options, .panel, .board-wrap) button.primary { background: #06d6a0; color: #0e0e14; border-color: #f4f4f8; box-shadow: 4px 4px 0 #f4f4f8; }
+[data-variant="noir"][data-theme="pop"] :is(.setup, .garage, .options, .panel, .board-wrap) button.ghost { background: #ef476f; color: #fff; }
+[data-variant="noir"][data-theme="pop"] :is(.setup, .garage, .options, .panel, .board-wrap) button.link { background: none; box-shadow: none; color: #f4f4f8; }
+[data-variant="noir"][data-theme="pop"] :is(.setup, .garage, .options, .panel, .board-wrap) :is(input, select) { background: #0e0e14; color: #f4f4f8; border-color: #f4f4f8; }
+[data-variant="noir"][data-theme="pop"] select option { background: #1b1b26; color: #f4f4f8; }
+[data-variant="noir"][data-theme="pop"] .players .player :is(.money, strong) { color: #f4f4f8; }
+[data-variant="noir"][data-theme="pop"] .players .player :is(.muted, small) { color: #a6a6bd; }
+[data-variant="noir"][data-theme="pop"] :is(.party, .auction-bid .bid, .auction-pct, .order-row, .market-company, .market-move) { background: #0e0e14; border-color: #f4f4f8; color: #f4f4f8; }
+[data-variant="noir"][data-theme="pop"] :is(.event-card .head, .auction-top, .inspect header) { border-bottom-color: #f4f4f8; }
+[data-variant="noir"][data-theme="pop"] .panel :is(.buy-row small, .journal-list, .journal-row b, .journal summary, .turn, .holder-value) { color: #f4f4f8; }
+[data-variant="noir"][data-theme="pop"] .panel .journal-row { border-bottom-color: #ffffff22; }
+[data-variant="noir"][data-theme="pop"] .panel .trend { background: #ffffff14; }
+[data-variant="noir"][data-theme="pop"] .panel .trend.up, [data-variant="noir"][data-theme="pop"] .panel .journal-row .plus, [data-variant="noir"][data-theme="pop"] :is(.event-card, .inspect) .plus { color: #3cf0b4; }
+[data-variant="noir"][data-theme="pop"] .panel .trend.down, [data-variant="noir"][data-theme="pop"] .panel .journal-row .minus, [data-variant="noir"][data-theme="pop"] :is(.event-card, .inspect) .minus { color: #ff7a98; }
+[data-variant="noir"][data-theme="pop"] .panel :is(.journal-deal, .market .pot) { color: #ffd166; }
+[data-variant="noir"][data-theme="pop"] .panel .sheet-handle i { background: #ffffff55; }
+[data-variant="noir"][data-theme="pop"] :is(.setup, .garage) h1, [data-variant="noir"][data-theme="pop"] .tagline { color: #f4f4f8; }
+[data-variant="noir"][data-theme="pop"] .setup .logo { border-color: #f4f4f8; box-shadow: 6px 6px 0 #ef476f; color: #0e0e14; }
+[data-variant="noir"][data-theme="pop"] :is(.code, .points, .theme-choice) { border-color: #f4f4f8; }
+[data-variant="noir"][data-theme="pop"] :is(.event-card .sub, .overlay-slot .who, .hover-tip small) { color: #c9c9da; }
