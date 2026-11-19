@@ -1,4 +1,4 @@
-import { allianceOf, board, markets, regions, type Cell, type GameState } from "@stonks/engine";
+import { allianceOf, board, companies, markets, regions, type Cell, type GameState } from "@stonks/engine";
 import type { Look } from "@stonks/shared";
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
@@ -603,9 +603,18 @@ export function createBoardScene(host: HTMLElement, events: BoardEvents = {}): B
       built.set(i, key);
       const deco = decos[i]!;
       const old = [...deco.children];
-      const logo = logoTex(company.id);
-      const b = !pct ? emptyLot(hub, company.color, logo) : hub ? campus(tierOf(pct), company.color, logo) : skyscraper(tierOf(pct), company.color, logo);
-      const size = hub ? 0.9 : 0.8;
+      // the logo lies flat on the cell, in front of the building
+      if (!deco.userData.logo) {
+        const plate = new THREE.Mesh(new THREE.PlaneGeometry(0.26, 0.26), new THREE.MeshStandardMaterial({ map: logoTex(company.id), roughness: 0.5 }));
+        plate.rotation.x = -Math.PI / 2;
+        plate.position.set(0, 0.168, 0.64);
+        deco.parent!.add(plate);
+        deco.userData.logo = true;
+      }
+      // each company always gets the same kind of building, wherever its cell is
+      const campusStyle = companies.findIndex((c) => c.id === company.id) % 2 === 1;
+      const b = !pct ? emptyLot(campusStyle, company.color) : campusStyle ? campus(tierOf(pct), company.color) : skyscraper(tierOf(pct), company.color);
+      const size = campusStyle ? (hub ? 0.9 : 0.75) : 0.8;
       if (pct && holder >= 0) ownerGlow(b, PLAYER_COLORS[holder]!);
       deco.add(b);
       if (first) {
