@@ -42,6 +42,8 @@ export interface GameConfig {
   doubleBonus: number;
   dominanceFrom: number;
   dominanceGrowth: number;
+  loanShare: number;
+  loanCap: number;
   maxPurchasePercent: number;
   leveeFundsPerPip: number;
   auctionPercentPerPip: number;

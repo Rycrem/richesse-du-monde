@@ -112,8 +112,10 @@ export function GamePanel({ game }: { game: GameState }) {
       )}
 
       {game.offer && <OfferPanel game={game} nameOf={nameOf} />}
+      {game.debt?.offer && canAct(game.debt.creditorId) && <DebtDealAnswer game={game} nameOf={nameOf} />}
 
       {you && <AlliancePanel game={game} you={you} nameOf={nameOf} />}
+      {you && <LoanPanel game={game} you={you} nameOf={nameOf} />}
 
       <Market game={game} />
 
@@ -380,12 +382,16 @@ function OfferPanel({ game, nameOf }: { game: GameState; nameOf: (id: string) =>
   );
 }
 
-// Short of cash after a payment: the player chooses what to sell to the bank
+// Short of cash after a payment: sell to the bank, give shares to the creditor, borrow, or give up
 function DebtPanel({ game }: { game: GameState }) {
   const { dispatch, you } = useStore();
   const me = currentPlayer(game);
   const [sell, setSell] = useState<Record<string, number>>({});
-  if (you !== null && you !== me.id) return <p className="muted">{me.name} doit vendre des actions pour payer sa dette.</p>;
+  const [deal, setDeal] = useState<Record<string, number>>({});
+  const [quit, setQuit] = useState(false);
+  if (you !== null && you !== me.id) return <p className="muted">{me.name} doit rembourser sa dette avant de finir son tour.</p>;
+  const d = game.debt;
+  const creditor = d && game.players.find((p) => p.id === d.creditorId)!.name;
   const ratio = config.bankBuybackRatio;
   return (
     <div className="card highlight debt">
@@ -414,7 +420,133 @@ function DebtPanel({ game }: { game: GameState }) {
         );
       })}
       <button onClick={() => dispatch({ type: "SETTLE_DEBT", playerId: me.id })}>Vendre automatiquement (les moins chères d'abord)</button>
+      {d && Object.keys(me.holdings).length > 0 && (
+        <div className="debt-deal">
+          <h4>Accord avec {creditor}</h4>
+          {d.offer ? (
+            <p className="muted">Actions proposées, en attente de la réponse de {creditor}...</p>
+          ) : (
+            <>
+              <p className="muted">Donne-lui des actions à la place : s'il accepte, {money(Math.min(d.amount, -me.cash))} de dette sont effacés.</p>
+              {Object.entries(me.holdings).map(([c, pct]) => (
+                <label key={c} className="row">
+                  <span>{companyById.get(c)!.name}</span>
+                  <span className="spacer" />
+                  <input type="number" min={0} max={pct} value={deal[c] ?? 0} onChange={(e) => setDeal({ ...deal, [c]: Math.max(0, Math.min(pct, Number(e.target.value))) })} />
+                  <span>/ {pct} %</span>
+                </label>
+              ))}
+              <button
+                disabled={!Object.values(deal).some((n) => n > 0)}
+                onClick={() => dispatch({ type: "DEBT_DEAL_OFFER", playerId: me.id, shares: Object.fromEntries(Object.entries(deal).filter(([, n]) => n > 0)) })}
+              >
+                Proposer ces actions à {creditor}
+              </button>
+            </>
+          )}
+        </div>
+      )}
+      <p className="muted">Un autre joueur peut aussi te prêter de l'argent (panneau Prêts).</p>
+      {quit ? (
+        <div className="row">
+          <button className="danger" onClick={() => dispatch({ type: "DECLARE_BANKRUPTCY", playerId: me.id })}>
+            Confirmer la faillite
+          </button>
+          <button onClick={() => setQuit(false)}>Annuler</button>
+        </div>
+      ) : (
+        <button className="ghost" onClick={() => setQuit(true)}>
+          Déclarer faillite (tes actions sont réparties entre les autres joueurs)
+        </button>
+      )}
     </div>
+  );
+}
+
+function DebtDealAnswer({ game, nameOf }: { game: GameState; nameOf: (id: string) => string }) {
+  const dispatch = useStore((s) => s.dispatch);
+  const d = game.debt!;
+  const shares = Object.entries(d.offer!);
+  const value = shares.reduce((a, [c, pct]) => a + companyById.get(c)!.pricePerPercent * pct, 0);
+  const debtor = game.players.find((p) => p.id === d.debtorId)!;
+  return (
+    <div className="card highlight">
+      <h3>Accord de dette</h3>
+      <p>
+        {nameOf(d.debtorId)} ne peut pas te payer et propose {shares.map(([c, pct]) => `${pct} % de ${companyById.get(c)!.name}`).join(", ")} pour effacer{" "}
+        {money(Math.min(d.amount, -debtor.cash))} de dette.
+      </p>
+      <p className="offer-value">
+        Valeur estimée des actions : <strong>{money(value)}</strong>
+      </p>
+      <div className="row">
+        <button className="primary" onClick={() => dispatch({ type: "DEBT_DEAL_ANSWER", playerId: d.creditorId, accept: true })}>
+          Accepter
+        </button>
+        <button onClick={() => dispatch({ type: "DEBT_DEAL_ANSWER", playerId: d.creditorId, accept: false })}>Refuser</button>
+      </div>
+    </div>
+  );
+}
+
+// Lending: the borrower gives back a share of every income until the cap is reached
+function LoanPanel({ game, you, nameOf }: { game: GameState; you: string; nameOf: (id: string) => string }) {
+  const dispatch = useStore((s) => s.dispatch);
+  const [target, setTarget] = useState("");
+  const [amount, setAmount] = useState(1000);
+  const me = game.players.find((p) => p.id === you);
+  if (!me || me.bankrupt) return null;
+  const incoming = game.loanOffers.filter((o) => o.borrowerId === you);
+  const sent = game.loanOffers.filter((o) => o.lenderId === you);
+  const loans = game.loans.filter((l) => l.lenderId === you || l.borrowerId === you);
+  const others = activePlayers(game).filter((p) => p.id !== you);
+  const cap = (n: number) => Math.ceil((n * config.loanCap) / 100);
+  return (
+    <details className="card" open={incoming.length > 0 || me.cash < 0}>
+      <summary>Prêts{loans.length ? ` (${loans.length})` : ""}</summary>
+      <p className="muted">
+        L'emprunteur reverse {config.loanShare} % de tous ses revenus au prêteur jusqu'à lui avoir rendu {config.loanCap} % de la somme.
+      </p>
+      {incoming.map((o) => (
+        <div key={o.lenderId} className="alliance-box">
+          <span>
+            <strong>{nameOf(o.lenderId)}</strong> te propose de te prêter {money(o.amount)}
+          </span>
+          <div className="row">
+            <button className="primary" onClick={() => dispatch({ type: "LOAN_ANSWER", playerId: you, lenderId: o.lenderId, accept: true })}>
+              Accepter
+            </button>
+            <button onClick={() => dispatch({ type: "LOAN_ANSWER", playerId: you, lenderId: o.lenderId, accept: false })}>Refuser</button>
+          </div>
+        </div>
+      ))}
+      {loans.map((l, i) => (
+        <div key={i} className="row loan">
+          <span>{l.lenderId === you ? `Prêt à ${nameOf(l.borrowerId)}` : `Emprunt à ${nameOf(l.lenderId)}`}</span>
+          <span className="spacer" />
+          <small>
+            {money(l.repaid)} / {money(cap(l.amount))}
+          </small>
+        </div>
+      ))}
+      {sent.length > 0 && <small className="muted">En attente : {sent.map((o) => `${nameOf(o.borrowerId)} (${money(o.amount)})`).join(", ")}</small>}
+      {others.length > 0 && me.cash > 0 && (
+        <div className="row loan-form">
+          <select value={target} onChange={(e) => setTarget(e.target.value)}>
+            <option value="">Prêter à...</option>
+            {others.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+          <input type="number" min={100} step={100} max={me.cash} value={amount} onChange={(e) => setAmount(Number(e.target.value))} />
+          <button disabled={!target} onClick={() => dispatch({ type: "LOAN_OFFER", playerId: you, borrowerId: target, amount }) && setTarget("")}>
+            Proposer
+          </button>
+        </div>
+      )}
+    </details>
   );
 }
 

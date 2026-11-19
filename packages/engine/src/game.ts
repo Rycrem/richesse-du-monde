@@ -20,6 +20,11 @@ export type Action =
   | { type: "ALLIANCE_INVITE"; playerId: PlayerId; targetId: PlayerId }
   | { type: "ALLIANCE_ANSWER"; playerId: PlayerId; fromId: PlayerId; accept: boolean }
   | { type: "ALLIANCE_LEAVE"; playerId: PlayerId }
+  | { type: "DEBT_DEAL_OFFER"; playerId: PlayerId; shares: Record<CompanyId, number> }
+  | { type: "DEBT_DEAL_ANSWER"; playerId: PlayerId; accept: boolean }
+  | { type: "DECLARE_BANKRUPTCY"; playerId: PlayerId }
+  | { type: "LOAN_OFFER"; playerId: PlayerId; borrowerId: PlayerId; amount: number }
+  | { type: "LOAN_ANSWER"; playerId: PlayerId; lenderId: PlayerId; accept: boolean }
   | { type: "END_GAME" }
   | { type: "KICK"; targetId: PlayerId };
 
@@ -71,6 +76,9 @@ export function createGame(players: { id: PlayerId; name: string }[], seed: numb
     nextEventId: 1,
     turnBuys: {},
     turnDeals: [],
+    debt: null,
+    loans: [],
+    loanOffers: [],
     eliminated: [],
     winner: null,
     log: [],
@@ -112,13 +120,26 @@ function emit(state: GameState, e: NewGameEvent): void {
 // Cash change shown on a card: who, why, how much, before and after
 function money(state: GameState, p: Player, kind: "actu" | "ipo" | "krach" | "lap" | "atout" | "double" | "jackpot", text: string, amount: number): void {
   const before = p.cash;
-  if (amount >= 0) p.cash += amount;
+  if (amount >= 0) earn(state, p, amount);
   else {
     // fines and taxes pile up in the stock exchange tower
     state.pot += -amount;
     charge(state, p, -amount);
   }
   emit(state, { kind, playerId: p.id, text, amount, before, after: p.cash });
+}
+
+// Any income: a share of it goes to the player's lenders until each loan is paid back
+function earn(state: GameState, p: Player, amount: number): void {
+  p.cash += amount;
+  for (const loan of state.loans.filter((l) => l.borrowerId === p.id)) {
+    const cut = Math.min(Math.floor((amount * config.loanShare) / 100), Math.ceil((loan.amount * config.loanCap) / 100) - loan.repaid);
+    if (cut <= 0) continue;
+    p.cash -= cut;
+    player(state, loan.lenderId)!.cash += cut;
+    loan.repaid += cut;
+  }
+  state.loans = state.loans.filter((l) => l.repaid < Math.ceil((l.amount * config.loanCap) / 100));
 }
 
 function shuffle<T>(arr: T[], seed: number): [number] {
@@ -181,11 +202,6 @@ function removeHolding(p: Player, company: CompanyId, percent: number): void {
   else delete p.holdings[company];
 }
 
-function liquidation(p: Player): number {
-  // priced 1 % at a time, as autoSell sells them, so rounding never leaves a debt uncovered
-  return p.cash + Object.entries(p.holdings).reduce((a, [c, pct]) => a + bankPrice(c, 1) * pct, 0);
-}
-
 // Sells holdings to the bank, cheapest first, until cash is back to `target`
 // Repeated sales of the same company by the same player add up into one line of the recap
 function recordDeal(state: GameState, deal: Deal): void {
@@ -207,27 +223,35 @@ function autoSell(state: GameState, p: Player, target: number): void {
   }
 }
 
-// Pays `amount`. Short of cash but able to cover it by selling: cash goes negative and the player
-// chooses what to sell before ending the turn. Unable to cover it at all: bankruptcy.
+// Pays `amount`. Short of cash, it goes negative: before ending the turn the player sells shares,
+// makes a deal with the creditor, borrows, or declares bankruptcy.
 function charge(state: GameState, p: Player, amount: number): void {
-  if (p.cash < amount && liquidation(p) < amount) {
-    autoSell(state, p, amount);
-    bankrupt(state, p);
-    return;
-  }
   p.cash -= amount;
 }
 
-function bankrupt(state: GameState, p: Player, message = `${p.name} fait faillite`): void {
-  for (const [company, pct] of Object.entries(p.holdings)) returnToStock(state, company, pct);
+// Shares go back to the bank, or with `share` are dealt 1 % at a time to the players left, in turn order
+function bankrupt(state: GameState, p: Player, message = `${p.name} fait faillite`, share = false): void {
+  const i = state.players.indexOf(p);
+  const heirs = share ? [...state.players.slice(i + 1), ...state.players.slice(0, i)].filter((o) => !o.bankrupt) : [];
+  let next = 0;
+  for (const [company, pct] of Object.entries(p.holdings)) {
+    if (!heirs.length) returnToStock(state, company, pct);
+    else for (let k = 0; k < pct; k++) {
+      const h = heirs[next++ % heirs.length]!;
+      h.holdings[company] = (h.holdings[company] ?? 0) + 1;
+    }
+  }
   p.holdings = {};
   p.cash = 0;
   p.bankrupt = true;
   leaveAlliance(state, p.id);
   state.allianceInvites = state.allianceInvites.filter((i) => i.from !== p.id && i.to !== p.id);
+  state.loans = state.loans.filter((l) => l.lenderId !== p.id && l.borrowerId !== p.id);
+  state.loanOffers = state.loanOffers.filter((l) => l.lenderId !== p.id && l.borrowerId !== p.id);
+  if (state.debt && [state.debt.debtorId, state.debt.creditorId].includes(p.id)) state.debt = null;
   state.eliminated.push(p.id);
   state.log.push(message);
-  emit(state, { kind: "bankrupt", playerId: p.id });
+  emit(state, { kind: "bankrupt", playerId: p.id, heirs: heirs.map((h) => h.id) });
   const alive = activePlayers(state);
   if (alive.length === 1) {
     state.phase = "gameOver";
@@ -278,11 +302,14 @@ function payRoyalty(state: GameState, payer: Player, cellId: string): void {
     if ((allianceOf(state, members[0]!.id)?.id ?? members[0]!.id) === payerGroup) continue;
     charge(state, payer, share);
     // the bank covers a bankrupt player's debt, so holders are always paid in full
-    for (const m of members) m.cash += Math.floor((share * (m.holdings[company] ?? 0)) / max);
+    for (const m of members) earn(state, m, Math.floor((share * (m.holdings[company] ?? 0)) / max));
+    if (payer.cash < 0) {
+      const creditor = [...members].sort((a, b) => (b.holdings[company] ?? 0) - (a.holdings[company] ?? 0))[0]!;
+      state.debt = { debtorId: payer.id, creditorId: creditor.id, amount: share, offer: null };
+    }
     const to = members.length === 1 ? members[0]!.name : `l'alliance ${members.map((m) => m.name).join(" + ")}`;
     state.log.push(`${payer.name} paie ${share} k$ à ${to} (${name})`);
     emit(state, { kind: "royalty", playerId: payer.id, company, amount: share, to: members.map((m) => m.id) });
-    if (payer.bankrupt) return;
   }
 }
 
@@ -304,7 +331,7 @@ function landOn(state: GameState, p: Player, pips: number): void {
       break;
     case "levee": {
       const before = p.cash;
-      p.cash += pips * config.leveeFundsPerPip;
+      earn(state, p, pips * config.leveeFundsPerPip);
       emit(state, { kind: "levee", playerId: p.id, text: `Vos investisseurs suivent : ${pips} aux dés × ${config.leveeFundsPerPip} k$`, amount: pips * config.leveeFundsPerPip, dice: state.lastRoll!, before, after: p.cash });
       break;
     }
@@ -349,7 +376,7 @@ function landOn(state: GameState, p: Player, pips: number): void {
       money(state, p, "ipo", "Votre entreprise entre en Bourse !", config.ipoBonus);
       break;
     case "krach": {
-      const loss = Math.floor((p.cash * config.krachPercent) / 100);
+      const loss = Math.max(0, Math.floor((p.cash * config.krachPercent) / 100));
       state.log.push(`Krach boursier : ${p.name} perd ${loss} k$`);
       money(state, p, "krach", `Les marchés plongent : vous perdez ${config.krachPercent} % de votre trésorerie.`, -loss);
       break;
@@ -413,6 +440,7 @@ function nextTurn(state: GameState): void {
   state.offer = null;
   state.turnBuys = {};
   state.turnDeals = [];
+  state.debt = null;
 }
 
 export function netWorth(p: Player): number {
@@ -616,6 +644,86 @@ export function applyAction(prev: GameState, action: Action): Result {
       const p = player(state, action.playerId);
       if (!p || p.cash >= 0) return { ok: false, error: "Aucune dette" };
       autoSell(state, p, 0);
+      if (p.cash < 0) {
+        bankrupt(state, p);
+        if (state.phase !== "gameOver" && cur.id === p.id) nextTurn(state);
+      }
+      return { ok: true, state };
+    }
+
+    // Shares instead of cash: if the creditor accepts, the debt of that royalty is wiped
+    case "DEBT_DEAL_OFFER": {
+      const d = state.debt;
+      if (!d || d.debtorId !== action.playerId || cur.cash >= 0 || d.offer) return { ok: false, error: "Aucun accord possible maintenant" };
+      const shares = Object.entries(action.shares).filter(([, pct]) => pct !== 0);
+      if (!shares.length || shares.some(([c, pct]) => !Number.isInteger(pct) || pct < 0 || (cur.holdings[c] ?? 0) < pct)) {
+        return { ok: false, error: "Pourcentage invalide" };
+      }
+      d.offer = Object.fromEntries(shares);
+      state.log.push(`${cur.name} propose des actions à ${player(state, d.creditorId)!.name} pour effacer sa dette`);
+      return { ok: true, state };
+    }
+
+    case "DEBT_DEAL_ANSWER": {
+      const d = state.debt;
+      if (!d?.offer || d.creditorId !== action.playerId) return { ok: false, error: "Aucun accord en attente" };
+      const debtor = player(state, d.debtorId)!;
+      const creditor = player(state, d.creditorId)!;
+      const offer = d.offer;
+      d.offer = null;
+      if (!action.accept) {
+        state.log.push(`${creditor.name} refuse l'accord de ${debtor.name}`);
+        return { ok: true, state };
+      }
+      if (Object.entries(offer).some(([c, pct]) => (debtor.holdings[c] ?? 0) < pct)) return { ok: false, error: "Le joueur ne détient plus ces actions" };
+      for (const [c, pct] of Object.entries(offer)) {
+        removeHolding(debtor, c, pct);
+        creditor.holdings[c] = (creditor.holdings[c] ?? 0) + pct;
+        recordDeal(state, { sellerId: debtor.id, buyerId: creditor.id, company: c, percent: pct, price: 0 });
+      }
+      const wiped = Math.max(0, Math.min(d.amount, -debtor.cash, creditor.cash));
+      creditor.cash -= wiped;
+      debtor.cash += wiped;
+      state.debt = null;
+      state.log.push(`${creditor.name} accepte des actions de ${debtor.name} : ${wiped} k$ de dette effacés`);
+      return { ok: true, state };
+    }
+
+    // Only when in debt; the shares left are dealt to the other players instead of the bank
+    case "DECLARE_BANKRUPTCY": {
+      const p = player(state, action.playerId);
+      if (!p || p.bankrupt || p.cash >= 0) return { ok: false, error: "Faillite possible seulement en cas de dette" };
+      bankrupt(state, p, `${p.name} déclare faillite et répartit ses actions`, true);
+      if (state.phase !== "gameOver" && cur.id === p.id) nextTurn(state);
+      return { ok: true, state };
+    }
+
+    case "LOAN_OFFER": {
+      const lender = player(state, action.playerId);
+      const borrower = player(state, action.borrowerId);
+      if (!lender || !borrower || lender.bankrupt || borrower.bankrupt || lender === borrower) return { ok: false, error: "Joueur introuvable" };
+      if (!Number.isInteger(action.amount) || action.amount <= 0 || action.amount > lender.cash) return { ok: false, error: "Montant invalide" };
+      if (state.loanOffers.some((o) => o.lenderId === lender.id && o.borrowerId === borrower.id)) return { ok: false, error: "Proposition déjà envoyée" };
+      state.loanOffers.push({ lenderId: lender.id, borrowerId: borrower.id, amount: action.amount });
+      state.log.push(`${lender.name} propose de prêter ${action.amount} k$ à ${borrower.name}`);
+      return { ok: true, state };
+    }
+
+    case "LOAN_ANSWER": {
+      const o = state.loanOffers.find((x) => x.lenderId === action.lenderId && x.borrowerId === action.playerId);
+      if (!o) return { ok: false, error: "Aucun prêt proposé" };
+      state.loanOffers = state.loanOffers.filter((x) => x !== o);
+      const lender = player(state, o.lenderId)!;
+      const borrower = player(state, o.borrowerId)!;
+      if (!action.accept) {
+        state.log.push(`${borrower.name} refuse le prêt de ${lender.name}`);
+        return { ok: true, state };
+      }
+      if (lender.cash < o.amount) return { ok: false, error: "Le prêteur n'a plus assez d'argent" };
+      lender.cash -= o.amount;
+      borrower.cash += o.amount;
+      state.loans.push({ lenderId: lender.id, borrowerId: borrower.id, amount: o.amount, repaid: 0 });
+      state.log.push(`${lender.name} prête ${o.amount} k$ à ${borrower.name}`);
       return { ok: true, state };
     }
 
@@ -697,7 +805,6 @@ export function applyAction(prev: GameState, action: Action): Result {
   }
 }
 
-// Final order: winner, then remaining players by net worth, then eliminated players (last eliminated first)
 // The two richest players may never share an alliance
 function leadersTogether(state: GameState, members: PlayerId[]): boolean {
   const [first, second, third] = [...activePlayers(state)].sort((a, b) => netWorth(b) - netWorth(a));
@@ -706,6 +813,7 @@ function leadersTogether(state: GameState, members: PlayerId[]): boolean {
   return members.includes(first.id) && members.includes(second.id);
 }
 
+// Final order: winner, then remaining players by net worth, then eliminated players (last eliminated first)
 export function ranking(state: GameState): PlayerId[] {
   const alive = activePlayers(state)
     .filter((p) => p.id !== state.winner)

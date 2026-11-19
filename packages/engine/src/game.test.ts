@@ -341,12 +341,16 @@ describe("royalties", () => {
     expect(g.players[0]!.cash).toBe(config.startingCash);
   });
 
-  it("sells holdings to the bank, then goes bankrupt, when cash is short", () => {
+  it("goes into debt, then selling everything is not enough: bankruptcy", () => {
     let g = withRoyalty("intol");
     g.players[1]!.holdings = { intol: 100 };
     g.players[0]!.cash = 0;
     g.players[0]!.holdings = { sonyx: 10 };
     g = at(g, "berlin");
+    expect(g.players[0]!.cash).toBeLessThan(0);
+    expect(g.debt).toMatchObject({ debtorId: "a", creditorId: "b" });
+    expect(err(g, { type: "END_TURN", playerId: "a" })).toMatch(/dette/);
+    g = ok(g, { type: "SETTLE_DEBT", playerId: "a" });
     const alice = g.players[0]!;
     expect(alice.bankrupt).toBe(true);
     expect(g.eliminated).toEqual(["a"]);
@@ -586,7 +590,74 @@ describe("alliances", () => {
     g.players[1]!.holdings = { intol: 100 };
     g.players[0]!.cash = 0;
     g = at(g, "berlin");
+    g = ok(g, { type: "SETTLE_DEBT", playerId: "a" });
     expect(g.players[0]!.bankrupt).toBe(true);
     expect(g.alliances).toEqual([]);
+  });
+});
+
+describe("debts and loans", () => {
+  function inDebt(): GameState {
+    const g = createGame(P, 1);
+    g.royalties.berlin = "intol";
+    g.players[1]!.holdings = { intol: 100 };
+    g.players[0]!.cash = 0;
+    g.players[0]!.holdings = { sonyx: 10, tesler: 3 };
+    return at(g, "berlin");
+  }
+
+  it("the creditor can take shares instead of the money owed", () => {
+    let g = inDebt();
+    const owed = -g.players[0]!.cash;
+    const bobCash = g.players[1]!.cash;
+    expect(err(g, { type: "DEBT_DEAL_OFFER", playerId: "a", shares: { sonyx: 20 } })).toMatch(/invalide/);
+    g = ok(g, { type: "DEBT_DEAL_OFFER", playerId: "a", shares: { sonyx: 5 } });
+    expect(err(g, { type: "DEBT_DEAL_ANSWER", playerId: "c", accept: true })).toMatch(/Aucun/);
+    g = ok(g, { type: "DEBT_DEAL_ANSWER", playerId: "b", accept: true });
+    expect(g.players[0]!.cash).toBe(0);
+    expect(g.players[0]!.holdings).toEqual({ sonyx: 5, tesler: 3 });
+    expect(g.players[1]!.holdings.sonyx).toBe(5);
+    expect(g.players[1]!.cash).toBe(bobCash - owed);
+    expect(g.debt).toBeNull();
+    g = ok(g, { type: "END_TURN", playerId: "a" });
+  });
+
+  it("a refused deal keeps the debt", () => {
+    let g = inDebt();
+    g = ok(g, { type: "DEBT_DEAL_OFFER", playerId: "a", shares: { tesler: 1 } });
+    g = ok(g, { type: "DEBT_DEAL_ANSWER", playerId: "b", accept: false });
+    expect(g.players[0]!.cash).toBeLessThan(0);
+    expect(g.debt?.offer).toBeNull();
+  });
+
+  it("declaring bankruptcy deals the shares left to the other players", () => {
+    let g = createGame(P, 1);
+    g.players[0]!.holdings = { sonyx: 5, tesler: 2 };
+    expect(err(g, { type: "DECLARE_BANKRUPTCY", playerId: "a" })).toMatch(/dette/);
+    g = inDebt();
+    g = ok(g, { type: "DECLARE_BANKRUPTCY", playerId: "a" });
+    expect(g.players[0]!.bankrupt).toBe(true);
+    expect(g.players[1]!.holdings).toMatchObject({ sonyx: 5, tesler: 2 });
+    expect(g.players[2]!.holdings).toEqual({ sonyx: 5, tesler: 1 });
+    expect(g.players[g.current]!.id).toBe("b");
+  });
+
+  it("a loan is paid back with a share of every income, up to the cap", () => {
+    let g = createGame(P, 1);
+    g = ok(g, { type: "LOAN_OFFER", playerId: "b", borrowerId: "a", amount: 1000 });
+    expect(err(g, { type: "LOAN_OFFER", playerId: "b", borrowerId: "a", amount: 1000 })).toMatch(/déjà/);
+    const [a0, b0] = [g.players[0]!.cash, g.players[1]!.cash];
+    g = ok(g, { type: "LOAN_ANSWER", playerId: "a", lenderId: "b", accept: true });
+    expect(g.players[0]!.cash).toBe(a0 + 1000);
+    expect(g.loans).toHaveLength(1);
+    g.royalties.berlin = "intol";
+    g.players[0]!.holdings = { intol: 100 };
+    g.current = 2;
+    g = at(g, "berlin");
+    const paid = g.events.find((e) => e.kind === "royalty")!.amount;
+    const cut = Math.min(Math.floor((paid * config.loanShare) / 100), (1000 * config.loanCap) / 100);
+    expect(g.players[0]!.cash).toBe(a0 + 1000 + paid - cut);
+    expect(g.players[1]!.cash).toBe(b0 - 1000 + cut);
+    if (cut === (1000 * config.loanCap) / 100) expect(g.loans).toEqual([]);
   });
 });

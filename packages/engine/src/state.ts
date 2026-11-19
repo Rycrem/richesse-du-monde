@@ -50,6 +50,22 @@ export interface AllianceInvite {
   to: PlayerId;
 }
 
+// A royalty the payer could not cover. The debtor may offer shares to the creditor instead of cash.
+export interface Debt {
+  debtorId: PlayerId;
+  creditorId: PlayerId;
+  amount: number;
+  offer: Record<string, number> | null;
+}
+
+// The borrower gives loanShare % of every income to the lender until loanCap % of the amount is paid back
+export interface Loan {
+  lenderId: PlayerId;
+  borrowerId: PlayerId;
+  amount: number;
+  repaid: number;
+}
+
 // A sale to the bank (no buyerId) or between players during a turn
 export interface Deal {
   sellerId: PlayerId;
@@ -69,7 +85,7 @@ export type GameEvent =
   | { id: number; kind: "auction"; playerId: PlayerId; sellerId: PlayerId; company: string; percent: number; price: number; winnerId: PlayerId | null; cancelled: boolean }
   | { id: number; kind: "order"; rolls: { playerId: PlayerId; dice: [number, number] }[] }
   | { id: number; kind: "market"; playerId: PlayerId; market: Record<string, number> }
-  | { id: number; kind: "bankrupt"; playerId: PlayerId }
+  | { id: number; kind: "bankrupt"; playerId: PlayerId; heirs: PlayerId[] }
   | { id: number; kind: "win"; playerId: PlayerId };
 export type NewGameEvent = GameEvent extends infer E ? (E extends GameEvent ? Omit<E, "id"> : never) : never;
 
@@ -100,6 +116,9 @@ export interface GameState {
   // % bought per company during the current turn, shown to everyone when the turn ends
   turnBuys: Record<CompanyId, number>;
   turnDeals: Deal[];
+  debt: Debt | null;
+  loans: Loan[];
+  loanOffers: { lenderId: PlayerId; borrowerId: PlayerId; amount: number }[];
   eliminated: PlayerId[];
   winner: PlayerId | null;
   log: string[];
