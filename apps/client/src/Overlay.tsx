@@ -1,4 +1,4 @@
-import { board, type GameEvent, type GameState } from "@stonks/engine";
+import { board, markets, type GameEvent, type GameState } from "@stonks/engine";
 import { useEffect, useRef, useState } from "react";
 import { play, steps, type Sfx } from "./audio";
 import { companyById, money, PLAYER_COLORS } from "./format";
@@ -24,7 +24,7 @@ function sound(e: GameEvent) {
     play("dice");
     return steps((e.to - e.from + board.length) % board.length, WALK_DELAY, STEP);
   }
-  const map: Partial<Record<GameEvent["kind"], Sfx>> = { order: "dice", krach: "loss", royalty: "coin", buys: "buy", auction: "bid", bankrupt: "bankrupt", win: "win" };
+  const map: Partial<Record<GameEvent["kind"], Sfx>> = { market: "bid", order: "dice", krach: "loss", royalty: "coin", buys: "buy", auction: "bid", bankrupt: "bankrupt", win: "win" };
   const amount = "amount" in e ? e.amount : 0;
   play(map[e.kind] ?? (e.kind === "atout" ? "buy" : amount >= 0 ? "coin" : "loss"));
 }
@@ -35,6 +35,7 @@ function timing(e: GameEvent): [number, number] {
   if (e.kind === "order") return [2000 + e.rolls.length * 700, 0];
   if (e.kind === "buys") return [3200 + e.deals.length * 600, 0];
   if (e.kind === "royalty") return [2400, 0];
+  if (e.kind === "market") return [4200, 0];
   return [2800, 0];
 }
 
@@ -109,6 +110,32 @@ function Card({ e, nameOf, colorOf }: { e: GameEvent; nameOf: (id: string) => st
       {nameOf(e.playerId)}
     </div>
   );
+  if (e.kind === "market")
+    return (
+      <div className="event-card market-card">
+        <div className="head" style={{ background: "#1f6fd1" }}>
+          <span className="icon">📈</span>
+          LA BOURSE BOUGE
+        </div>
+        <div className="body">
+          {who}
+          <div className="sub">passe le Départ en tête : nouvelles tendances des redevances</div>
+          <div className="market-moves">
+            {markets.map((m, i) => {
+              const t = e.market[m.id] ?? 0;
+              return (
+                <div key={m.id} className="market-move" style={{ animationDelay: `${200 + i * 150}ms` }}>
+                  <span>{m.name}</span>
+                  <strong className={t > 0 ? "plus" : t < 0 ? "minus" : ""}>
+                    {t > 0 ? "▲" : t < 0 ? "▼" : "="} {Math.abs(t)} %
+                  </strong>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
   if (e.kind === "roll")
     return (
       <div className="big-dice">

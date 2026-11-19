@@ -428,7 +428,10 @@ export function applyAction(prev: GameState, action: Action): Result {
       if (to >= board.length) {
         cur.laps += 1;
         money(state, cur, "lap", "Vous repassez par le Départ.", config.lapBonus);
-        if (state.players.every((p) => p === cur || p.laps < cur.laps)) state.seed = moveMarket(state.market, state.seed);
+        if (state.players.every((p) => p === cur || p.laps < cur.laps)) {
+          state.seed = moveMarket(state.market, state.seed);
+          emit(state, { kind: "market", playerId: cur.id, market: { ...state.market } });
+        }
       }
       landOn(state, cur, d1 + d2);
       if (cur.bankrupt && (state.phase as string) !== "gameOver") nextTurn(state);

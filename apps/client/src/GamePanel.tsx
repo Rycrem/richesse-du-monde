@@ -437,7 +437,7 @@ function Countdown({ prefix = "Expire dans" }: { prefix?: string }) {
   );
 }
 
-const ICONS: Partial<Record<GameEvent["kind"], string>> = { double: "🎲", jackpot: "🏦", roll: "🎲", actu: "📰", levee: "💰", ipo: "🔔", krach: "📉", lap: "🏁", atout: "⭐", royalty: "💸", buys: "🛒", auction: "⚖", bankrupt: "☠", win: "🏆", order: "🎲" };
+const ICONS: Partial<Record<GameEvent["kind"], string>> = { market: "📈", double: "🎲", jackpot: "🏦", roll: "🎲", actu: "📰", levee: "💰", ipo: "🔔", krach: "📉", lap: "🏁", atout: "⭐", royalty: "💸", buys: "🛒", auction: "⚖", bankrupt: "☠", win: "🏆", order: "🎲" };
 
 function Signed({ amount }: { amount: number }) {
   return <span className={amount >= 0 ? "plus" : "minus"}>{amount >= 0 ? "+" : "-"}{money(Math.abs(amount))}</span>;
@@ -476,6 +476,8 @@ function Journal({ game, colorOf, nameOf }: { game: GameState; colorOf: (id: str
             {e.winnerId ? <>adjugé à {nameOf(e.winnerId)} pour {money(e.price)}</> : "aucune offre"}
           </>
         );
+      case "market":
+        return <>passe le Départ en tête, la Bourse bouge : {markets.map((m) => `${m.name} ${e.market[m.id]! > 0 ? "+" : ""}${e.market[m.id]} %`).join(", ")}</>;
       case "bankrupt":
         return <>fait faillite</>;
       case "win":
