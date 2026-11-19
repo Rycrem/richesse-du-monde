@@ -1,4 +1,5 @@
 export const THEMES = [
+  { id: "glass", name: "Liquid Glass", colors: ["#1b1f4b", "#ffffff", "#7cc4ff", "#ff8ad8"] },
   { id: "cyberpunk", name: "Cyberpunk", colors: ["#07060d", "#ff2a6d", "#05d9e8", "#f9f002"] },
   { id: "terminal", name: "Terminal de bourse", colors: ["#070d14", "#00e5a0", "#ff4d6d", "#ffd166"] },
   { id: "pop", name: "Pop cartoon", colors: ["#fff6e6", "#1a1a2e", "#06d6a0", "#ef476f"] },
@@ -8,14 +9,15 @@ export const THEMES = [
 
 export type ThemeId = (typeof THEMES)[number]["id"];
 
-const KEY = "stonks-theme";
+// v2: Liquid Glass became the default, so earlier saved choices start over on it
+const KEY = "stonks-theme-v2";
 
 export function loadTheme(): ThemeId {
   try {
     const saved = localStorage.getItem(KEY);
     if (THEMES.some((t) => t.id === saved)) return saved as ThemeId;
   } catch {}
-  return "cyberpunk";
+  return "glass";
 }
 
 export function applyTheme(id: ThemeId) {
