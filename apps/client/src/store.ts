@@ -67,6 +67,7 @@ interface Store {
   joinRoom: (code: string, name: string) => void;
   resume: () => void;
   startOnline: (mode: GameMode) => void;
+  kick: (playerId: string) => void;
   dispatch: (action: Action) => boolean;
   sendChat: (channel: string, text: string) => void;
   createGroup: (name: string, members: string[]) => Promise<string | null>;
@@ -84,6 +85,10 @@ export const useStore = create<Store>((set, get) => {
     socket.on("room:state", (room) => {
       // ignore late updates from a room we just left
       if (get().online) set({ room, game: room.game });
+    });
+    socket.on("room:kicked", () => {
+      saveSession(null);
+      set({ online: false, you: null, room: null, game: null, bots: [], error: null, notice: "L'hôte t'a exclu de la partie" });
     });
     socket.on("connect", () => {
       // after a network drop, take our seat back automatically
@@ -194,6 +199,10 @@ export const useStore = create<Store>((set, get) => {
     },
     startOnline: (mode) =>
       socket?.emit("room:start", mode, (res) => {
+        if (!res.ok) set({ error: res.error });
+      }),
+    kick: (playerId) =>
+      socket?.emit("room:kick", playerId, (res) => {
         if (!res.ok) set({ error: res.error });
       }),
     dispatch: (action) => {

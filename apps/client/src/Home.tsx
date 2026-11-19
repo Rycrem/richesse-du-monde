@@ -29,8 +29,8 @@ export function Home() {
   if (admin && profile.admin) return <Admin onClose={() => setAdmin(false)} />;
 
   return (
-    <div className="setup">
-      <h1>Stonks Valley</h1>
+    <div className="setup home">
+      <h1 className="logo">Stonks Valley</h1>
       <p className="tagline">Achète des parts, encaisse les redevances, ruine tes amis.</p>
       <Install />
       <button className="my-pawn" onClick={() => setGarage(true)}>

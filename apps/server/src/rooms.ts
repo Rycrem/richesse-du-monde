@@ -6,6 +6,7 @@ import type { Profiles } from "./profiles";
 interface Member extends LobbyPlayer {
   token: string;
   profileToken: string;
+  kicked?: boolean;
 }
 
 export interface Room {
@@ -95,7 +96,7 @@ export class Rooms {
   rejoin(code: string, token: string): Result<Session> {
     const room = this.get(code);
     const member = room?.members.find((m) => m.token === token);
-    if (!room || !member) return { ok: false, error: "Session expirée" };
+    if (!room || !member || member.kicked) return { ok: false, error: "Session expirée" };
     member.connected = true;
     if (room.game) this.schedule(room);
     this.onChange(room);
@@ -139,9 +140,30 @@ export class Rooms {
     return { ok: true, data: null };
   }
 
+  // The host removes a player: from the lobby they are just dropped; in a game their shares go back to the bank
+  // and they keep their seat in the list, unable to act, rejoin or earn points
+  kick(code: string, hostId: string, targetId: string): Result<null> {
+    const room = this.get(code);
+    if (!room) return { ok: false, error: "Partie introuvable" };
+    if (room.hostId !== hostId) return { ok: false, error: "Seul l'hôte peut exclure un joueur" };
+    const target = room.members.find((m) => m.id === targetId);
+    if (!target || target.kicked || targetId === hostId) return { ok: false, error: "Joueur introuvable" };
+    if (!room.game) {
+      room.members = room.members.filter((m) => m !== target);
+      this.onChange(room);
+      return { ok: true, data: null };
+    }
+    target.kicked = true;
+    target.connected = false;
+    if (room.game.phase !== "gameOver") return this.apply(room, { type: "KICK", targetId });
+    this.onChange(room);
+    return { ok: true, data: null };
+  }
+
   act(code: string, playerId: string, action: Action): Result<null> {
     const room = this.get(code);
     if (!room?.game) return { ok: false, error: "Aucune partie en cours" };
+    if (room.members.find((m) => m.id === playerId)?.kicked) return { ok: false, error: "Tu as été exclu de la partie" };
     if ((SYSTEM_ACTIONS as readonly string[]).includes(action.type)) {
       if (action.type !== "END_GAME" || room.hostId !== playerId || room.game.mode !== "chrono") {
         return { ok: false, error: "Action réservée" };
@@ -208,7 +230,7 @@ export class Rooms {
       const member = room.members.find((m) => m.id === playerId);
       const points = pointsForRank(rank);
       room.rewards![playerId] = points;
-      if (member) this.profiles.award(member.profileToken, points);
+      if (member && !member.kicked) this.profiles.award(member.profileToken, points);
     });
   }
 
@@ -226,6 +248,7 @@ export class Rooms {
   sendChat(code: string, playerId: string, channel: string, text: string): Result<null> {
     const room = this.get(code);
     if (!room) return { ok: false, error: "Partie introuvable" };
+    if (room.members.find((m) => m.id === playerId)?.kicked) return { ok: false, error: "Tu as été exclu de la partie" };
     const clean = text.trim().slice(0, MAX_TEXT);
     if (!clean) return { ok: false, error: "Message vide" };
     if (channel.startsWith("dm:")) {

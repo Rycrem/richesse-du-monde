@@ -1,12 +1,15 @@
-// Every sound is synthesized with Web Audio: no files to load. The music is a generative lofi loop.
+// Every sound is synthesized with Web Audio: no files to load. The music is a generative loop, jazz or lofi.
+export type MusicStyle = "jazz" | "lofi";
+
 export interface AudioSettings {
+  style: MusicStyle;
   music: number;
   sfx: number;
   muted: boolean;
 }
 
 const KEY = "stonks-audio";
-const DEFAULTS: AudioSettings = { music: 0.5, sfx: 0.7, muted: false };
+const DEFAULTS: AudioSettings = { style: "jazz", music: 0.5, sfx: 0.7, muted: false };
 
 export function loadSettings(): AudioSettings {
   try {
@@ -142,37 +145,208 @@ export function steps(n: number, delay: number, every: number) {
   for (let i = 0; i < n; i++) tone(220, t + i * every, 0.08, { gain: 0.12, type: "triangle", to: 160 });
 }
 
-// Generative lofi: a jazzy 4-chord loop picked at random, soft drums with swing, a wandering pentatonic melody and vinyl crackle
-const PROGRESSIONS = [
-  [[50, 53, 57, 60], [55, 59, 62, 65], [48, 52, 55, 59], [45, 48, 52, 55]],
-  [[53, 57, 60, 64], [52, 55, 59, 62], [50, 53, 57, 60], [55, 59, 62, 65]],
-  [[45, 48, 52, 55], [50, 53, 57, 60], [43, 47, 50, 53], [48, 52, 55, 59]],
-];
-const SCALE = [0, 2, 4, 7, 9];
-const BPM = 74;
+// Generative jazz combo: swung ii-V-I changes, walking bass, ride cymbal, piano comping, a horn section
+// (trumpet, sax, trombone) and a soloist that switches between vibraphone and trumpet
 let started = false;
 
 function startMusic() {
   if (started || !ctx) return;
   started = true;
-  const c = ctx;
+  startJazz(ctx);
+  startLofi(ctx);
+}
+
+const QUALITY = {
+  maj7: { chord: [0, 4, 7, 11], scale: [0, 2, 4, 7, 9, 11] },
+  m7: { chord: [0, 3, 7, 10], scale: [0, 2, 3, 5, 7, 9, 10] },
+  "7": { chord: [0, 4, 7, 10], scale: [0, 2, 4, 5, 7, 9, 10] },
+  m7b5: { chord: [0, 3, 6, 10], scale: [0, 1, 3, 5, 6, 8, 10] },
+};
+type Chord = [root: number, quality: keyof typeof QUALITY];
+const PROGRESSIONS: Chord[][] = [
+  [[2, "m7"], [7, "7"], [0, "maj7"], [9, "7"]],
+  [[5, "maj7"], [2, "m7"], [7, "m7"], [0, "7"]],
+  [[0, "m7"], [5, "7"], [10, "maj7"], [7, "7"]],
+  [[11, "m7b5"], [4, "7"], [9, "m7"], [2, "7"]],
+];
+const JAZZ_BPM = 116;
+
+const pick = <T>(a: T[]): T => a[Math.floor(Math.random() * a.length)]!;
+const inRange = (pc: number, lo: number) => lo + ((pc - lo) % 12 + 12) % 12;
+
+function startJazz(c: AudioContext) {
+  const filter = c.createBiquadFilter();
+  filter.type = "lowpass";
+  filter.frequency.value = 3200;
+  filter.connect(musicBus);
+  const beat = 60 / JAZZ_BPM;
+  let barStart = c.currentTime + 0.2;
+  let bar = 0;
+  let prog = PROGRESSIONS[0]!;
+  let note = 72;
+  let phrase = 0;
+
+  const bass = (n: number, at: number) => {
+    tone(midi(n), at, beat * 0.95, { gain: 0.26, attack: 0.01, out: filter });
+    tone(midi(n) * 2, at, beat * 0.3, { gain: 0.05, type: "triangle", out: filter });
+  };
+  const piano = (notes: number[], at: number, dur: number) => {
+    for (const n of notes) {
+      tone(midi(n), at, dur, { gain: 0.045, type: "triangle", out: filter });
+      tone(midi(n) * 2, at, dur * 0.5, { gain: 0.012, out: filter });
+    }
+  };
+  const vibes = (n: number, at: number, dur: number) => {
+    tone(midi(n), at, dur, { gain: 0.07, attack: 0.004, out: filter });
+    tone(midi(n) * 4, at, dur * 0.3, { gain: 0.008, out: filter });
+  };
+  // brass: detuned saws through a lowpass that opens on the attack ("blat"), with a slow vibrato on long notes
+  const brass = (n: number, at: number, dur: number, gain: number, bright = 2600) => {
+    const g = c.createGain();
+    const f = c.createBiquadFilter();
+    f.type = "lowpass";
+    f.Q.value = 2;
+    f.frequency.setValueAtTime(300, at);
+    f.frequency.exponentialRampToValueAtTime(bright, at + 0.05);
+    f.frequency.exponentialRampToValueAtTime(bright * 0.5, at + dur);
+    g.gain.setValueAtTime(0, at);
+    g.gain.linearRampToValueAtTime(gain, at + 0.04);
+    g.gain.setValueAtTime(gain * 0.8, at + Math.max(0.05, dur - 0.06));
+    g.gain.exponentialRampToValueAtTime(0.0001, at + dur + 0.08);
+    f.connect(g).connect(musicBus);
+    const lfo = c.createOscillator();
+    const depth = c.createGain();
+    lfo.frequency.value = 5.5;
+    depth.gain.setValueAtTime(0, at);
+    depth.gain.linearRampToValueAtTime(dur > beat ? 18 : 0, at + dur);
+    lfo.connect(depth);
+    for (const detune of [-7, 7]) {
+      const o = c.createOscillator();
+      o.type = "sawtooth";
+      o.frequency.value = midi(n);
+      o.detune.value = detune;
+      depth.connect(o.detune);
+      o.connect(f);
+      o.start(at);
+      o.stop(at + dur + 0.1);
+    }
+    lfo.start(at);
+    lfo.stop(at + dur + 0.1);
+  };
+  // horn section voicing: trombone on the 3rd or 7th, sax on the 5th or 9th, trumpet on top
+  const horns = (root: number, q: (typeof QUALITY)[keyof typeof QUALITY], at: number, dur: number, gain: number) => {
+    const top = inRange(root + pick([q.chord[3]!, 14, q.chord[1]!]), 70);
+    const mid = inRange(root + pick([q.chord[2]!, 14]), 62);
+    const lowN = inRange(root + pick([q.chord[1]!, q.chord[3]!]), 50);
+    brass(top, at, dur, gain, 3200);
+    brass(mid, at, dur, gain * 0.8, 2200);
+    brass(lowN, at, dur, gain * 0.9, 1400);
+  };
+  let soloist: "vibes" | "trumpet" = "vibes";
+  const ride = (at: number, accent: boolean) => hiss(at, 0.45, { type: "highpass", freq: 6000, gain: accent ? 0.07 : 0.045, out: musicBus });
+
+  const schedule = () => {
+    if (settings.style !== "jazz") {
+      barStart = c.currentTime + 0.1;
+      return;
+    }
+    while (barStart < c.currentTime + 0.6) {
+      if (bar % 4 === 0) {
+        if (Math.random() < 0.35) prog = pick(PROGRESSIONS);
+        soloist = Math.random() < 0.5 ? "vibes" : "trumpet";
+      }
+      const [root, quality] = prog[bar % 4]!;
+      const [nextRoot] = prog[(bar + 1) % 4]!;
+      const q = QUALITY[quality];
+      const swing = beat * 0.66;
+      const at = (b: number, off = false) => barStart + b * beat + (off ? swing : 0);
+
+      // walking bass: root, two chord or scale tones, then a half step into the next root
+      const low = inRange(root, 36);
+      bass(low, at(0));
+      bass(low + pick([q.chord[1]!, q.chord[2]!, 12]), at(1));
+      bass(low + pick([q.chord[2]!, q.chord[3]!, q.scale[1]!]), at(2));
+      const target = inRange(nextRoot, 36);
+      bass(target + pick([-1, 1, 7 - 12]), at(3));
+
+      // drums: ride "ding, ding-da-ding", hi-hat foot on 2 and 4, a few brush ghost notes
+      for (let b = 0; b < 4; b++) ride(at(b), b % 2 === 0);
+      ride(at(1, true), false);
+      ride(at(3, true), false);
+      hiss(at(1), 0.05, { freq: 8000, gain: 0.06, out: musicBus });
+      hiss(at(3), 0.05, { freq: 8000, gain: 0.06, out: musicBus });
+      if (Math.random() < 0.5) hiss(at(pick([0, 1, 2, 3]), true), 0.08, { freq: 2200, gain: 0.04, out: filter });
+
+      // piano: rootless voicing (3rd, 5th, 7th, 9th) on one or two syncopated spots
+      const voicing = [q.chord[1]!, q.chord[2]!, q.chord[3]!, 14].map((iv) => inRange(root + iv, 52));
+      voicing.sort((a, b) => a - b);
+      const spots: [number, boolean][] = [[0, false], [1, true], [2, false], [3, true]];
+      piano(voicing, at(...pick(spots)), beat * 0.7);
+      if (Math.random() < 0.5) piano(voicing, at(...pick(spots)), beat * 0.4);
+
+      // horns: a shout chorus of syncopated stabs on the turnaround bar, soft held pads behind the trumpet otherwise
+      if (bar % 4 === 3 && Math.random() < 0.7) {
+        horns(root, q, at(1, true), beat * 0.45, 0.035);
+        horns(root, q, at(2, true), beat * 0.3, 0.03);
+        horns(root, q, at(3), beat * 1.1, 0.04);
+      } else if (soloist === "vibes" && Math.random() < 0.4) horns(root, q, at(0), beat * 3.6, 0.014);
+
+      // soloist (vibraphone or trumpet): phrases of swung eighths through the chord scale, landing on chord tones
+      if (phrase === 0 && Math.random() < 0.45) phrase = 1 + Math.floor(Math.random() * 2);
+      if (phrase > 0) {
+        const options = [60, 72, 84].flatMap((o) => q.scale.map((s) => o + ((root + s) % 12))).filter((n) => n >= 67 && n <= 86);
+        const tones = options.filter((n) => q.chord.includes((n - root + 120) % 12));
+        for (let e = 0; e < 8; e++) {
+          if (Math.random() > 0.7) continue;
+          const pool = e % 2 === 0 ? tones : options;
+          const near = pool.filter((n) => Math.abs(n - note) <= 4 && n !== note);
+          note = near.length ? pick(near) : pick(pool);
+          const t = at(Math.floor(e / 2), e % 2 === 1);
+          if (soloist === "vibes") vibes(note, t, beat * (e === 7 ? 1.2 : 0.6));
+          else brass(note - 5, t, beat * (e === 7 ? 1.4 : 0.55), 0.05, 3000);
+        }
+        phrase--;
+      }
+
+      barStart += beat * 4;
+      bar++;
+    }
+  };
+  schedule();
+  setInterval(schedule, 150);
+}
+
+// Generative lofi: a jazzy 4-chord loop picked at random, soft drums with swing, a wandering pentatonic melody and vinyl crackle
+const LOFI_PROGRESSIONS = [
+  [[50, 53, 57, 60], [55, 59, 62, 65], [48, 52, 55, 59], [45, 48, 52, 55]],
+  [[53, 57, 60, 64], [52, 55, 59, 62], [50, 53, 57, 60], [55, 59, 62, 65]],
+  [[45, 48, 52, 55], [50, 53, 57, 60], [43, 47, 50, 53], [48, 52, 55, 59]],
+];
+const SCALE = [0, 2, 4, 7, 9];
+const LOFI_BPM = 74;
+
+function startLofi(c: AudioContext) {
   const filter = c.createBiquadFilter();
   filter.type = "lowpass";
   filter.frequency.value = 1400;
   filter.connect(musicBus);
-  const beat = 60 / BPM;
+  const beat = 60 / LOFI_BPM;
   let next = c.currentTime + 0.2;
   let step = 0;
-  let prog = PROGRESSIONS[0]!;
+  let prog = LOFI_PROGRESSIONS[0]!;
   let note = 72;
 
   const schedule = () => {
+    if (settings.style !== "lofi") {
+      next = c.currentTime + 0.1;
+      return;
+    }
     while (next < c.currentTime + 0.5) {
       const bar = Math.floor(step / 8) % 4;
       const eighth = step % 8;
       const swing = eighth % 2 ? beat * 0.12 : 0;
       const at = next + swing;
-      if (step % 32 === 0 && Math.random() < 0.4) prog = PROGRESSIONS[Math.floor(Math.random() * PROGRESSIONS.length)]!;
+      if (step % 32 === 0 && Math.random() < 0.4) prog = LOFI_PROGRESSIONS[Math.floor(Math.random() * LOFI_PROGRESSIONS.length)]!;
       const chord = prog[bar]!;
       if (eighth === 0) {
         for (const n of chord) tone(midi(n), at, beat * 4, { gain: 0.06, type: "triangle", attack: 0.08, out: filter });

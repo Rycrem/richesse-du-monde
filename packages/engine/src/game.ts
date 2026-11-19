@@ -20,7 +20,8 @@ export type Action =
   | { type: "ALLIANCE_INVITE"; playerId: PlayerId; targetId: PlayerId }
   | { type: "ALLIANCE_ANSWER"; playerId: PlayerId; fromId: PlayerId; accept: boolean }
   | { type: "ALLIANCE_LEAVE"; playerId: PlayerId }
-  | { type: "END_GAME" };
+  | { type: "END_GAME" }
+  | { type: "KICK"; targetId: PlayerId };
 
 export type Result = { ok: true; state: GameState } | { ok: false; error: string };
 
@@ -194,7 +195,7 @@ function charge(state: GameState, p: Player, amount: number): void {
   p.cash -= amount;
 }
 
-function bankrupt(state: GameState, p: Player): void {
+function bankrupt(state: GameState, p: Player, message = `${p.name} fait faillite`): void {
   for (const [company, pct] of Object.entries(p.holdings)) returnToStock(state, company, pct);
   p.holdings = {};
   p.cash = 0;
@@ -202,7 +203,7 @@ function bankrupt(state: GameState, p: Player): void {
   leaveAlliance(state, p.id);
   state.allianceInvites = state.allianceInvites.filter((i) => i.from !== p.id && i.to !== p.id);
   state.eliminated.push(p.id);
-  state.log.push(`${p.name} fait faillite`);
+  state.log.push(message);
   emit(state, { kind: "bankrupt", playerId: p.id });
   const alive = activePlayers(state);
   if (alive.length === 1) {
@@ -616,6 +617,21 @@ export function applyAction(prev: GameState, action: Action): Result {
       if (!p || !allianceOf(state, p.id)) return { ok: false, error: "Pas dans une alliance" };
       leaveAlliance(state, p.id);
       state.log.push(`${p.name} quitte son alliance`);
+      return { ok: true, state };
+    }
+
+    // The host removes a player: their shares go back to the bank, anything waiting on them is cancelled
+    case "KICK": {
+      const p = player(state, action.targetId);
+      if (!p || p.bankrupt) return { ok: false, error: "Joueur introuvable" };
+      const a = state.auction;
+      if (a && [a.chooserId, a.sellerId, a.highestBidderId].includes(p.id)) {
+        state.auction = null;
+        state.phase = "act";
+      }
+      if (state.offer && [state.offer.buyerId, state.offer.ownerId].includes(p.id)) state.offer = null;
+      bankrupt(state, p, `${p.name} est exclu de la partie`);
+      if (state.phase !== "gameOver" && cur.id === p.id) nextTurn(state);
       return { ok: true, state };
     }
 
