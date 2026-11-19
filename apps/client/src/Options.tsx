@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { loadSettings, play, setSettings, unlock } from "./audio";
+import { useStore } from "./store";
 import { applyTheme, loadTheme, THEMES } from "./theme";
 
 // Gear button with sound and theme settings, available on every screen
@@ -7,6 +8,9 @@ export function Options() {
   const [open, setOpen] = useState(false);
   const [s, setS] = useState(loadSettings);
   const [theme, setTheme] = useState(loadTheme);
+  const [confirmQuit, setConfirmQuit] = useState(false);
+  const { game, room, online, quit } = useStore();
+  const inGame = !!game || (online && !!room);
   useEffect(() => applyTheme(theme), [theme]);
   useEffect(() => setSettings(s), [s]);
   useEffect(() => {
@@ -24,6 +28,27 @@ export function Options() {
       {open && (
         <div className="options-panel">
           <h3>Réglages</h3>
+          {inGame &&
+            (confirmQuit ? (
+              <div className="quit-confirm">
+                <small>{online ? "Tu quittes la partie en ligne." : "La partie en cours sera perdue."}</small>
+                <div className="row">
+                  <button
+                    className="ghost"
+                    onClick={() => {
+                      quit();
+                      setConfirmQuit(false);
+                      setOpen(false);
+                    }}
+                  >
+                    Quitter
+                  </button>
+                  <button onClick={() => setConfirmQuit(false)}>Annuler</button>
+                </div>
+              </div>
+            ) : (
+              <button onClick={() => setConfirmQuit(true)}>Retour au menu</button>
+            ))}
           <h4>Son</h4>
           <label>
             Musique lofi
