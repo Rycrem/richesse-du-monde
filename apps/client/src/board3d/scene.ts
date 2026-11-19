@@ -277,7 +277,7 @@ function center(scene: THREE.Scene) {
     g.fillRect(0, 0, 2048, 96);
     g.font = "800 46px Inter, Arial";
     let x = 20;
-    const items = markets.map((m) => ({ text: `${m.name.toUpperCase()} ${market[m.id]! >= 0 ? "▲" : "▼"} ${Math.abs(market[m.id] ?? 0)} %`, color: (market[m.id] ?? 0) >= 0 ? "#3fd17b" : "#ff4d6d" }));
+    const items = markets.map((m) => ({ text: `${m.name.toUpperCase()} ${market[m.id]! > 0 ? "▲" : market[m.id]! < 0 ? "▼" : "="} ${Math.abs(market[m.id] ?? 0)} %`, color: (market[m.id] ?? 0) > 0 ? "#3fd17b" : (market[m.id] ?? 0) < 0 ? "#ff4d6d" : "#c9d3e6" }));
     items.push({ text: `CAGNOTTE ${pot.toLocaleString("fr-FR")} k$`, color: "#e8c45a" });
     for (const it of items) {
       g.fillStyle = it.color;

@@ -526,8 +526,8 @@ function Market({ game }: { game: GameState }) {
         {markets.map((m) => {
           const t = game.market[m.id] ?? 0;
           return (
-            <button key={m.id} className={`trend ${t >= 0 ? "up" : "down"}`} title={m.companies.map((c) => companyById.get(c)!.name).join(", ")} onClick={() => setInspect({ market: m.id })}>
-              {m.name} {t >= 0 ? "▲" : "▼"} {Math.abs(t)} %
+            <button key={m.id} className={`trend ${t > 0 ? "up" : t < 0 ? "down" : ""}`} title={m.companies.map((c) => companyById.get(c)!.name).join(", ")} onClick={() => setInspect({ market: m.id })}>
+              {m.name} {t > 0 ? "▲" : t < 0 ? "▼" : "="} {Math.abs(t)} %
             </button>
           );
         })}

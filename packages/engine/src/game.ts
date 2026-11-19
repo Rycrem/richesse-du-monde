@@ -43,8 +43,8 @@ export function createGame(players: { id: PlayerId; name: string }[], seed: numb
   [s] = shuffle(deck, s);
   const royalties: Record<string, CompanyId> = {};
   cityStockOrigin.forEach((city, i) => (royalties[city.id] = tokens[i]!));
-  const market: Record<string, number> = {};
-  s = moveMarket(market, s);
+  // flat market until the leader completes the first lap
+  const market: Record<string, number> = Object.fromEntries(markets.map((m) => [m.id, 0]));
   return {
     seed: s,
     market,
@@ -373,7 +373,7 @@ export function buyableStock(state: GameState): Record<CompanyId, number> {
 
 const TRENDS = [-30, -25, -20, -15, -10, 10, 15, 20, 25, 30];
 
-// Each market gets a new trend, so royalties change from one turn to the next
+// Each market gets a new trend, each time the leader passes Départ
 function moveMarket(market: Record<string, number>, seed: number): number {
   let s = seed;
   for (const m of markets) {
@@ -390,7 +390,6 @@ export function trendOf(state: GameState, company: CompanyId): number {
 }
 
 function nextTurn(state: GameState): void {
-  state.seed = moveMarket(state.market, state.seed);
   const n = state.players.length;
   let i = state.current;
   do i = (i + 1) % n;
@@ -429,6 +428,7 @@ export function applyAction(prev: GameState, action: Action): Result {
       if (to >= board.length) {
         cur.laps += 1;
         money(state, cur, "lap", "Vous repassez par le Départ.", config.lapBonus);
+        if (state.players.every((p) => p === cur || p.laps < cur.laps)) state.seed = moveMarket(state.market, state.seed);
       }
       landOn(state, cur, d1 + d2);
       if (cur.bankrupt && (state.phase as string) !== "gameOver") nextTurn(state);
