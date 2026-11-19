@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { play, steps, type Sfx } from "./audio";
 import { companyById, money, PLAYER_COLORS } from "./format";
 
-const WALK_DELAY = 1.5;
+const WALK_DELAY = 2.2;
 const STEP = 0.24;
 const LEAVE_MS = 380;
 
@@ -264,6 +264,8 @@ export function EventOverlay({ game }: { game: GameState }) {
   const [queue, setQueue] = useState<GameEvent[]>([]);
   const [current, setCurrent] = useState<{ e: GameEvent; leaving: boolean; show: number; gap: number } | null>(null);
   const [winner, setWinner] = useState<{ id: string; leaving: boolean } | null>(null);
+  // the card stays while the player touches or scrolls it
+  const [held, setHeld] = useState(false);
   const nameOf = (id: string) => game.players.find((p) => p.id === id)?.name ?? "?";
   const colorOf = (id: string) => PLAYER_COLORS[game.players.findIndex((p) => p.id === id)] ?? "#fff";
 
@@ -297,15 +299,23 @@ export function EventOverlay({ game }: { game: GameState }) {
   }, [queue, current]);
 
   useEffect(() => {
-    if (!current) return;
+    if (!current || held) return;
     const t = setTimeout(() => (current.leaving ? setCurrent(null) : setCurrent({ ...current, leaving: true })), current.leaving ? LEAVE_MS + current.gap : current.show);
     return () => clearTimeout(t);
-  }, [current]);
+  }, [current, held]);
 
   return (
     <>
       {current && current.e.kind !== "win" && (
-        <div className={`overlay-slot ${current.leaving ? "leaving" : "entering"}`} key={current.e.id}>
+        <div
+          className={`overlay-slot ${current.leaving ? "leaving" : "entering"}`}
+          key={current.e.id}
+          onPointerEnter={() => setHeld(true)}
+          onPointerDown={() => setHeld(true)}
+          onPointerLeave={() => setHeld(false)}
+          onPointerCancel={() => setHeld(false)}
+          onPointerUp={(ev) => ev.pointerType !== "mouse" && setHeld(false)}
+        >
           <Card e={current.e} nameOf={nameOf} colorOf={colorOf} />
         </div>
       )}

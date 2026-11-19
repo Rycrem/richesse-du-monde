@@ -470,7 +470,7 @@ export function createBoardScene(host: HTMLElement, events: BoardEvents = {}): B
   const easeOut = (k: number) => 1 - (1 - k) ** 3;
   const easeBack = (k: number) => 1 + 2.7 * (k - 1) ** 3 + 1.7 * (k - 1) ** 2;
   // the big dice overlay plays first, then the pawn walks
-  const WALK_DELAY = 1.5;
+  const WALK_DELAY = 2.2;
   const STEP = 0.24;
 
   const built = new Map<number, string>();
