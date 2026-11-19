@@ -328,8 +328,21 @@ function OfferForm({ game }: { game: GameState }) {
       <label>
         Prix <input type="number" min={0} step={100} value={price} onChange={(e) => setPrice(Number(e.target.value))} />
       </label>
+      <OfferValue company={co} percent={percent} price={price} />
       <button onClick={() => dispatch({ type: "OFFER", playerId: me.id, ownerId: owner.id, company: co, percent, price })}>Proposer</button>
     </details>
+  );
+}
+
+// What the shares are worth: the market price, and what the bank would pay for them
+function OfferValue({ company, percent, price }: { company: string; percent: number; price: number }) {
+  const value = companyById.get(company)!.pricePerPercent * percent;
+  const gap = value ? Math.round(((price - value) / value) * 100) : 0;
+  return (
+    <p className="offer-value">
+      Valeur estimée : <strong>{money(value)}</strong> (banque : {money(Math.floor(value * config.bankBuybackRatio))})
+      {gap !== 0 && <span className={gap > 0 ? "plus" : "minus"}> · offre {gap > 0 ? "+" : ""}{gap} %</span>}
+    </p>
   );
 }
 
@@ -344,6 +357,7 @@ function OfferPanel({ game, nameOf }: { game: GameState; nameOf: (id: string) =>
       <p>
         {nameOf(o.buyerId)} veut acheter {o.percent} % de {companyById.get(o.company)!.name} à {nameOf(o.ownerId)} pour {money(o.price)}.
       </p>
+      <OfferValue company={o.company} percent={o.percent} price={o.price} />
       <p>
         Réponse attendue de <strong>{nameOf(o.awaiting)}</strong>
       </p>
@@ -370,6 +384,7 @@ function OfferPanel({ game, nameOf }: { game: GameState; nameOf: (id: string) =>
 function DebtPanel({ game }: { game: GameState }) {
   const { dispatch, you } = useStore();
   const me = currentPlayer(game);
+  const [sell, setSell] = useState<Record<string, number>>({});
   if (you !== null && you !== me.id) return <p className="muted">{me.name} doit vendre des actions pour payer sa dette.</p>;
   const ratio = config.bankBuybackRatio;
   return (
@@ -380,15 +395,21 @@ function DebtPanel({ game }: { game: GameState }) {
         const co = companyById.get(c)!;
         const per = co.pricePerPercent * ratio;
         const needed = Math.min(pct, Math.ceil(-me.cash / per));
+        const n = Math.min(pct, sell[c] ?? needed);
         return (
-          <div key={c} className="row debt-row">
-            <span className="chip" style={{ background: co.color }}>
-              <img src={`/logos/${c}.svg`} alt="" />
-              {co.name} {pct} %
-            </span>
-            <span className="spacer" />
-            <button onClick={() => dispatch({ type: "SELL_TO_BANK", playerId: me.id, company: c, percent: 1 })}>1 %</button>
-            <button onClick={() => dispatch({ type: "SELL_TO_BANK", playerId: me.id, company: c, percent: needed })}>{needed} %</button>
+          <div key={c} className="debt-row">
+            <div className="row">
+              <span className="chip" style={{ background: co.color }}>
+                <img src={`/logos/${c}.svg`} alt="" />
+                {co.name} {pct} %
+              </span>
+              <span className="spacer" />
+              <strong>{n} %</strong>
+            </div>
+            <div className="row">
+              <input type="range" min={1} max={pct} value={n} onChange={(e) => setSell({ ...sell, [c]: Number(e.target.value) })} />
+              <button onClick={() => dispatch({ type: "SELL_TO_BANK", playerId: me.id, company: c, percent: n })}>Vendre {money(Math.floor(per * n))}</button>
+            </div>
           </div>
         );
       })}

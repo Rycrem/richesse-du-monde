@@ -406,3 +406,6 @@ button.trend:hover { filter: brightness(1.3); }
 .turn-banner .dot { width: 12px; height: 12px; border-radius: 999px; }
 @keyframes banner-in { 0% { opacity: 0; transform: translate(-50%, -20px); } 12%, 85% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -10px); } }
 .hover-tip .owner-name { color: #ffd166; font-weight: 700; }
+.offer-value { font-size: 13px; margin: 6px 0; opacity: 0.9; }
+.debt-row { display: flex; flex-direction: column; gap: 6px; padding: 8px 0; border-bottom: 1px solid #ffffff14; }
+.debt-row input[type="range"] { flex: 1; }
