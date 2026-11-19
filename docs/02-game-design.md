@@ -36,7 +36,7 @@ Les mécaniques suivent le livret de "Richesses du Monde" fourni par Emeric (red
 
 - Chaque entreprise vaut **100 %**. Il n'y a pas de cartes : un joueur détient simplement un pourcentage de chaque entreprise (ex. 35 % d'AMB, 10 % de Nvidio).
 - Les 100 % de chaque entreprise sont **répartis entre les régions, puis entre les villes** de ces régions.
-  - Exemple : l'Europe détient 50 % d'AMB et 30 % de Nvidio, répartis entre ses villes. Paris en a 20 % d'AMB et 10 % de Nvidio.
+  - Exemple : chaque ville vend 4 entreprises différentes, par blocs de 4 à 15 %, et chaque entreprise est répartie sur 12 villes. Paris vend Xiaomy 7 %, Intol 9 %, Gogol 9 % et Tesler 7 %.
 - Chaque ville a donc un **stock** : la liste des entreprises qu'on peut y acheter, avec le pourcentage restant de chacune. Le stock baisse au fil des achats.
 - Prix = cours de l'entreprise (prix pour 1 %) x pourcentage acheté. Les entreprises chères (Nvidio, Appel) rapportent plus mais coûtent plus.
 - Achat par tranches de 1 %.
@@ -52,7 +52,7 @@ Le plateau a deux anneaux : un anneau extérieur de 48 cases (les 6 régions du 
 |---|---|---|
 | Départ | 1 | Chaque passage par le Départ (fin de la spirale) rapporte une prime de 2 000 k$ |
 | Ville tech | 30 (5 par région, anneau extérieur) | Paiement + achat (voir "Tour de jeu") |
-| Hub tech | 18 (anneau intérieur) | Comme une ville, avec des stocks plus gros (15 à 25 % par entreprise) |
+| Hub tech | 18 (anneau intérieur) | Comme une ville (4 entreprises, 4 à 15 % chacune) |
 | Choix régional | 8 (1 par région, 2 pour les hubs) | Achat dans le stock de toutes les villes de la région, n'importe quelle entreprise, dès le premier tour |
 | Choix mondial | 1 | Pareil, dans le monde entier. Valable seulement après un premier tour complet |
 | Enchères | 3 | Mise aux enchères forcée (voir "Enchères"). Valable seulement après un premier tour complet |
@@ -76,7 +76,7 @@ En début de partie, chaque joueur lance 2 dés : le plus haut total commence, p
 1. **Dés** : le joueur actif lance 2 dés et avance. Les doubles n'ont pas d'effet particulier.
 2. **Paiement** (ville) : il paie le plus gros détenteur de l'entreprise de redevance de la case (voir "Paiements").
 3. **Achats** : le joueur actif, et **lui seul** :
-   - voit le stock de la case (ex. "Paris : AMB 20 %, Nvidio 10 %") et choisit combien de % il achète de chaque entreprise, **au maximum 30 % cumulés** par achat (ex. 20 % d'AMB + 10 % de Nvidio, ou 15 % + 5 %...) ;
+   - voit le stock de la case (ex. "Paris : Xiaomy 7 %, Intol 9 %, Gogol 9 %, Tesler 7 %") et choisit combien de % il achète de chaque entreprise, **au maximum 30 % cumulés** par achat (ex. 9 % d'Intol + 9 % de Gogol + 7 % de Tesler) ;
    - peut proposer de racheter un pourcentage à **n'importe quel autre joueur** (ex. 10 % de ses Nvidio pour 3 M). Le propriétaire accepte, refuse ou fait une contre-offre (délai de 15 s). Les autres joueurs ne peuvent ni acheter ni lancer de transaction pendant ce tour.
 4. **Fin du tour** : une carte récapitule pour tout le monde les achats, les ventes à la banque et les échanges entre joueurs du tour, puis on passe au joueur suivant.
 

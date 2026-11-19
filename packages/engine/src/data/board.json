@@ -10,8 +10,10 @@
     "name": "Seattle",
     "region": "amerique-nord",
     "stock": {
-      "nvidio": 15,
-      "tsmb": 15
+      "nvidio": 9,
+      "gogol": 12,
+      "meto": 12,
+      "xiaomy": 9
     }
   },
   {
@@ -20,8 +22,10 @@
     "name": "Vancouver",
     "region": "amerique-nord",
     "stock": {
-      "appel": 15,
-      "netflox": 15
+      "appel": 6,
+      "amazone": 9,
+      "tesler": 9,
+      "sonyx": 7
     }
   },
   {
@@ -35,8 +39,10 @@
     "name": "Toronto",
     "region": "amerique-nord",
     "stock": {
-      "macrosoft": 15,
-      "meto": 15
+      "macrosoft": 4,
+      "tsmb": 6,
+      "oracul": 7,
+      "spotifaille": 4
     }
   },
   {
@@ -45,8 +51,10 @@
     "name": "Austin",
     "region": "amerique-nord",
     "stock": {
-      "gogol": 15,
-      "tesler": 15
+      "gogol": 11,
+      "netflox": 4,
+      "amb": 4,
+      "intol": 11
     }
   },
   {
@@ -61,8 +69,10 @@
     "name": "New York",
     "region": "amerique-nord",
     "stock": {
-      "amazone": 15,
-      "oracul": 15
+      "amazone": 8,
+      "meto": 11,
+      "samsong": 11,
+      "nvidio": 8
     }
   },
   {
@@ -76,8 +86,10 @@
     "name": "Mexico",
     "region": "amerique-latine",
     "stock": {
-      "tsmb": 15,
-      "amb": 15
+      "tsmb": 5,
+      "tesler": 8,
+      "xiaomy": 8,
+      "appel": 5
     }
   },
   {
@@ -87,7 +99,9 @@
     "region": "amerique-latine",
     "stock": {
       "netflox": 15,
-      "samsong": 15
+      "oracul": 6,
+      "sonyx": 6,
+      "macrosoft": 15
     }
   },
   {
@@ -106,8 +120,10 @@
     "name": "Lima",
     "region": "amerique-latine",
     "stock": {
-      "meto": 15,
-      "xiaomy": 15
+      "meto": 10,
+      "amb": 15,
+      "spotifaille": 15,
+      "gogol": 10
     }
   },
   {
@@ -122,8 +138,10 @@
     "name": "São Paulo",
     "region": "amerique-latine",
     "stock": {
-      "tesler": 15,
-      "sonyx": 15
+      "tesler": 8,
+      "samsong": 10,
+      "intol": 10,
+      "amazone": 8
     }
   },
   {
@@ -132,8 +150,10 @@
     "name": "Santiago",
     "region": "amerique-latine",
     "stock": {
-      "oracul": 15,
-      "spotifaille": 15
+      "oracul": 5,
+      "xiaomy": 8,
+      "nvidio": 8,
+      "tsmb": 5
     }
   },
   {
@@ -147,8 +167,10 @@
     "name": "Londres",
     "region": "europe",
     "stock": {
-      "amb": 15,
-      "intol": 15
+      "amb": 12,
+      "sonyx": 5,
+      "appel": 5,
+      "netflox": 12
     }
   },
   {
@@ -157,8 +179,10 @@
     "name": "Dublin",
     "region": "europe",
     "stock": {
-      "samsong": 15,
-      "nvidio": 15
+      "samsong": 9,
+      "spotifaille": 12,
+      "macrosoft": 12,
+      "meto": 9
     }
   },
   {
@@ -173,8 +197,10 @@
     "name": "Paris",
     "region": "europe",
     "stock": {
-      "xiaomy": 15,
-      "appel": 15
+      "xiaomy": 7,
+      "intol": 9,
+      "gogol": 9,
+      "tesler": 7
     }
   },
   {
@@ -183,8 +209,10 @@
     "name": "Berlin",
     "region": "europe",
     "stock": {
-      "sonyx": 15,
-      "macrosoft": 15
+      "sonyx": 5,
+      "nvidio": 7,
+      "amazone": 7,
+      "oracul": 5
     }
   },
   {
@@ -193,8 +221,10 @@
     "name": "Stockholm",
     "region": "europe",
     "stock": {
-      "spotifaille": 15,
-      "gogol": 15
+      "spotifaille": 11,
+      "appel": 4,
+      "tsmb": 4,
+      "amb": 11
     }
   },
   {
@@ -208,8 +238,10 @@
     "name": "Séoul",
     "region": "asie-est",
     "stock": {
-      "intol": 15,
-      "amazone": 15
+      "intol": 8,
+      "macrosoft": 11,
+      "netflox": 11,
+      "samsong": 8
     }
   },
   {
@@ -218,8 +250,10 @@
     "name": "Tokyo",
     "region": "asie-est",
     "stock": {
-      "nvidio": 15,
-      "tsmb": 15
+      "nvidio": 6,
+      "gogol": 8,
+      "meto": 8,
+      "xiaomy": 6
     }
   },
   {
@@ -234,7 +268,9 @@
     "region": "asie-est",
     "stock": {
       "appel": 15,
-      "netflox": 15
+      "amazone": 6,
+      "tesler": 6,
+      "sonyx": 4
     }
   },
   {
@@ -249,8 +285,10 @@
     "name": "Taipei",
     "region": "asie-est",
     "stock": {
-      "macrosoft": 15,
-      "meto": 15
+      "macrosoft": 10,
+      "tsmb": 15,
+      "oracul": 4,
+      "spotifaille": 10
     }
   },
   {
@@ -259,8 +297,10 @@
     "name": "Hong Kong",
     "region": "asie-est",
     "stock": {
-      "gogol": 10,
-      "tesler": 15
+      "gogol": 8,
+      "netflox": 10,
+      "amb": 10,
+      "intol": 8
     }
   },
   {
@@ -274,8 +314,10 @@
     "name": "Bangalore",
     "region": "asie-sud",
     "stock": {
-      "amazone": 10,
-      "oracul": 15
+      "amazone": 5,
+      "meto": 8,
+      "samsong": 8,
+      "nvidio": 5
     }
   },
   {
@@ -284,8 +326,10 @@
     "name": "Singapour",
     "region": "asie-sud",
     "stock": {
-      "tsmb": 10,
-      "amb": 15
+      "tsmb": 12,
+      "tesler": 5,
+      "xiaomy": 5,
+      "appel": 12
     }
   },
   {
@@ -304,8 +348,10 @@
     "name": "Dubaï",
     "region": "asie-sud",
     "stock": {
-      "netflox": 10,
-      "samsong": 15
+      "netflox": 9,
+      "oracul": 15,
+      "sonyx": 15,
+      "macrosoft": 9
     }
   },
   {
@@ -314,8 +360,10 @@
     "name": "Tel Aviv",
     "region": "asie-sud",
     "stock": {
-      "meto": 10,
-      "xiaomy": 15
+      "meto": 7,
+      "amb": 9,
+      "spotifaille": 9,
+      "gogol": 7
     }
   },
   {
@@ -330,8 +378,10 @@
     "name": "Mumbai",
     "region": "asie-sud",
     "stock": {
-      "tesler": 10,
-      "sonyx": 15
+      "tesler": 5,
+      "samsong": 7,
+      "intol": 7,
+      "amazone": 5
     }
   },
   {
@@ -345,8 +395,10 @@
     "name": "Lagos",
     "region": "afrique-oceanie",
     "stock": {
-      "oracul": 10,
-      "spotifaille": 10
+      "oracul": 12,
+      "xiaomy": 5,
+      "nvidio": 5,
+      "tsmb": 11
     }
   },
   {
@@ -355,8 +407,10 @@
     "name": "Le Caire",
     "region": "afrique-oceanie",
     "stock": {
-      "amb": 10,
-      "intol": 10
+      "amb": 8,
+      "sonyx": 12,
+      "appel": 11,
+      "netflox": 8
     }
   },
   {
@@ -365,8 +419,10 @@
     "name": "Nairobi",
     "region": "afrique-oceanie",
     "stock": {
-      "samsong": 10,
-      "nvidio": 10
+      "samsong": 6,
+      "spotifaille": 8,
+      "macrosoft": 8,
+      "meto": 6
     }
   },
   {
@@ -381,8 +437,10 @@
     "name": "Le Cap",
     "region": "afrique-oceanie",
     "stock": {
-      "xiaomy": 10,
-      "appel": 10
+      "xiaomy": 4,
+      "intol": 6,
+      "gogol": 6,
+      "tesler": 4
     }
   },
   {
@@ -391,8 +449,10 @@
     "name": "Sydney",
     "region": "afrique-oceanie",
     "stock": {
-      "sonyx": 10,
-      "macrosoft": 10
+      "sonyx": 11,
+      "nvidio": 4,
+      "amazone": 4,
+      "oracul": 11
     }
   },
   {
@@ -406,8 +466,10 @@
     "name": "Hyderabad",
     "region": "hubs",
     "stock": {
-      "spotifaille": 25,
-      "gogol": 25
+      "spotifaille": 8,
+      "appel": 10,
+      "tsmb": 10,
+      "amb": 8
     }
   },
   {
@@ -416,8 +478,10 @@
     "name": "Abu Dhabi",
     "region": "hubs",
     "stock": {
-      "intol": 25,
-      "amazone": 25
+      "intol": 5,
+      "macrosoft": 8,
+      "netflox": 8,
+      "samsong": 5
     }
   },
   {
@@ -431,8 +495,10 @@
     "name": "Shanghai",
     "region": "hubs",
     "stock": {
-      "nvidio": 25,
-      "tsmb": 25
+      "nvidio": 15,
+      "gogol": 5,
+      "meto": 5,
+      "xiaomy": 15
     }
   },
   {
@@ -441,8 +507,10 @@
     "name": "Pékin",
     "region": "hubs",
     "stock": {
-      "appel": 25,
-      "netflox": 25
+      "appel": 9,
+      "amazone": 15,
+      "tesler": 15,
+      "sonyx": 10
     }
   },
   {
@@ -456,8 +524,10 @@
     "name": "Shenzhen",
     "region": "hubs",
     "stock": {
-      "macrosoft": 25,
-      "meto": 25
+      "macrosoft": 7,
+      "tsmb": 9,
+      "oracul": 10,
+      "spotifaille": 7
     }
   },
   {
@@ -471,8 +541,10 @@
     "name": "Hsinchu",
     "region": "hubs",
     "stock": {
-      "gogol": 20,
-      "tesler": 25
+      "gogol": 5,
+      "netflox": 7,
+      "amb": 7,
+      "intol": 5
     }
   },
   {
@@ -481,8 +553,10 @@
     "name": "Suwon",
     "region": "hubs",
     "stock": {
-      "amazone": 20,
-      "oracul": 25
+      "amazone": 12,
+      "meto": 5,
+      "samsong": 5,
+      "nvidio": 12
     }
   },
   {
@@ -497,8 +571,10 @@
     "name": "Kyoto",
     "region": "hubs",
     "stock": {
-      "tsmb": 20,
-      "amb": 25
+      "tsmb": 8,
+      "tesler": 12,
+      "xiaomy": 12,
+      "appel": 8
     }
   },
   {
@@ -512,8 +588,10 @@
     "name": "Helsinki",
     "region": "hubs",
     "stock": {
-      "netflox": 20,
-      "samsong": 25
+      "netflox": 6,
+      "oracul": 9,
+      "sonyx": 9,
+      "macrosoft": 6
     }
   },
   {
@@ -522,8 +600,10 @@
     "name": "Eindhoven",
     "region": "hubs",
     "stock": {
-      "meto": 20,
-      "xiaomy": 25
+      "meto": 4,
+      "amb": 6,
+      "spotifaille": 6,
+      "gogol": 4
     }
   },
   {
@@ -537,8 +617,10 @@
     "name": "Munich",
     "region": "hubs",
     "stock": {
-      "tesler": 20,
-      "sonyx": 25
+      "tesler": 11,
+      "samsong": 4,
+      "intol": 4,
+      "amazone": 11
     }
   },
   {
@@ -547,8 +629,10 @@
     "name": "Zurich",
     "region": "hubs",
     "stock": {
-      "oracul": 20,
-      "spotifaille": 20
+      "oracul": 8,
+      "xiaomy": 11,
+      "nvidio": 11,
+      "tsmb": 8
     }
   },
   {
@@ -562,8 +646,10 @@
     "name": "Cambridge",
     "region": "hubs",
     "stock": {
-      "amb": 20,
-      "intol": 20
+      "amb": 5,
+      "sonyx": 8,
+      "appel": 8,
+      "netflox": 5
     }
   },
   {
@@ -577,8 +663,10 @@
     "name": "Redmond",
     "region": "hubs",
     "stock": {
-      "samsong": 20,
-      "nvidio": 20
+      "samsong": 15,
+      "spotifaille": 5,
+      "macrosoft": 5,
+      "meto": 15
     }
   },
   {
@@ -597,8 +685,10 @@
     "name": "Palo Alto",
     "region": "hubs",
     "stock": {
-      "xiaomy": 20,
-      "appel": 20
+      "xiaomy": 10,
+      "intol": 15,
+      "gogol": 15,
+      "tesler": 10
     }
   },
   {
@@ -607,8 +697,10 @@
     "name": "Mountain View",
     "region": "hubs",
     "stock": {
-      "sonyx": 20,
-      "macrosoft": 20
+      "sonyx": 8,
+      "nvidio": 10,
+      "amazone": 10,
+      "oracul": 8
     }
   },
   {
@@ -623,8 +715,10 @@
     "name": "San José",
     "region": "hubs",
     "stock": {
-      "spotifaille": 15,
-      "gogol": 15
+      "spotifaille": 5,
+      "appel": 7,
+      "tsmb": 7,
+      "amb": 5
     }
   },
   {
@@ -643,8 +737,10 @@
     "name": "Cupertino",
     "region": "hubs",
     "stock": {
-      "intol": 15,
-      "amazone": 15
+      "intol": 12,
+      "macrosoft": 5,
+      "netflox": 5,
+      "samsong": 12
     }
   }
 ]
