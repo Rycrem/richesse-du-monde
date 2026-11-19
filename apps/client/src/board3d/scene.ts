@@ -6,7 +6,7 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { companyById, PLAYER_COLORS } from "../format";
 import { pawnDataUrl } from "../pawn";
-import { campus, emptyLot, skyscraper, tierOf } from "./buildings";
+import { campus, emptyLot, ownerGlow, skyscraper, tierOf } from "./buildings";
 
 // Outer ring: 4 corners + 11 cells per side; inner raised ring of hubs: 4 corners + 7 per side.
 const W = 1.1, CORNER = 1.6, N = 11;
@@ -301,7 +301,9 @@ function disposeTree(o: THREE.Object3D) {
 
 export interface BoardScene {
   update(game: GameState, looks: Look[]): void;
-  recenter(): void;
+  // green fill where the company can be bought, blue frame where it collects royalties
+  highlight(buy: number[], pay: number[]): void;
+  recenter(animate?: boolean): void;
   dispose(): void;
 }
 
@@ -364,6 +366,8 @@ export function createBoardScene(host: HTMLElement, events: BoardEvents = {}): B
   const side = mat("#d9cfb8", { roughness: 0.7 });
   const decos: THREE.Group[] = [];
   const cellGroups: THREE.Group[] = [];
+  const marks: { fill: THREE.Mesh; frame: THREE.Mesh }[] = [];
+  let marked = false;
   board.forEach((cell, i) => {
     const p = cellPose(i);
     const g = new THREE.Group();
@@ -387,6 +391,23 @@ export function createBoardScene(host: HTMLElement, events: BoardEvents = {}): B
     tile.position.y = 0.08;
     tile.receiveShadow = tile.castShadow = true;
     g.add(tile);
+    const fill = new THREE.Mesh(new THREE.PlaneGeometry(p.w - 0.1, p.d - 0.1), new THREE.MeshBasicMaterial({ color: "#00c853", transparent: true, opacity: 0, depthWrite: false }));
+    fill.rotation.x = -Math.PI / 2;
+    fill.position.y = 0.175;
+    fill.visible = false;
+    g.add(fill);
+    const outer = new THREE.Shape().setFromPoints([
+      new THREE.Vector2(-p.w / 2, -p.d / 2), new THREE.Vector2(p.w / 2, -p.d / 2), new THREE.Vector2(p.w / 2, p.d / 2), new THREE.Vector2(-p.w / 2, p.d / 2),
+    ]);
+    const iw = p.w / 2 - 0.09;
+    const id = p.d / 2 - 0.09;
+    outer.holes.push(new THREE.Path().setFromPoints([new THREE.Vector2(-iw, -id), new THREE.Vector2(-iw, id), new THREE.Vector2(iw, id), new THREE.Vector2(iw, -id)]));
+    const frame = new THREE.Mesh(new THREE.ShapeGeometry(outer), new THREE.MeshBasicMaterial({ color: "#3a86ff", transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide }));
+    frame.rotation.x = -Math.PI / 2;
+    frame.position.y = 0.18;
+    frame.visible = false;
+    g.add(frame);
+    marks.push({ fill, frame });
     const deco = new THREE.Group();
     deco.position.set(0, 0.16, -p.d * 0.2);
     g.add(deco);
@@ -470,6 +491,25 @@ export function createBoardScene(host: HTMLElement, events: BoardEvents = {}): B
     return Math.max(0, ...groups.values());
   }
 
+  // index of the player holding the most of a company, -1 when nobody or a tie
+  function topHolder(game: GameState, company: string) {
+    const held = game.players.map((p) => (p.bankrupt ? 0 : (p.holdings[company] ?? 0)));
+    const max = Math.max(...held);
+    return max > 0 && held.filter((h) => h === max).length === 1 ? held.indexOf(max) : -1;
+  }
+
+  function highlight(buy: number[], pay: number[]) {
+    marks.forEach((m, i) => {
+      m.fill.visible = buy.includes(i);
+      m.frame.visible = pay.includes(i);
+    });
+    const was = marked;
+    marked = buy.length + pay.length > 0;
+    // step back to the overview so every highlighted cell is in sight
+    if (marked && !was) recenter(true);
+    dirty = true;
+  }
+
   function texFor(look: Look, idx: number) {
     const key = `${idx}:${JSON.stringify(look)}`;
     let tex = pawnTex.get(key);
@@ -532,7 +572,8 @@ export function createBoardScene(host: HTMLElement, events: BoardEvents = {}): B
       const company = companyById.get(game.royalties[cell.id]!)!;
       const pct = biggestHolding(game, company.id);
       const hub = cell.region === "hubs";
-      const key = `${company.id}:${pct ? tierOf(pct) : -1}`;
+      const holder = topHolder(game, company.id);
+      const key = `${company.id}:${pct ? tierOf(pct) : -1}:${holder}`;
       if (built.get(i) === key) return;
       built.set(i, key);
       const deco = decos[i]!;
@@ -540,6 +581,7 @@ export function createBoardScene(host: HTMLElement, events: BoardEvents = {}): B
       const logo = logoTex(company.id);
       const b = !pct ? emptyLot(hub, company.color, logo) : hub ? campus(tierOf(pct), company.color, logo) : skyscraper(tierOf(pct), company.color, logo);
       const size = hub ? 0.9 : 0.8;
+      if (pct && holder >= 0) ownerGlow(b, PLAYER_COLORS[holder]!);
       deco.add(b);
       if (first) {
         old.forEach((o) => (disposeTree(o), deco.remove(o)));
@@ -609,14 +651,26 @@ export function createBoardScene(host: HTMLElement, events: BoardEvents = {}): B
     dirty = true;
   }
 
-  function recenter() {
+  function recenter(animate = false) {
     follow = false;
     const aspect = host.clientWidth / Math.max(1, host.clientHeight);
     const k = Math.max(0.9, 1.2 / aspect);
-    controls.target.set(0, 0, 0.9);
-    camera.position.set(0, 21 * k, 16.5 * k);
-    controls.update();
-    dirty = true;
+    const target = new THREE.Vector3(0, 0, 0.9);
+    const pos = new THREE.Vector3(0, 21 * k, 16.5 * k);
+    if (!animate) {
+      controls.target.copy(target);
+      camera.position.copy(pos);
+      controls.update();
+      dirty = true;
+      return;
+    }
+    const t0 = controls.target.clone();
+    const p0 = camera.position.clone();
+    tween(0.8, (x) => {
+      const e = easeOut(x);
+      controls.target.lerpVectors(t0, target, e);
+      camera.position.lerpVectors(p0, pos, e);
+    });
   }
 
   const resize = () => {
@@ -651,6 +705,14 @@ export function createBoardScene(host: HTMLElement, events: BoardEvents = {}): B
         tw.step(k);
         if (k < 1) tweens.push(tw);
         else tw.done?.();
+      }
+      dirty = true;
+    }
+    if (marked) {
+      const o = 0.55 + 0.2 * Math.sin(t * 4);
+      for (const m of marks) {
+        (m.fill.material as THREE.MeshBasicMaterial).opacity = o;
+        (m.frame.material as THREE.MeshBasicMaterial).opacity = 0.4 + o;
       }
       dirty = true;
     }
@@ -707,6 +769,7 @@ export function createBoardScene(host: HTMLElement, events: BoardEvents = {}): B
 
   return {
     update,
+    highlight,
     recenter,
     dispose() {
       cancelAnimationFrame(frame);

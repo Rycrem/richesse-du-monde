@@ -265,3 +265,22 @@ button.link:disabled { opacity: 0.5; cursor: default; }
 .options-panel h3 { margin: 0; }
 .options-panel label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
 .options-panel label.row { flex-direction: row; align-items: center; }
+.card-button.selected { transform: translateY(-6px) scale(1.04); filter: drop-shadow(0 0 8px #ffd166); }
+.auction-pct { display: flex; flex-direction: column; gap: 10px; background: #24324c; border-radius: 14px; padding: 12px 14px; animation: rise 0.3s both; }
+.auction-pct label { display: flex; flex-direction: column; gap: 6px; }
+.auction-card { width: 380px; }
+.auction-card .body { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 22px 24px 24px; }
+.auction-card .lot-card { animation: pop 0.5s 0.1s both; }
+.auction-card .text { margin: 0; }
+.parties { display: flex; align-items: center; justify-content: center; gap: 16px; width: 100%; animation: fade-in 0.4s 0.35s both; }
+.party { display: flex; flex-direction: column; align-items: center; gap: 4px; background: #e9dfc6; border-radius: 12px; padding: 8px 14px; min-width: 110px; }
+.party small { color: #6b7a90; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+.parties .arrow { font-size: 22px; color: #6b7a90; }
+.person { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; }
+.auction-card .amount { margin-top: 0; }
+.holder-value { color: #9aa7c2; font-size: 12px; min-width: 76px; text-align: right; }
+.legend { display: flex; gap: 14px; font-size: 12px; color: #fff; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }
+.legend i.buy { background: #00c853; }
+.legend i.pay { border: 3px solid #3a86ff; }

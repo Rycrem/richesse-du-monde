@@ -33,8 +33,11 @@ function useRemaining(a: Auction | null, online: boolean, onExpire: () => void) 
 export function AuctionScreen({ game }: { game: GameState }) {
   const { dispatch, you, online } = useStore();
   const [shown, setShown] = useState<{ a: Auction; leaving: boolean } | null>(null);
+  const [pick, setPick] = useState<{ ownerId: string; company: string; max: number } | null>(null);
+  const [pct, setPct] = useState(1);
   useEffect(() => {
     if (game.auction) setShown({ a: game.auction, leaving: false });
+    if (!game.auction?.company) setPick(null);
     else if (shown && !shown.leaving) {
       setShown({ ...shown, leaving: true });
       const t = setTimeout(() => setShown(null), LEAVE_MS);
@@ -75,16 +78,32 @@ export function AuctionScreen({ game }: { game: GameState }) {
                     <Who id={p.id} />
                     {p.atouts > 0 && <small className="muted"> (a un Atout)</small>}
                     <div className="owner-cards">
-                      {Object.entries(p.holdings).map(([c, pct]) => (
-                        <button key={c} className="card-button" onClick={() => dispatch({ type: "AUCTION_CHOOSE", playerId: a.chooserId, ownerId: p.id, company: c })}>
-                          <StockCard company={c} percent={pct} small />
-                        </button>
-                      ))}
+                      {Object.entries(p.holdings).map(([c, held]) => {
+                        const max = Math.min(held, a.percentToSell);
+                        const selected = pick?.ownerId === p.id && pick.company === c;
+                        return (
+                          <button key={c} className={`card-button ${selected ? "selected" : ""}`} onClick={() => (setPick({ ownerId: p.id, company: c, max }), setPct(max))}>
+                            <StockCard company={c} percent={held} small />
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 ))}
             </div>
-          ) : (
+          ) : null}
+          {can(a.chooserId) && pick && (
+            <div className="auction-pct" key={`${pick.ownerId}:${pick.company}`}>
+              <label>
+                Pourcentage mis aux enchères : <strong>{pct} %</strong> (max {pick.max} %)
+                <input type="range" min={1} max={pick.max} value={pct} onChange={(e) => setPct(Number(e.target.value))} />
+              </label>
+              <button className="primary" onClick={() => dispatch({ type: "AUCTION_CHOOSE", playerId: a.chooserId, ownerId: pick.ownerId, company: pick.company, percent: pct })}>
+                Mettre {pct} % aux enchères
+              </button>
+            </div>
+          )}
+          {!can(a.chooserId) && (
             <p className="muted">Choix en cours...</p>
           )}
         </div>

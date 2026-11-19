@@ -98,11 +98,12 @@ En début de partie, chaque joueur lance 2 dés : le plus haut total commence, p
 - **Plus on détient de %, plus on est payé** : montant = tarif de l'entreprise x % détenu par le plus gros détenteur.
   - Exemple : tarif 0,1 M par %, détenteur à 40 % : le visiteur paie 4 M.
 - Bonus monopole : à **100 %**, le montant est doublé.
+- Égalité : un joueur (ou son alliance) qui détient autant que le plus gros détenteur ne paie rien en tombant sur la case.
 - Le paiement est automatique.
 
 ## Enchères
 
-- Le joueur qui tombe sur Enchères choisit **un adversaire et une de ses entreprises** : jusqu'à **dé x 5 %** de ces parts partent aux enchères (ex. dé à 3 : 15 %). Si l'adversaire en a moins, tout ce qu'il a de cette entreprise part. Si aucun adversaire n'a de parts, il ne se passe rien.
+- Le joueur qui tombe sur Enchères choisit **un adversaire et une de ses entreprises** : il choisit combien de % partent aux enchères, **jusqu'à dé x 5 %** de ces parts (ex. dé à 3 : de 1 à 15 %). Si l'adversaire en a moins, tout ce qu'il a de cette entreprise part. Si aucun adversaire n'a de parts, il ne se passe rien.
 - Un écran spécial s'ouvre pour tout le monde. Mise à prix : **75 % du prix d'achat**, surenchère minimum fixe.
 - Tout le monde sauf le vendeur peut enchérir pendant **30 secondes**. La meilleure offre gagne et l'argent va au vendeur.
 - Aucune offre : la banque rachète à 75 % du prix, et les % retournent dans le stock des villes.

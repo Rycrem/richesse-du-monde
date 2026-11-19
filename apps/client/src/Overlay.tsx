@@ -167,28 +167,44 @@ function Card({ e, nameOf, colorOf }: { e: GameEvent; nameOf: (id: string) => st
     );
   }
   if (e.kind === "win") return null;
-  if (e.kind === "auction")
+  if (e.kind === "auction") {
+    const name = companyById.get(e.company)!.name;
+    const Person = ({ id }: { id: string }) => (
+      <span className="person">
+        <span className="dot" style={{ background: colorOf(id) }} />
+        {nameOf(id)}
+      </span>
+    );
     return (
-      <div className="event-card">
+      <div className="event-card auction-card">
         <div className="head" style={{ background: "#e94f6f" }}>
           <span className="icon">⚖</span>
           ENCHÈRES
         </div>
         <div className="body">
-          <div className="auction-result">
-            <StockCard company={e.company} percent={e.percent} small />
-            <div className="text">
-              {e.cancelled
-                ? `${nameOf(e.sellerId)} utilise un Atout : l'enchère est annulée.`
-                : e.winnerId
-                  ? `${nameOf(e.winnerId)} remporte ${e.percent} % de ${companyById.get(e.company)!.name}, payés à ${nameOf(e.sellerId)}.`
-                  : `Aucune offre : la banque rachète ${e.percent} % de ${companyById.get(e.company)!.name} à ${nameOf(e.sellerId)}.`}
+          <div className="lot-card">
+            <StockCard company={e.company} percent={e.percent} />
+          </div>
+          <div className="text">
+            {e.cancelled ? "Enchère annulée avec un Atout" : e.winnerId ? `${e.percent} % de ${name} adjugés` : `Aucune offre pour ${e.percent} % de ${name}`}
+          </div>
+          <div className="parties">
+            <div className="party">
+              <small>Vendeur</small>
+              <Person id={e.sellerId} />
+            </div>
+            <div className="arrow">→</div>
+            <div className="party">
+              <small>{e.cancelled ? "Garde ses parts" : "Acheteur"}</small>
+              {e.cancelled ? <Person id={e.sellerId} /> : e.winnerId ? <Person id={e.winnerId} /> : <span className="person">La banque</span>}
             </div>
           </div>
           {!e.cancelled && <div className="amount plus">{money(e.price)}</div>}
+          {!e.cancelled && <div className="sub">payés à {nameOf(e.sellerId)}</div>}
         </div>
       </div>
     );
+  }
   const h = HEAD[e.kind]!;
   return (
     <div className="event-card">
