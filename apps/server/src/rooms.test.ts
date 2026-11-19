@@ -24,11 +24,12 @@ describe("rooms", () => {
     expect(rooms.view(rooms.get(host.code)!, "p1").players.map((p) => p.name)).toEqual(["Alice", "Bob"]);
   });
 
-  it("the host picks the starting cash among the allowed amounts", () => {
+  it("the host picks the starting cash, a preset or any amount within bounds", () => {
     const { rooms, host } = setup();
-    expect(rooms.start(host.code, host.playerId, "classique", 1234).ok).toBe(false);
-    expect(rooms.start(host.code, host.playerId, "classique", 20000).ok).toBe(true);
-    expect(rooms.get(host.code)!.game!.players.every((p) => p.cash === 20000)).toBe(true);
+    expect(rooms.start(host.code, host.playerId, "classique", 500).ok).toBe(false);
+    expect(rooms.start(host.code, host.playerId, "classique", 1234.5).ok).toBe(false);
+    expect(rooms.start(host.code, host.playerId, "classique", 42000).ok).toBe(true);
+    expect(rooms.get(host.code)!.game!.players.every((p) => p.cash === 42000)).toBe(true);
   });
 
   it("only the host starts, and nobody joins after the start", () => {

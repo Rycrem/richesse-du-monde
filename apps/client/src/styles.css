@@ -361,7 +361,8 @@ button.link:disabled { opacity: 0.5; cursor: default; }
 }
 .install-btn { width: 100%; margin-bottom: 12px; border-color: var(--accent); color: var(--accent); font-weight: 700; animation: rise 0.3s both; }
 .install-hint { font-size: 13px; color: var(--muted); background: var(--card); border-radius: 10px; padding: 8px 12px; margin: 0 0 12px; }
-.cash-pick { justify-content: space-between; } .cash-pick select { width: auto; }
+.cash-pick { justify-content: space-between; flex-wrap: wrap; gap: 8px; } .cash-pick select { width: auto; }
+.cash-inputs { display: flex; gap: 8px; align-items: center; } .cash-inputs input { width: 110px; }
 .market { gap: 8px; display: flex; flex-direction: column; }
 .market h3 { margin: 0; }
 .market .pot { color: #e8c45a; font-weight: 800; font-size: 13px; }

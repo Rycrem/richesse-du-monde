@@ -1,6 +1,7 @@
-import { config, STARTING_CASH_OPTIONS, type GameMode } from "@stonks/engine";
+import { config, isStartingCash, type GameMode } from "@stonks/engine";
+import { CashPick } from "./CashPick";
 import { useState } from "react";
-import { money, PLAYER_COLORS } from "./format";
+import { PLAYER_COLORS } from "./format";
 import { useStore } from "./store";
 
 export function Setup({ solo = false }: { solo?: boolean }) {
@@ -41,15 +42,9 @@ export function Setup({ solo = false }: { solo?: boolean }) {
       </label>
       <label className="row cash-pick">
         Argent de départ
-        <select value={cash} onChange={(e) => setCash(Number(e.target.value))}>
-          {STARTING_CASH_OPTIONS.map((v) => (
-            <option key={v} value={v}>
-              {money(v)}
-            </option>
-          ))}
-        </select>
+        <CashPick value={cash} onChange={setCash} />
       </label>
-      <button className="primary" disabled={names.some((n) => !n.trim())} onClick={() => startLocal(names.map((n) => n.trim()), mode, names.map((_, i) => solo && i > 0), cash)}>
+      <button className="primary" disabled={names.some((n) => !n.trim()) || !isStartingCash(cash)} onClick={() => startLocal(names.map((n) => n.trim()), mode, names.map((_, i) => solo && i > 0), cash)}>
         Lancer la partie
       </button>
     </div>

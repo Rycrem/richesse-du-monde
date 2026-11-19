@@ -1,7 +1,8 @@
-import { config, STARTING_CASH_OPTIONS, type GameMode } from "@stonks/engine";
+import { config, isStartingCash, type GameMode } from "@stonks/engine";
+import { CashPick } from "./CashPick";
 import type { RoomView } from "@stonks/shared";
 import { useState } from "react";
-import { money, PLAYER_COLORS } from "./format";
+import { PLAYER_COLORS } from "./format";
 import { Garage } from "./Garage";
 import { pawnDataUrl } from "./pawn";
 import { useStore } from "./store";
@@ -59,15 +60,9 @@ export function Lobby({ room }: { room: RoomView }) {
             </label>
             <label className="row cash-pick">
               Argent de départ
-              <select value={cash} onChange={(e) => setCash(Number(e.target.value))}>
-                {STARTING_CASH_OPTIONS.map((v) => (
-                  <option key={v} value={v}>
-                    {money(v)}
-                  </option>
-                ))}
-              </select>
+              <CashPick value={cash} onChange={setCash} />
             </label>
-            <button className="primary" disabled={room.players.length < config.minPlayers} onClick={() => startOnline(mode, cash)}>
+            <button className="primary" disabled={room.players.length < config.minPlayers || !isStartingCash(cash)} onClick={() => startOnline(mode, cash)}>
               Lancer la partie
             </button>
           </>
