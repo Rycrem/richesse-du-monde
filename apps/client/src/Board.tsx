@@ -46,6 +46,9 @@ export function Board({ game, looks }: { game: GameState; looks: Look[] }) {
         onDoubleClick={() => scene.current?.recenter(true)}
         title="Clic sur une case pour les détails, glisser pour tourner, clic droit pour déplacer, molette pour zoomer, double-clic pour recentrer"
       />
+      <button className="recenter-btn" aria-label="Recentrer le plateau" onClick={() => scene.current?.recenter(true)}>
+        ⌖
+      </button>
       <HoverTip hover={hover} game={game} />
     </>
   );

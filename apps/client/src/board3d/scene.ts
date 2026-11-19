@@ -655,8 +655,10 @@ export function createBoardScene(host: HTMLElement, events: BoardEvents = {}): B
     follow = false;
     const aspect = host.clientWidth / Math.max(1, host.clientHeight);
     const k = Math.max(0.9, 1.2 / aspect);
-    const target = new THREE.Vector3(0, 0, 0.9);
-    const pos = new THREE.Vector3(0, 21 * k, 16.5 * k);
+    // phones in portrait: a steeper, closer view so the board fills the narrow screen
+    const portrait = aspect < 1;
+    const target = new THREE.Vector3(0, 0, portrait ? 0.4 : 0.9);
+    const pos = portrait ? new THREE.Vector3(0, 19 * k, 7 * k) : new THREE.Vector3(0, 21 * k, 16.5 * k);
     if (!animate) {
       controls.target.copy(target);
       camera.position.copy(pos);
@@ -725,10 +727,11 @@ export function createBoardScene(host: HTMLElement, events: BoardEvents = {}): B
       if (follow) {
         focus.copy(me.sprite.position).setY(0.2);
         const offset = camera.position.clone().sub(controls.target);
-        const want = THREE.MathUtils.lerp(offset.length(), 17, 0.04);
+        const dist = host.clientWidth < host.clientHeight ? 26 : 17;
+        const want = THREE.MathUtils.lerp(offset.length(), dist, 0.04);
         controls.target.lerp(focus, 0.06);
         camera.position.copy(controls.target).add(offset.setLength(want));
-        if (controls.target.distanceTo(focus) < 0.02 && !me.walking && Math.abs(offset.length() - 17) < 0.2) follow = false;
+        if (controls.target.distanceTo(focus) < 0.02 && !me.walking && Math.abs(offset.length() - dist) < 0.2) follow = false;
       }
     }
     if (controls.update() || dirty) {

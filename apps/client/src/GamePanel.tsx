@@ -12,6 +12,8 @@ export function GamePanel({ game }: { game: GameState }) {
   const cell = board[me.position]!;
   const colorOf = (id: string) => PLAYER_COLORS[game.players.findIndex((p) => p.id === id)]!;
   const nameOf = (id: string) => game.players.find((p) => p.id === id)!.name;
+  // phones: the panel is a bottom sheet that can be pulled up
+  const [expanded, setExpanded] = useState(false);
 
   if (game.phase === "gameOver") {
     return (
@@ -40,7 +42,10 @@ export function GamePanel({ game }: { game: GameState }) {
   }
 
   return (
-    <aside className="panel">
+    <aside className={`panel ${expanded ? "expanded" : ""}`}>
+      <button className="sheet-handle" aria-label={expanded ? "Réduire le panneau" : "Agrandir le panneau"} onClick={() => setExpanded(!expanded)}>
+        <i />
+      </button>
       <div className="turn" style={{ borderColor: colorOf(me.id) }}>
         <span className="dot" style={{ background: colorOf(me.id) }} />
         Au tour de <strong>{me.name}</strong>
