@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { board, companies, config, markets } from "./data";
-import { applyAction, buyableStock, buyCost, createGame, rollTurnOrder, royaltyQuote, type Action } from "./game";
+import { ATOUTS, applyAction, buyableStock, buyCost, createGame, rollTurnOrder, royaltyQuote, type Action } from "./game";
 import { rollDie } from "./rng";
 import type { GameState } from "./state";
 
@@ -129,6 +129,41 @@ describe("buying", () => {
   it("an Atout can be bought even with two players left", () => {
     const g = at(createGame(P.slice(0, 2), 1), "atout-1");
     expect(g.canBuyAtout).toBe(true);
+    expect(ATOUTS.map((a) => a.id)).toContain(g.atoutCard);
+    const card = g.atoutCard!;
+    const g2 = ok(g, { type: "BUY_ATOUT", playerId: "a" });
+    expect(g2.players[0]!.atouts).toEqual([card]);
+    expect(g2.atoutCard).toBeNull();
+  });
+
+  it("Exonération waives the next royalty, Dividende doubles the next one received", () => {
+    let g = createGame(P, 1);
+    g.royalties.berlin = "intol";
+    g.players[1]!.holdings = { intol: 30 };
+    g.players[0]!.atouts = ["exoneration"];
+    g.players[1]!.atouts = ["dividende"];
+    const [a0, b0] = [g.players[0]!.cash, g.players[1]!.cash];
+    g = at(g, "berlin");
+    expect(g.players[0]!.cash).toBe(a0);
+    expect(g.players[0]!.atouts).toEqual([]);
+    expect(g.players[1]!.atouts).toEqual(["dividende"]);
+    let h = createGame(P, 1);
+    h.royalties.berlin = "intol";
+    h.players[1]!.holdings = { intol: 30 };
+    h.players[1]!.atouts = ["dividende"];
+    h = at(h, "berlin");
+    const paid = h.events.find((e) => e.kind === "royalty")!.amount;
+    expect(h.players[1]!.cash).toBe(b0 + paid * 2);
+    expect(h.players[1]!.atouts).toEqual([]);
+  });
+
+  it("Rachat express allows 15 % more this turn", () => {
+    let g = at(createGame(P, 1), "atout-1");
+    g.players[0]!.atouts = ["rachat"];
+    expect(err(g, { type: "USE_ATOUT", playerId: "b", atout: "rachat" })).toMatch(/inutilisable/);
+    g = ok(g, { type: "USE_ATOUT", playerId: "a", atout: "rachat" });
+    expect(g.boughtThisTurn).toBe(-15);
+    expect(g.players[0]!.atouts).toEqual([]);
   });
 
   it("world choice requires a completed lap", () => {
@@ -429,14 +464,14 @@ describe("auctions", () => {
 
   it("the targeted owner can cancel it with an Atout", () => {
     let g = createGame(P, 1);
-    g.players[1]!.atouts = 1;
+    g.players[1]!.atouts = ["bouclier"];
     g.players[1]!.holdings = { appel: 50 };
     g = at(g, "encheres-1");
     g = ok(g, { type: "AUCTION_CHOOSE", playerId: "a", ownerId: "b", company: "appel" });
     g = ok(g, { type: "USE_ATOUT", playerId: "b" });
     expect(g.phase).toBe("act");
     expect(g.players[1]!.holdings.appel).toBe(50);
-    expect(g.players[1]!.atouts).toBe(0);
+    expect(g.players[1]!.atouts).toEqual([]);
   });
 
   it("the lander may put fewer percent up for auction, never more than the dice allow", () => {

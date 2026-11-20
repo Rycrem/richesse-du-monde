@@ -13,7 +13,7 @@ export type Action =
   | { type: "OFFER_TIMEOUT" }
   | { type: "AUCTION_CHOOSE"; playerId: PlayerId; ownerId: PlayerId; company: CompanyId; percent?: number }
   | { type: "SETTLE_DEBT"; playerId: PlayerId }
-  | { type: "USE_ATOUT"; playerId: PlayerId }
+  | { type: "USE_ATOUT"; playerId: PlayerId; atout?: string }
   | { type: "BID"; playerId: PlayerId; amount: number }
   | { type: "AUCTION_CLOSE" }
   | { type: "END_TURN"; playerId: PlayerId }
@@ -32,6 +32,24 @@ export type Result = { ok: true; state: GameState } | { ok: false; error: string
 
 const companyById = new Map(companies.map((c) => [c.id, c]));
 const cityStockOrigin = board.flatMap((c) => (c.type === "city" ? [c] : []));
+
+// Atout cards: one is drawn at random on each Atout cell, the player may buy it
+export const ATOUTS = [
+  { id: "bouclier", name: "Bouclier anti-OPA", text: "Annule la prochaine enchère forcée sur tes actions." },
+  { id: "exoneration", name: "Exonération", text: "Ta prochaine redevance à payer est offerte." },
+  { id: "dividende", name: "Dividende exceptionnel", text: "La prochaine redevance que tu touches est doublée par la banque." },
+  { id: "rachat", name: "Rachat express", text: "À utiliser pendant ton tour : +15 % d'achat autorisé ce tour-ci." },
+] as const;
+export const atoutById = new Map<string, (typeof ATOUTS)[number]>(ATOUTS.map((a) => [a.id, a]));
+const RACHAT_BONUS = 15;
+
+// Removes one card of that kind, returns whether the player had it
+function spendAtout(p: Player, id: string): boolean {
+  const i = p.atouts.indexOf(id);
+  if (i < 0) return false;
+  p.atouts.splice(i, 1);
+  return true;
+}
 
 // Starting cash the host can pick before the game
 export const STARTING_CASH_OPTIONS = [15000, 20000, 25000, 30000, 40000, 50000];
@@ -57,7 +75,7 @@ export function createGame(players: { id: PlayerId; name: string }[], seed: numb
     market,
     pot: 0,
     mode,
-    players: players.map((p) => ({ ...p, cash: startingCash, position: 0, holdings: {}, atouts: 0, laps: 0, bankrupt: false })),
+    players: players.map((p) => ({ ...p, cash: startingCash, position: 0, holdings: {}, atouts: [], laps: 0, bankrupt: false })),
     current: 0,
     phase: "roll",
     stocks: Object.fromEntries(cityStockOrigin.map((c) => [c.id, { ...c.stock }])),
@@ -67,6 +85,7 @@ export function createGame(players: { id: PlayerId; name: string }[], seed: numb
     buyScope: null,
     boughtThisTurn: 0,
     canBuyAtout: false,
+    atoutCard: null,
     auction: null,
     offer: null,
     alliances: [],
@@ -307,6 +326,11 @@ function payRoyalty(state: GameState, payer: Player, cellId: string): void {
   // a payer who holds as much as the biggest holder (alone or with allies) owes nothing
   const payerMembers = activePlayers(state).filter((p) => (allianceOf(state, p.id)?.id ?? p.id) === payerGroup);
   if (payerMembers.reduce((a, p) => a + (p.holdings[company] ?? 0), 0) === max) return;
+  if (winners.some((members) => (allianceOf(state, members[0]!.id)?.id ?? members[0]!.id) !== payerGroup) && spendAtout(payer, "exoneration")) {
+    state.log.push(`${payer.name} utilise Exonération : pas de redevance ${name}`);
+    emit(state, { kind: "atout", playerId: payer.id, text: `Exonération : la redevance ${name} est offerte.`, amount: 0, before: payer.cash, after: payer.cash });
+    return;
+  }
   for (const members of winners) {
     if ((allianceOf(state, members[0]!.id)?.id ?? members[0]!.id) === payerGroup) continue;
     // a lender landing on the borrower's city lowers what is still owed instead of paying
@@ -323,6 +347,7 @@ function payRoyalty(state: GameState, payer: Player, cellId: string): void {
       }
       // the bank covers a bankrupt player's debt, so holders are always paid in full
       earn(state, m, part);
+      if (part > 0 && spendAtout(m, "dividende")) money(state, m, "atout", `Dividende exceptionnel : la banque double ta redevance ${name}.`, part);
     }
     state.loans = state.loans.filter((l) => loanLeft(l) > 0);
     charge(state, payer, owed);
@@ -358,9 +383,13 @@ function landOn(state: GameState, p: Player, pips: number): void {
       emit(state, { kind: "levee", playerId: p.id, text: `Vos investisseurs suivent : ${pips} aux dés × ${config.leveeFundsPerPip} k$`, amount: pips * config.leveeFundsPerPip, dice: state.lastRoll!, before, after: p.cash });
       break;
     }
-    case "atout":
+    case "atout": {
+      const [r, next] = nextRandom(state.seed);
+      state.seed = next;
       state.canBuyAtout = true;
+      state.atoutCard = ATOUTS[Math.floor(r * ATOUTS.length)]!.id;
       break;
+    }
     case "actu": {
       const id = state.actuDeck.shift()!;
       state.actuDeck.push(id);
@@ -458,6 +487,7 @@ function nextTurn(state: GameState): void {
   state.buyScope = null;
   state.boughtThisTurn = 0;
   state.canBuyAtout = false;
+  state.atoutCard = null;
   state.offer = null;
   state.turnBuys = {};
   state.turnDeals = [];
@@ -533,9 +563,11 @@ export function applyAction(prev: GameState, action: Action): Result {
     case "BUY_ATOUT": {
       if (!isCurrent || state.phase !== "act" || !state.canBuyAtout) return { ok: false, error: "Achat d'Atout impossible" };
       if (cur.cash < config.atoutPrice) return { ok: false, error: "Pas assez d'argent" };
-      money(state, cur, "atout", "Atout acheté : il annule la prochaine enchère forcée sur vos actions.", -config.atoutPrice);
-      cur.atouts += 1;
+      const card = atoutById.get(state.atoutCard ?? "bouclier")!;
+      money(state, cur, "atout", `Atout acheté : ${card.name}. ${card.text}`, -config.atoutPrice);
+      cur.atouts.push(card.id);
       state.canBuyAtout = false;
+      state.atoutCard = null;
       return { ok: true, state };
     }
 
@@ -595,11 +627,16 @@ export function applyAction(prev: GameState, action: Action): Result {
     }
 
     case "USE_ATOUT": {
+      if ((action.atout ?? "bouclier") === "rachat") {
+        if (!isCurrent || state.phase !== "act" || !spendAtout(cur, "rachat")) return { ok: false, error: "Atout inutilisable maintenant" };
+        state.boughtThisTurn -= RACHAT_BONUS;
+        state.log.push(`${cur.name} utilise Rachat express : +${RACHAT_BONUS} % d'achat ce tour`);
+        return { ok: true, state };
+      }
       const a = state.auction;
       const seller = a?.sellerId ? player(state, a.sellerId) : undefined;
       if (state.phase !== "auction" || !a || !seller || seller.id !== action.playerId) return { ok: false, error: "Atout inutilisable maintenant" };
-      if (seller.atouts < 1) return { ok: false, error: "Aucun Atout" };
-      seller.atouts -= 1;
+      if (!spendAtout(seller, "bouclier")) return { ok: false, error: "Aucun Bouclier anti-OPA" };
       emit(state, { kind: "auction", playerId: a.chooserId, sellerId: seller.id, company: a.company!, percent: a.percent, price: 0, winnerId: null, cancelled: true });
       state.auction = null;
       state.phase = "act";

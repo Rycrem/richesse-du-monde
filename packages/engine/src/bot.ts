@@ -39,7 +39,7 @@ export function botAction(g: GameState, id: PlayerId): Action | null {
       const biggest = Object.entries(target.holdings).sort((x, y) => y[1] - x[1])[0]![0];
       return { type: "AUCTION_CHOOSE", playerId: id, ownerId: target.id, company: biggest };
     }
-    if (a.sellerId === id) return me.atouts > 0 ? { type: "USE_ATOUT", playerId: id } : null;
+    if (a.sellerId === id) return me.atouts.includes("bouclier") ? { type: "USE_ATOUT", playerId: id } : null;
     if (a.highestBidderId === id) return null;
     const next = a.highestBidderId ? a.highestBid + config.minBidIncrement : a.startPrice;
     const max = a.percent * pricePer(a.company);
@@ -64,6 +64,6 @@ export function botAction(g: GameState, id: PlayerId): Action | null {
     cash -= buyCost(company, held, pct);
   }
   if (Object.keys(purchases).length) return { type: "BUY", playerId: id, purchases };
-  if (g.canBuyAtout && me.atouts === 0 && me.cash > config.atoutPrice * 3) return { type: "BUY_ATOUT", playerId: id };
+  if (g.canBuyAtout && me.atouts.length === 0 && me.cash > config.atoutPrice * 3) return { type: "BUY_ATOUT", playerId: id };
   return { type: "END_TURN", playerId: id };
 }

@@ -1,4 +1,4 @@
-import { config, currentPlayer, type GameState } from "@stonks/engine";
+import { atoutById, config, currentPlayer, type GameState } from "@stonks/engine";
 import { useEffect, useState } from "react";
 import { money } from "./format";
 import { useStore } from "./store";
@@ -18,6 +18,7 @@ export function AtoutOffer({ game }: { game: GameState }) {
   }, [open, turn]);
   if (!open || shown !== turn || closed === turn) return null;
   const short = me.cash < config.atoutPrice;
+  const card = atoutById.get(game.atoutCard ?? "bouclier")!;
   return (
     <div className="atout-offer">
       <div className="event-card">
@@ -26,8 +27,13 @@ export function AtoutOffer({ game }: { game: GameState }) {
           ATOUT
         </div>
         <div className="body">
-          <div className="text">Acheter un Atout pour {money(config.atoutPrice)} ?</div>
-          <div className="sub">Il annule la prochaine enchère forcée sur tes actions.{me.atouts > 0 && ` Tu en as déjà ${me.atouts}.`}</div>
+          <div className="text">
+            {card.name} : l'acheter pour {money(config.atoutPrice)} ?
+          </div>
+          <div className="sub">
+            {card.text}
+            {me.atouts.length > 0 && ` Tu as déjà ${me.atouts.map((a) => atoutById.get(a)!.name).join(", ")}.`}
+          </div>
           {short && <div className="sub minus">Pas assez d'argent ({money(me.cash)})</div>}
           <div className="atout-actions">
             <button onClick={() => setClosed(turn)}>Non merci</button>

@@ -76,7 +76,7 @@ export function AuctionScreen({ game }: { game: GameState }) {
                 .map((p, i) => (
                   <div key={p.id} className="owner" style={{ animationDelay: `${i * 90}ms` }}>
                     <Who id={p.id} />
-                    {p.atouts > 0 && <small className="muted"> (a un Atout)</small>}
+                    {p.atouts.includes("bouclier") && <small className="muted"> (a un Bouclier anti-OPA)</small>}
                     <div className="owner-cards">
                       {Object.entries(p.holdings).map(([c, held]) => {
                         const max = Math.min(held, a.percentToSell);
@@ -152,8 +152,8 @@ export function AuctionScreen({ game }: { game: GameState }) {
                   </div>
                 );
               })}
-            {can(a.sellerId!) && (game.players.find((p) => p.id === a.sellerId)?.atouts ?? 0) > 0 && (
-              <button onClick={() => dispatch({ type: "USE_ATOUT", playerId: a.sellerId! })}>Utiliser un Atout pour annuler</button>
+            {can(a.sellerId!) && game.players.find((p) => p.id === a.sellerId)?.atouts.includes("bouclier") && (
+              <button onClick={() => dispatch({ type: "USE_ATOUT", playerId: a.sellerId! })}>Utiliser le Bouclier anti-OPA pour annuler</button>
             )}
           </div>
         </div>

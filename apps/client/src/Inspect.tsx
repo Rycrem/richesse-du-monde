@@ -1,13 +1,13 @@
-import { allianceOf, board, config, markets, regions, royaltyQuote, trendOf, type Cell, type GameState } from "@stonks/engine";
+import { allianceOf, ATOUTS, board, config, markets, regions, royaltyQuote, trendOf, type Cell, type GameState } from "@stonks/engine";
 import { useEffect, useState } from "react";
 import { companyById, money, PLAYER_COLORS } from "./format";
 import { useStore } from "./store";
 
 const SPECIAL: Record<string, string> = {
   depart: `Chaque passage rapporte ${config.lapBonus.toLocaleString("fr-FR")} k$.`,
-  mondial: "Achète jusqu'à 30 % dans les entreprises que tu possèdes déjà, partout dans le monde. Valable après un premier tour complet.",
+  mondial: "Achète jusqu'à 30 % dans n'importe quelle entreprise, partout dans le monde. Valable après un premier tour complet.",
   encheres: "Choisis un adversaire et une de ses actions : elle part aux enchères pendant 30 s. Tout le monde peut enchérir, sauf le vendeur.",
-  atout: `Achète un Atout pour ${config.atoutPrice.toLocaleString("fr-FR")} k$. Il permet d'annuler une enchère qui te vise.`,
+  atout: `Une carte Atout tirée au hasard est à vendre pour ${config.atoutPrice.toLocaleString("fr-FR")} k$ : ${ATOUTS.map((a) => a.name).join(", ")}.`,
   actu: "Une actualité tech tombe : gain ou perte pour le joueur, montré à tout le monde. Les pertes vont dans la cagnotte de la Bourse, que seule la carte Délit d'initié permet de rafler.",
   levee: `Levée de fonds : tu reçois ${config.leveeFundsPerPip} k$ par point de dés.`,
   ipo: `Introduction en Bourse : +${config.ipoBonus.toLocaleString("fr-FR")} k$.`,
