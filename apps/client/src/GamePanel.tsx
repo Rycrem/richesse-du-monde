@@ -1,4 +1,4 @@
-import { activePlayers, allianceOf, atoutById, board, buyableStock, buyCost, config, currentPlayer, markets, netWorth, ranking, type GameEvent, type GameState } from "@stonks/engine";
+import { activePlayers, allianceOf, atoutById, board, buyableStock, buyCost, config, currentPlayer, markets, netWorth, ranking, royaltyQuote, type GameEvent, type GameState } from "@stonks/engine";
 import { useEffect, useState } from "react";
 import { companyById, money, PLAYER_COLORS } from "./format";
 import { AnimatedMoney } from "./Overlay";
@@ -189,6 +189,12 @@ function AlliancePanel({ game, you, nameOf }: { game: GameState; you: string; na
 function Players({ game, colorOf }: { game: GameState; colorOf: (id: string) => string }) {
   const { room, you, dispatch, setInspect, kick } = useStore();
   const alive = activePlayers(game);
+  // gold ring when the player (alone or with allies) is the biggest holder; brighter at 100 %, where the royalty doubles
+  const lead = (id: string, c: string) => {
+    const q = royaltyQuote(game, c);
+    if (!q.winners.flat().some((w) => w.id === id)) return "";
+    return q.max === 100 ? "monopoly" : "leader";
+  };
   const [lendTo, setLendTo] = useState<string | null>(null);
   const [amount, setAmount] = useState(1000);
   const myCash = game.players.find((p) => p.id === you && !p.bankrupt)?.cash ?? 0;
@@ -238,7 +244,13 @@ function Players({ game, colorOf }: { game: GameState; colorOf: (id: string) => 
             {Object.entries(p.holdings)
               .sort((a, b) => b[1] - a[1])
               .map(([c, pct]) => (
-                <span key={c} className="chip clickable" style={{ background: companyById.get(c)!.color }} onClick={() => setInspect({ company: c })}>
+                <span
+                  key={c}
+                  className={`chip clickable ${lead(p.id, c)}`}
+                  title={lead(p.id, c) === "monopoly" ? "Monopole : redevance doublée" : lead(p.id, c) ? "Plus gros détenteur : touche la redevance" : undefined}
+                  style={{ background: companyById.get(c)!.color }}
+                  onClick={() => setInspect({ company: c })}
+                >
                   <img src={`/logos/${c}.svg`} alt="" />
                   {companyById.get(c)!.name} {pct} %
                 </span>
