@@ -51,7 +51,7 @@
 [data-theme="cyberpunk"] .thumb small { font: 400 11px "Share Tech Mono", monospace; text-transform: none; letter-spacing: 0; }
 [data-theme="cyberpunk"] .thumb.selected { outline-color: var(--yel); }
 [data-theme="cyberpunk"] .my-pawn img { filter: drop-shadow(0 0 8px #05d9e8aa); }
-[data-theme="cyberpunk"] .options .options-btn { background: #0e0c1aee; border-radius: 0; }
+[data-theme="cyberpunk"] :is(.options, .market-float) .options-btn { background: #0e0c1aee; border-radius: 0; }
 [data-theme="cyberpunk"] .options-panel { border-radius: 0; border: 1px solid #ff2a6d66; background: #0e0c1af2; }
 
 /* ---------- Terminal de bourse ---------- */
@@ -113,7 +113,7 @@
 [data-theme="pop"] .points { border: 3px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); }
 [data-theme="pop"] .podium { background: radial-gradient(ellipse 45% 6% at 50% 94%, #ffd166 0 99%, transparent 100%), repeating-conic-gradient(from 0deg at 50% 80%, #ffffff18 0 15deg, transparent 15deg 30deg), #118ab2; border: 3px solid var(--ink); border-radius: 22px; box-shadow: 5px 5px 0 var(--ink); }
 [data-theme="pop"] .thumb.selected { background: #ffd166; outline: none; }
-[data-theme="pop"] .options .options-btn { background: #fff; }
+[data-theme="pop"] :is(.options, .market-float) .options-btn { background: #fff; }
 [data-theme="pop"] .options-panel { border: 3px solid var(--ink); border-radius: 18px; box-shadow: 5px 5px 0 var(--ink); background: #fff; }
 
 /* ---------- Journal financier ---------- */
@@ -144,7 +144,7 @@
 [data-theme="journal"] .points { background: none; color: var(--ink); border: 2px solid var(--ink); border-radius: 0; font-family: "IBM Plex Mono", monospace; }
 [data-theme="journal"] .podium { border-radius: 0; border: 1px solid var(--ink); background: #f6d6c8; }
 [data-theme="journal"] .thumb.selected { outline-color: var(--accent); }
-[data-theme="journal"] .options .options-btn { background: #f3ecdc; border-radius: 0; }
+[data-theme="journal"] :is(.options, .market-float) .options-btn { background: #f3ecdc; border-radius: 0; }
 [data-theme="journal"] .options-panel { border-radius: 0; border: 2px solid var(--ink); background: #f3ecdc; box-shadow: 4px 4px 0 #0003; }
 
 /* ---------- Stonks OS ---------- */
@@ -188,7 +188,7 @@
 [data-theme="os"] .garage h1 { color: #000; text-shadow: none; font-size: 28px; }
 [data-theme="os"] .thumb.selected { background: #0a246a; color: #fff; outline: 1px dotted #000; }
 [data-theme="os"] .thumb.selected small { color: #fff; }
-[data-theme="os"] .options .options-btn { border-radius: 0; }
+[data-theme="os"] :is(.options, .market-float) .options-btn { border-radius: 0; }
 .kick-btn { color: var(--danger) !important; }
 
 /* ---------- Player cards in game (panel on desktop, bottom sheet on mobile) ---------- */
@@ -327,7 +327,7 @@
 [data-theme="glass"] :is(.setup, .garage, .options, .panel, .board-wrap) :is(input, select) { border-radius: 14px; border: 1px solid #ffffff55; background: #0b0f2e80; color: #fff; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
 [data-theme="glass"] :is(input, select)::placeholder { color: #ffffffa6; }
 [data-theme="glass"] select option { color: #1b1f4b; }
-[data-theme="glass"] .options .options-btn { background: #ffffff26; border-radius: 999px; -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
+[data-theme="glass"] :is(.options, .market-float) .options-btn { background: #ffffff26; border-radius: 999px; -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
 [data-theme="glass"] .options-panel { border-radius: 22px; }
 [data-theme="glass"] .theme-choice.selected { background: #ffffff55; }
 [data-theme="glass"] .points { background: #ffffff26; border: 1px solid #ffffff55; border-radius: 999px; color: #fff; }
@@ -360,7 +360,7 @@
     #0e0e14;
 }
 [data-variant="noir"][data-theme="pop"] :is(.setup, .garage, .panel) .card,
-[data-variant="noir"][data-theme="pop"] :is(.players .player, .options-panel, .options .options-btn, .inspect, .event-card, .buys, .big-dice, .chat, .win-card, .auction-screen, .hover-tip, .cash-hud, .turn-banner) {
+[data-variant="noir"][data-theme="pop"] :is(.players .player, .options-panel, :is(.options, .market-float) .options-btn, .inspect, .event-card, .buys, .big-dice, .chat, .win-card, .auction-screen, .hover-tip, .cash-hud, .turn-banner) {
   background: #1b1b26; color: #f4f4f8; border-color: #f4f4f8; box-shadow: 6px 6px 0 #ef476f;
 }
 [data-variant="noir"][data-theme="pop"] .panel { background: #0e0e14; }

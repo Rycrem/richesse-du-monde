@@ -123,8 +123,6 @@ export function GamePanel({ game }: { game: GameState }) {
       {you && <AlliancePanel game={game} you={you} nameOf={nameOf} />}
       {you && <LoanPanel game={game} you={you} nameOf={nameOf} />}
 
-      <Market game={game} />
-
       <Players game={game} colorOf={colorOf} />
 
       <Journal game={game} colorOf={colorOf} nameOf={nameOf} />
@@ -703,6 +701,22 @@ function Journal({ game, colorOf, nameOf }: { game: GameState; colorOf: (id: str
 }
 
 // The stock exchange tower: this turn's royalty trend of each market, and the pot won with the jackpot card
+// Next to the gear: a stonks arrow that opens the market trends
+export function MarketButton({ game }: { game: GameState }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="market-float">
+      <button className="options-btn market-btn" aria-label="Bourse" title="Bourse" onClick={() => setOpen(!open)}>
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 18l6-6 4 4 8-8" />
+          <path d="M15 8h6v6" />
+        </svg>
+      </button>
+      {open && <Market game={game} />}
+    </div>
+  );
+}
+
 function Market({ game }: { game: GameState }) {
   const setInspect = useStore((s) => s.setInspect);
   return (
