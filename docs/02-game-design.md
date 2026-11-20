@@ -115,7 +115,7 @@ En début de partie, chaque joueur lance 2 dés : le plus haut total commence, p
 - Un joueur peut revendre à la banque n'importe quel % à 75 % du prix d'achat. Les % retournent dans le stock des villes d'origine de l'entreprise.
 - Un paiement plus grand que la trésorerie laisse le joueur en dette. Avant de finir son tour, il revend des parts à la banque (ou laisse la vente automatique vendre les moins chères), propose des actions au joueur qu'il n'a pas pu payer, emprunte, ou déclare faillite.
 - **Accord de dette** : le débiteur propose des actions de son choix au créancier, sans qu'elles aient à valoir la somme. S'il accepte, il reçoit les actions et la dette de cette redevance est effacée.
-- **Prêts** : à tout moment, un joueur propose de prêter une somme à un autre. L'emprunteur reverse 15 % de tous ses revenus (redevances, bonus, levées de fonds) au prêteur jusqu'à lui avoir rendu 120 % de la somme.
+- **Prêts** : à tout moment, un joueur propose de prêter une somme à un autre. L'emprunteur reverse 15 % de tous ses revenus (redevances, bonus, levées de fonds) au prêteur jusqu'à lui avoir rendu 120 % de la somme. Le bouton Prêter est sur la ligne de chaque joueur. Un prêteur qui tombe sur une ville de son emprunteur ne paie pas : la redevance est déduite de ce qui lui reste dû.
 
 ## Tour de la Bourse (centre du plateau)
 
@@ -139,7 +139,7 @@ En début de partie, chaque joueur lance 2 dés : le plus haut total commence, p
 ## Faillite et victoire
 
 - Un joueur qui ne peut pas payer une dette est en faillite : la banque couvre la dette, ses parts retournent dans le stock des villes, il est éliminé.
-- Un joueur en dette peut aussi déclarer faillite lui-même : ses parts restantes sont réparties 1 % à la fois entre les joueurs encore en jeu, dans l'ordre du tour.
+- Un joueur peut aussi déclarer faillite lui-même, à tout moment (lien en bas du panneau) : ses parts restantes sont réparties 1 % à la fois entre les joueurs encore en jeu, dans l'ordre du tour.
 - **Classique** (par défaut) : le dernier joueur en jeu gagne. Les autres sont classés par ordre d'élimination.
 - **Chrono** (option, 45 à 60 min) : à la fin du temps, le plus grand patrimoine (argent + valeur des parts) gagne.
 

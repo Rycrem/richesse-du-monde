@@ -640,7 +640,9 @@ describe("debts and loans", () => {
   it("declaring bankruptcy deals the shares left to the other players", () => {
     let g = createGame(P, 1);
     g.players[0]!.holdings = { sonyx: 5, tesler: 2 };
-    expect(err(g, { type: "DECLARE_BANKRUPTCY", playerId: "a" })).toMatch(/dette/);
+    g = ok(g, { type: "DECLARE_BANKRUPTCY", playerId: "a" });
+    expect(g.players[1]!.holdings).toEqual({ sonyx: 3, tesler: 1 });
+    expect(g.players[g.current]!.id).toBe("b");
     g = inDebt();
     g = ok(g, { type: "DECLARE_BANKRUPTCY", playerId: "a" });
     expect(g.players[0]!.bankrupt).toBe(true);
@@ -666,5 +668,20 @@ describe("debts and loans", () => {
     expect(g.players[0]!.cash).toBe(a0 + 1000 + paid - cut);
     expect(g.players[1]!.cash).toBe(b0 - 1000 + cut);
     if (cut === (1000 * config.loanCap) / 100) expect(g.loans).toEqual([]);
+  });
+
+  it("a lender landing on the borrower's city lowers the loan instead of paying", () => {
+    let g = createGame(P, 1);
+    g = ok(g, { type: "LOAN_OFFER", playerId: "a", borrowerId: "b", amount: 5000 });
+    g = ok(g, { type: "LOAN_ANSWER", playerId: "b", lenderId: "a", accept: true });
+    g.royalties.berlin = "intol";
+    g.players[1]!.holdings = { intol: 30 };
+    const [a0, b0] = [g.players[0]!.cash, g.players[1]!.cash];
+    g = at(g, "berlin");
+    const paid = g.events.find((e) => e.kind === "royalty")!.amount;
+    expect(paid).toBeGreaterThan(0);
+    expect(g.players[0]!.cash).toBe(a0);
+    expect(g.players[1]!.cash).toBe(b0);
+    expect(g.loans[0]!.repaid).toBe(paid);
   });
 });
