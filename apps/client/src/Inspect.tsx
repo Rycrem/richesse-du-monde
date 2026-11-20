@@ -1,4 +1,4 @@
-import { allianceOf, ATOUTS, board, config, markets, regions, royaltyQuote, trendOf, type Cell, type GameState } from "@stonks/engine";
+import { allianceOf, ATOUTS, board, buyCost, config, markets, regions, royaltyQuote, trendOf, type Cell, type GameState } from "@stonks/engine";
 import { useEffect, useState } from "react";
 import { companyById, money, PLAYER_COLORS } from "./format";
 import { useStore } from "./store";
@@ -110,6 +110,69 @@ function CellBody({ game, cell }: { game: GameState; cell: Cell }) {
   return <p>{SPECIAL[cell.type]}</p>;
 }
 
+// Cost of owning x % bought from the bank: linear, then each % dearer past dominanceFrom
+function PriceChart({ game, company }: { game: GameState; company: string }) {
+  const you = useStore((s) => s.you);
+  const [hover, setHover] = useState<number | null>(null);
+  const c = companyById.get(company)!;
+  const W = 290, H = 150, L = 40, R = 16, T = 10, B = 22;
+  const costs = Array.from({ length: 101 }, (_, x) => buyCost(company, 0, x));
+  const max = costs[100]!;
+  const px = (x: number) => L + (x / 100) * (W - L - R);
+  const py = (v: number) => T + (1 - v / max) * (H - T - B);
+  const path = costs.map((v, x) => `${x ? "L" : "M"}${px(x).toFixed(1)},${py(v).toFixed(1)}`).join("");
+  const held = you ? (game.players.find((p) => p.id === you)?.holdings[company] ?? 0) : 0;
+  const ticks = [0, max / 2, max];
+  const k = (v: number) => (v >= 1000 ? `${Math.round(v / 100) / 10}k` : `${Math.round(v)}`);
+  const move = (e: React.PointerEvent<SVGSVGElement>) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    const x = Math.round((((e.clientX - r.left) / r.width) * W - L) / ((W - L - R) / 100));
+    setHover(x >= 0 && x <= 100 ? x : null);
+  };
+  const h = hover;
+  return (
+    <div className="price-chart">
+      <svg viewBox={`0 0 ${W} ${H}`} onPointerMove={move} onPointerLeave={() => setHover(null)} role="img" aria-label={`Coût pour détenir x % de ${c.name}`}>
+        {ticks.map((v) => (
+          <g key={v}>
+            <line x1={L} x2={W - R} y1={py(v)} y2={py(v)} className="grid" />
+            <text x={L - 4} y={py(v) + 3} textAnchor="end">
+              {k(v)}
+            </text>
+          </g>
+        ))}
+        {[0, 25, 50, 75, 100].map((x) => (
+          <text key={x} x={px(x)} y={H - 6} textAnchor="middle">
+            {x} %
+          </text>
+        ))}
+        <line x1={px(config.dominanceFrom)} x2={px(config.dominanceFrom)} y1={T} y2={H - B} className="threshold" />
+        <path d={path} fill="none" stroke={c.color} strokeWidth={2} strokeLinejoin="round" />
+        {held > 0 && <circle cx={px(held)} cy={py(costs[held]!)} r={4} fill={c.color} className="ring" />}
+        {h !== null && (
+          <>
+            <line x1={px(h)} x2={px(h)} y1={T} y2={H - B} className="cross" />
+            <circle cx={px(h)} cy={py(costs[h]!)} r={4} fill={c.color} className="ring" />
+          </>
+        )}
+      </svg>
+      <div className="price-chart-read">
+        {h !== null ? (
+          <>
+            <strong>{h} %</strong> détenus : {money(costs[h]!)} au total
+            {h > 0 && <> · ce % coûte {money(costs[h]! - costs[h - 1]!)}</>}
+          </>
+        ) : (
+          <>
+            Survole la courbe. Au-delà de {config.dominanceFrom} %, chaque % coûte plus cher.
+            {held > 0 && <> Point : tes {held} %.</>}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function CompanyBody({ game, company }: { game: GameState; company: string }) {
   const c = companyById.get(company)!;
   const cities = board.filter((cell) => cell.type === "city" && (game.stocks[cell.id]![company] ?? 0) > 0) as Extract<Cell, { type: "city" }>[];
@@ -130,6 +193,8 @@ function CompanyBody({ game, company }: { game: GameState; company: string }) {
         Le plus gros détenteur touche {money(c.royaltyPerPercent)} par % détenu chaque fois qu'un joueur tombe sur une case {c.name} (x
         {config.monopolyMultiplier} à 100 %). La banque rachète {money(Math.floor(c.pricePerPercent * config.bankBuybackRatio))} / %.
       </p>
+      <h4>Prix selon le % détenu</h4>
+      <PriceChart game={game} company={company} />
       <h4>Cases qui paient {c.name}</h4>
       <p>{royaltyCells.map((cell) => cell.name).join(", ")}</p>
       <h4>Parts à vendre</h4>
