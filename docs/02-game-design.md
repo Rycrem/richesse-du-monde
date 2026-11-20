@@ -97,6 +97,7 @@ En début de partie, chaque joueur lance 2 dés : le plus haut total commence, p
 - Seul **le plus gros détenteur** est payé. Égalité : le paiement est divisé à parts égales (arrondi à l'unité inférieure, le reste va à la banque).
 - **Plus on détient de %, plus on est payé** : montant = tarif de l'entreprise x % détenu par le plus gros détenteur.
   - Exemple : tarif 0,1 M par %, détenteur à 40 % : le visiteur paie 4 M.
+- **Au-delà de 50 %**, chaque % rapporte 5 % de plus que le précédent (croissance exponentielle).
 - Bonus monopole : à **100 %**, le montant est doublé.
 - Égalité : un joueur (ou son alliance) qui détient autant que le plus gros détenteur ne paie rien en tombant sur la case.
 - Le paiement est automatique.

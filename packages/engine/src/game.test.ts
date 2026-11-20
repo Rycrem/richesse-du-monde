@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { board, companies, config, markets } from "./data";
-import { ATOUTS, applyAction, buyableStock, buyCost, createGame, rollTurnOrder, royaltyQuote, type Action } from "./game";
+import { ATOUTS, applyAction, buyableStock, buyCost, createGame, royaltyFor, rollTurnOrder, royaltyQuote, type Action } from "./game";
 import { rollDie } from "./rng";
 import type { GameState } from "./state";
 
@@ -361,11 +361,14 @@ describe("royalties", () => {
     expect(g.players[1]!.cash).toBe(config.startingCash + share);
   });
 
-  it("doubles at 100 %", () => {
+  it("grows faster past 50 % and doubles at 100 %", () => {
+    expect(royaltyFor("intol", 50, 0)).toBe(50 * royalty("intol"));
+    expect(royaltyFor("intol", 60, 0)).toBeGreaterThan(60 * royalty("intol"));
+    expect(royaltyFor("intol", 100, 0)).toBeGreaterThan(2 * royaltyFor("intol", 99, 0));
     let g = withRoyalty("intol");
     g.players[1]!.holdings = { intol: 100 };
     g = at(g, "berlin");
-    expect(g.players[1]!.cash).toBe(config.startingCash + 100 * royalty("intol") * config.monopolyMultiplier);
+    expect(g.players[1]!.cash).toBe(config.startingCash + royaltyFor("intol", 100, 0));
   });
 
   it("the biggest holder landing on their own company pays nothing", () => {

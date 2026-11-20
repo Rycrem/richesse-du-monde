@@ -1,4 +1,4 @@
-import { allianceOf, ATOUTS, board, config, markets, regions, royaltyQuote, trendOf, type Cell, type GameState } from "@stonks/engine";
+import { allianceOf, ATOUTS, board, config, markets, regions, royaltyFor, royaltyQuote, trendOf, type Cell, type GameState } from "@stonks/engine";
 import { useEffect, useState } from "react";
 import { companyById, money, PLAYER_COLORS } from "./format";
 import { useStore } from "./store";
@@ -117,7 +117,7 @@ function PriceChart({ game, company }: { game: GameState; company: string }) {
   const c = companyById.get(company)!;
   const W = 290, H = 150, L = 40, R = 16, T = 10, B = 22;
   const trend = trendOf(game, company);
-  const costs = Array.from({ length: 101 }, (_, x) => Math.floor((c.royaltyPerPercent * x * (x === 100 ? config.monopolyMultiplier : 1) * (100 + trend)) / 100));
+  const costs = Array.from({ length: 101 }, (_, x) => royaltyFor(company, x, trend));
   const max = costs[100]!;
   const px = (x: number) => L + (x / 100) * (W - L - R);
   const py = (v: number) => T + (1 - v / max) * (H - T - B);
@@ -147,6 +147,7 @@ function PriceChart({ game, company }: { game: GameState; company: string }) {
             {x} %
           </text>
         ))}
+        <line x1={px(config.dominanceFrom)} x2={px(config.dominanceFrom)} y1={T} y2={H - B} className="threshold" />
         <path d={path} fill="none" stroke={c.color} strokeWidth={2} strokeLinejoin="round" />
         {held > 0 && <circle cx={px(held)} cy={py(costs[held]!)} r={4} fill={c.color} className="ring" />}
         {h !== null && (
@@ -163,7 +164,7 @@ function PriceChart({ game, company }: { game: GameState; company: string }) {
           </>
         ) : (
           <>
-            Survole la courbe. À 100 % (monopole), la redevance est doublée.
+            Survole la courbe. Au-delà de {config.dominanceFrom} %, chaque % rapporte plus que le précédent, et tout est doublé à 100 % (monopole).
             {held > 0 && <> Point : tes {held} %.</>}
           </>
         )}
@@ -189,7 +190,7 @@ function CompanyBody({ game, company }: { game: GameState; company: string }) {
       </div>
       <Trend game={game} company={company} />
       <p>
-        Le plus gros détenteur touche {money(c.royaltyPerPercent)} par % détenu chaque fois qu'un joueur tombe sur une case {c.name} (x
+        Le plus gros détenteur touche {money(c.royaltyPerPercent)} par % détenu chaque fois qu'un joueur tombe sur une case {c.name}, un peu plus par % au-delà de {config.dominanceFrom} % (x
         {config.monopolyMultiplier} à 100 %). La banque rachète {money(Math.floor(c.pricePerPercent * config.bankBuybackRatio))} / %.
       </p>
       <h4>Redevance selon le % détenu</h4>
