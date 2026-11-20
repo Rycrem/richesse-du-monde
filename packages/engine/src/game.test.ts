@@ -166,16 +166,8 @@ describe("buying", () => {
     expect(g.players[0]!.atouts).toEqual([]);
   });
 
-  it("world choice requires a completed lap", () => {
+  it("world choice sells any company from every city, from the first lap", () => {
     let g = createGame(P, 1);
-    g.players[0]!.holdings = { amb: 5 };
-    g = at(g, "mondial-1");
-    expect(buyableStock(g)).toEqual({});
-  });
-
-  it("after a lap, world choice sells any company from every city", () => {
-    let g = createGame(P, 1);
-    g.players[0]!.laps = 1;
     g = at(g, "mondial-1");
     expect(Object.keys(buyableStock(g))).toHaveLength(companies.length);
   });
