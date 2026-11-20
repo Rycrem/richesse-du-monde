@@ -1,4 +1,4 @@
-import { allianceOf, ATOUTS, board, buyCost, config, markets, regions, royaltyQuote, trendOf, type Cell, type GameState } from "@stonks/engine";
+import { allianceOf, ATOUTS, board, config, markets, regions, royaltyQuote, trendOf, type Cell, type GameState } from "@stonks/engine";
 import { useEffect, useState } from "react";
 import { companyById, money, PLAYER_COLORS } from "./format";
 import { useStore } from "./store";
@@ -110,13 +110,14 @@ function CellBody({ game, cell }: { game: GameState; cell: Cell }) {
   return <p>{SPECIAL[cell.type]}</p>;
 }
 
-// Cost of owning x % bought from the bank: linear, then each % dearer past dominanceFrom
+// What a player landing on one of its cells pays when the biggest holder owns x %, with this turn's market trend
 function PriceChart({ game, company }: { game: GameState; company: string }) {
   const you = useStore((s) => s.you);
   const [hover, setHover] = useState<number | null>(null);
   const c = companyById.get(company)!;
   const W = 290, H = 150, L = 40, R = 16, T = 10, B = 22;
-  const costs = Array.from({ length: 101 }, (_, x) => buyCost(company, 0, x));
+  const trend = trendOf(game, company);
+  const costs = Array.from({ length: 101 }, (_, x) => Math.floor((c.royaltyPerPercent * x * (x === 100 ? config.monopolyMultiplier : 1) * (100 + trend)) / 100));
   const max = costs[100]!;
   const px = (x: number) => L + (x / 100) * (W - L - R);
   const py = (v: number) => T + (1 - v / max) * (H - T - B);
@@ -132,7 +133,7 @@ function PriceChart({ game, company }: { game: GameState; company: string }) {
   const h = hover;
   return (
     <div className="price-chart">
-      <svg viewBox={`0 0 ${W} ${H}`} onPointerMove={move} onPointerLeave={() => setHover(null)} role="img" aria-label={`Coût pour détenir x % de ${c.name}`}>
+      <svg viewBox={`0 0 ${W} ${H}`} onPointerMove={move} onPointerLeave={() => setHover(null)} role="img" aria-label={`Redevance ${c.name} selon le % détenu`}>
         {ticks.map((v) => (
           <g key={v}>
             <line x1={L} x2={W - R} y1={py(v)} y2={py(v)} className="grid" />
@@ -146,7 +147,6 @@ function PriceChart({ game, company }: { game: GameState; company: string }) {
             {x} %
           </text>
         ))}
-        <line x1={px(config.dominanceFrom)} x2={px(config.dominanceFrom)} y1={T} y2={H - B} className="threshold" />
         <path d={path} fill="none" stroke={c.color} strokeWidth={2} strokeLinejoin="round" />
         {held > 0 && <circle cx={px(held)} cy={py(costs[held]!)} r={4} fill={c.color} className="ring" />}
         {h !== null && (
@@ -159,12 +159,11 @@ function PriceChart({ game, company }: { game: GameState; company: string }) {
       <div className="price-chart-read">
         {h !== null ? (
           <>
-            <strong>{h} %</strong> détenus : {money(costs[h]!)} au total
-            {h > 0 && <> · ce % coûte {money(costs[h]! - costs[h - 1]!)}</>}
+            Avec <strong>{h} %</strong> détenus, un joueur qui tombe sur une case {c.name} paie <strong>{money(costs[h]!)}</strong>
           </>
         ) : (
           <>
-            Survole la courbe. Au-delà de {config.dominanceFrom} %, chaque % coûte plus cher.
+            Survole la courbe. À 100 % (monopole), la redevance est doublée.
             {held > 0 && <> Point : tes {held} %.</>}
           </>
         )}
@@ -193,7 +192,7 @@ function CompanyBody({ game, company }: { game: GameState; company: string }) {
         Le plus gros détenteur touche {money(c.royaltyPerPercent)} par % détenu chaque fois qu'un joueur tombe sur une case {c.name} (x
         {config.monopolyMultiplier} à 100 %). La banque rachète {money(Math.floor(c.pricePerPercent * config.bankBuybackRatio))} / %.
       </p>
-      <h4>Prix selon le % détenu</h4>
+      <h4>Redevance selon le % détenu</h4>
       <PriceChart game={game} company={company} />
       <h4>Cases qui paient {c.name}</h4>
       <p>{royaltyCells.map((cell) => cell.name).join(", ")}</p>
