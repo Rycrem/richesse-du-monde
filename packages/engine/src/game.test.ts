@@ -478,6 +478,14 @@ describe("auctions", () => {
     expect(g.auction!.percent).toBe(1);
   });
 
+  it("never puts more than 15 % up for auction", () => {
+    for (let seed = 1; seed <= 30; seed++) {
+      const g = createGame(P, seed);
+      g.players[1]!.holdings = { appel: 50 };
+      expect(at(g, "encheres-1").auction!.percentToSell).toBeLessThanOrEqual(config.auctionMaxPercent);
+    }
+  });
+
   it("works from the first lap, and does nothing when no opponent holds anything", () => {
     expect(auction().phase).toBe("auction");
     expect(at(createGame(P, 1), "encheres-1").phase).toBe("act");

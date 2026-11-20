@@ -47,6 +47,7 @@ export interface GameConfig {
   maxPurchasePercent: number;
   leveeFundsPerPip: number;
   auctionPercentPerPip: number;
+  auctionMaxPercent: number;
   minBidIncrement: number;
   auctionTimeoutSeconds: number;
   offerTimeoutSeconds: number;

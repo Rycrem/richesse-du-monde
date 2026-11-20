@@ -3,6 +3,7 @@
   "maxPurchasePercent": 30,
   "leveeFundsPerPip": 100,
   "auctionPercentPerPip": 5,
+  "auctionMaxPercent": 15,
   "minBidIncrement": 100,
   "auctionTimeoutSeconds": 30,
   "offerTimeoutSeconds": 15,
