@@ -64,6 +64,6 @@ export function botAction(g: GameState, id: PlayerId): Action | null {
     cash -= buyCost(company, held, pct);
   }
   if (Object.keys(purchases).length) return { type: "BUY", playerId: id, purchases };
-  if (g.canBuyAtout && me.atouts.length === 0 && me.cash > config.atoutPrice * 3) return { type: "BUY_ATOUT", playerId: id };
+  if (g.canBuyAtout) return { type: "BUY_ATOUT", playerId: id };
   return { type: "END_TURN", playerId: id };
 }

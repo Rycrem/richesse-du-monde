@@ -56,7 +56,7 @@ Le plateau a deux anneaux : un anneau extérieur de 48 cases (les 6 régions du 
 | Choix régional | 8 (1 par région, 2 pour les hubs) | Achat dans le stock de toutes les villes de la région, n'importe quelle entreprise, dès le premier tour |
 | Choix mondial | 1 | Pareil, dans le monde entier, dès le premier tour |
 | Enchères | 3 | Mise aux enchères forcée (voir "Enchères"). Valable seulement après un premier tour complet |
-| Atout | 4 | Une carte Atout tirée au hasard est à vendre (voir "Atouts") |
+| Atout | 4 | Une carte Atout tirée au hasard est offerte (voir "Atouts") |
 | Actu Tech | 7 | On pioche une carte événement : on reçoit ou on paie une somme |
 | Levée de fonds | 4 | On reçoit de la banque (total des dés x un montant fixe) |
 | Introduction en Bourse | 2 | On reçoit une prime de 1 000 k$ |
@@ -112,7 +112,7 @@ En début de partie, chaque joueur lance 2 dés : le plus haut total commence, p
 
 ## Atouts
 
-Sur une case Atout, une carte est tirée au hasard et le joueur peut l'acheter (1 500 k$). Les cartes ne se vendent pas et ne s'échangent pas.
+Sur une case Atout, une carte est tirée au hasard et le joueur peut la prendre gratuitement. Les cartes ne se vendent pas et ne s'échangent pas.
 
 - **Bouclier anti-OPA** : annule la prochaine enchère forcée sur ses actions.
 - **Exonération** : la prochaine redevance à payer est offerte (utilisée automatiquement).
