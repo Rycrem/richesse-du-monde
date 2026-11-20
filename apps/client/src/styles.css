@@ -416,3 +416,7 @@ button.danger { background: #ef476f; color: #fff; border-color: #ef476f; }
 .quit-link { text-align: center; font-size: 12px; opacity: 0.7; margin: 4px 0 0; }
 .quit-link a { text-decoration: underline; cursor: pointer; }
 .player .loan-form { flex-wrap: wrap; margin-top: 6px; }
+.market-float { position: fixed; left: 64px; top: 14px; z-index: 59; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.market-btn { display: grid; place-items: center; color: #3fd17b; }
+.market-float .market { width: 300px; max-width: calc(100vw - 80px); box-shadow: 0 12px 30px #0008; animation: rise 0.25s ease-out; }
+@media (max-width: 700px) { .market-float { top: max(10px, env(safe-area-inset-top)); left: 60px; } }
