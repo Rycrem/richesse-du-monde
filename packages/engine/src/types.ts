@@ -51,7 +51,6 @@ export interface GameConfig {
   minBidIncrement: number;
   auctionTimeoutSeconds: number;
   offerTimeoutSeconds: number;
-  atoutPrice: number;
   monopolyMultiplier: number;
   bankBuybackRatio: number;
   royaltyTokensPerCompany: number;

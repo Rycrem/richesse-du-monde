@@ -126,7 +126,7 @@ describe("buying", () => {
     expect(buyableStock(g)).toEqual({ amb: 23, sonyx: 10, appel: 9, netflox: 12, samsong: 9, spotifaille: 23, macrosoft: 12, meto: 9, xiaomy: 7, intol: 9, gogol: 9, tesler: 7, nvidio: 7, amazone: 7, oracul: 5, tsmb: 4 });
   });
 
-  it("an Atout can be bought even with two players left", () => {
+  it("an Atout is free and can be taken even with two players left", () => {
     const g = at(createGame(P.slice(0, 2), 1), "atout-1");
     expect(g.canBuyAtout).toBe(true);
     expect(ATOUTS.map((a) => a.id)).toContain(g.atoutCard);
@@ -134,6 +134,7 @@ describe("buying", () => {
     const g2 = ok(g, { type: "BUY_ATOUT", playerId: "a" });
     expect(g2.players[0]!.atouts).toEqual([card]);
     expect(g2.atoutCard).toBeNull();
+    expect(g2.players[0]!.cash).toBe(g.players[0]!.cash);
   });
 
   it("Exonération waives the next royalty, Dividende doubles the next one received", () => {

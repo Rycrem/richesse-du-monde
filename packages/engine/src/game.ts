@@ -571,9 +571,8 @@ export function applyAction(prev: GameState, action: Action): Result {
 
     case "BUY_ATOUT": {
       if (!isCurrent || state.phase !== "act" || !state.canBuyAtout) return { ok: false, error: "Achat d'Atout impossible" };
-      if (cur.cash < config.atoutPrice) return { ok: false, error: "Pas assez d'argent" };
       const card = atoutById.get(state.atoutCard ?? "bouclier")!;
-      money(state, cur, "atout", `Atout acheté : ${card.name}. ${card.text}`, -config.atoutPrice);
+      emit(state, { kind: "atout", playerId: cur.id, text: `Atout pris : ${card.name}. ${card.text}`, amount: 0, before: cur.cash, after: cur.cash });
       cur.atouts.push(card.id);
       state.canBuyAtout = false;
       state.atoutCard = null;

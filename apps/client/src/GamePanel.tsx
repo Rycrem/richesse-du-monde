@@ -102,7 +102,7 @@ export function GamePanel({ game }: { game: GameState }) {
           {game.buyScope && <BuyPanel game={game} />}
           {game.canBuyAtout && (
             <button onClick={() => dispatch({ type: "BUY_ATOUT", playerId: me.id })}>
-              Acheter l'Atout {atoutById.get(game.atoutCard ?? "bouclier")!.name} ({money(config.atoutPrice)})
+              Prendre l'Atout {atoutById.get(game.atoutCard ?? "bouclier")!.name} (gratuit)
             </button>
           )}
           {me.atouts.includes("rachat") && (
