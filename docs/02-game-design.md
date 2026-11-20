@@ -56,7 +56,7 @@ Le plateau a deux anneaux : un anneau extérieur de 48 cases (les 6 régions du 
 | Choix régional | 8 (1 par région, 2 pour les hubs) | Achat dans le stock de toutes les villes de la région, n'importe quelle entreprise, dès le premier tour |
 | Choix mondial | 1 | Pareil, dans le monde entier. Valable seulement après un premier tour complet |
 | Enchères | 3 | Mise aux enchères forcée (voir "Enchères"). Valable seulement après un premier tour complet |
-| Atout | 4 | On peut acheter une carte Atout |
+| Atout | 4 | Une carte Atout tirée au hasard est à vendre (voir "Atouts") |
 | Actu Tech | 7 | On pioche une carte événement : on reçoit ou on paie une somme |
 | Levée de fonds | 4 | On reçoit de la banque (total des dés x un montant fixe) |
 | Introduction en Bourse | 2 | On reçoit une prime de 1 000 k$ |
@@ -107,7 +107,16 @@ En début de partie, chaque joueur lance 2 dés : le plus haut total commence, p
 - Un écran spécial s'ouvre pour tout le monde. Mise à prix : **75 % du prix d'achat**, surenchère minimum fixe.
 - Tout le monde sauf le vendeur peut enchérir pendant **30 secondes**. La meilleure offre gagne et l'argent va au vendeur.
 - Aucune offre : la banque rachète à 75 % du prix, et les % retournent dans le stock des villes.
-- Le vendeur peut annuler la vente avec une carte **Atout** (achetée sur une case Atout). Elle ne se vend pas et ne s'échange pas.
+- Le vendeur peut annuler la vente avec un **Bouclier anti-OPA** (carte Atout).
+
+## Atouts
+
+Sur une case Atout, une carte est tirée au hasard et le joueur peut l'acheter (1 500 k$). Les cartes ne se vendent pas et ne s'échangent pas.
+
+- **Bouclier anti-OPA** : annule la prochaine enchère forcée sur ses actions.
+- **Exonération** : la prochaine redevance à payer est offerte (utilisée automatiquement).
+- **Dividende exceptionnel** : la prochaine redevance touchée est doublée par la banque (automatique).
+- **Rachat express** : à jouer pendant son tour, +15 % d'achat autorisé ce tour-ci.
 
 ## Argent
 

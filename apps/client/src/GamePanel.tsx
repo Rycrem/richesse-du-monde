@@ -1,4 +1,4 @@
-import { activePlayers, allianceOf, board, buyableStock, buyCost, config, currentPlayer, markets, netWorth, ranking, type GameEvent, type GameState } from "@stonks/engine";
+import { activePlayers, allianceOf, atoutById, board, buyableStock, buyCost, config, currentPlayer, markets, netWorth, ranking, type GameEvent, type GameState } from "@stonks/engine";
 import { useEffect, useState } from "react";
 import { companyById, money, PLAYER_COLORS } from "./format";
 import { AnimatedMoney } from "./Overlay";
@@ -102,7 +102,12 @@ export function GamePanel({ game }: { game: GameState }) {
         <>
           {game.buyScope && <BuyPanel game={game} />}
           {game.canBuyAtout && (
-            <button onClick={() => dispatch({ type: "BUY_ATOUT", playerId: me.id })}>Acheter un Atout ({money(config.atoutPrice)})</button>
+            <button onClick={() => dispatch({ type: "BUY_ATOUT", playerId: me.id })}>
+              Acheter l'Atout {atoutById.get(game.atoutCard ?? "bouclier")!.name} ({money(config.atoutPrice)})
+            </button>
+          )}
+          {me.atouts.includes("rachat") && (
+            <button onClick={() => dispatch({ type: "USE_ATOUT", playerId: me.id, atout: "rachat" })}>Utiliser Rachat express (+15 % d'achat ce tour)</button>
           )}
           <OfferForm game={game} />
           <SellForm game={game} />
@@ -239,7 +244,11 @@ function Players({ game, colorOf }: { game: GameState; colorOf: (id: string) => 
                   {companyById.get(c)!.name} {pct} %
                 </span>
               ))}
-            {p.atouts > 0 && <span className="chip atout">Atout x{p.atouts}</span>}
+            {p.atouts.map((a, i) => (
+              <span key={i} className="chip atout" title={atoutById.get(a)!.text}>
+                ⭐ {atoutById.get(a)!.name}
+              </span>
+            ))}
           </div>
           {!p.bankrupt && <small>Patrimoine : {money(netWorth(p))}</small>}
           {lendTo === p.id && canLend(p.id) && (

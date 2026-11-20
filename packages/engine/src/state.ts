@@ -8,7 +8,8 @@ export interface Player {
   cash: number;
   position: number;
   holdings: Record<CompanyId, number>;
-  atouts: number;
+  // Atout cards held, by id (see ATOUTS)
+  atouts: string[];
   laps: number;
   bankrupt: boolean;
 }
@@ -105,6 +106,8 @@ export interface GameState {
   buyScope: BuyScope | null;
   boughtThisTurn: number;
   canBuyAtout: boolean;
+  // the Atout card on sale on the cell the current player landed on
+  atoutCard: string | null;
   auction: Auction | null;
   offer: Offer | null;
   // allied players add up their % to be the biggest holder and share the royalty

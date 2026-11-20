@@ -20,7 +20,7 @@ function botTurn(state: GameState): GameState {
     const target = activePlayers(g).find((p) => p.id !== self.id && Object.keys(p.holdings).length > 0)!;
     const smallest = Object.entries(target.holdings).sort((x, y) => x[1] - y[1])[0]![0];
     g = step(g, { type: "AUCTION_CHOOSE", playerId: self.id, ownerId: target.id, company: smallest });
-    if (target.atouts > 0) g = step(g, { type: "USE_ATOUT", playerId: target.id });
+    if (target.atouts.includes("bouclier")) g = step(g, { type: "USE_ATOUT", playerId: target.id });
     else {
       const bidder = activePlayers(g).find((p) => p.id !== target.id && p.cash > g.auction!.startPrice * 2);
       if (bidder) g = step(g, { type: "BID", playerId: bidder.id, amount: g.auction!.startPrice });
