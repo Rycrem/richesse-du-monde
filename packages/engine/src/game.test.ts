@@ -705,6 +705,18 @@ describe("debts and loans", () => {
     if (cut === (1000 * config.loanCap) / 100) expect(g.loans).toEqual([]);
   });
 
+  it("the bankrupt player can choose who gets which shares", () => {
+    let g = createGame(P, 1);
+    g.players[0]!.holdings = { sonyx: 10, tesler: 4 };
+    expect(err(g, { type: "DECLARE_BANKRUPTCY", playerId: "a", split: { c: { sonyx: 11 } } })).toMatch(/autant/);
+    expect(err(g, { type: "DECLARE_BANKRUPTCY", playerId: "a", split: { a: { sonyx: 1 } } })).toMatch(/introuvable/);
+    g = ok(g, { type: "DECLARE_BANKRUPTCY", playerId: "a", split: { c: { sonyx: 10 }, b: { tesler: 1 } } });
+    expect(g.players[2]!.holdings.sonyx).toBe(10);
+    // the 3 % of Tesler left unassigned are dealt out in turn order: b, c, b
+    expect(g.players[1]!.holdings).toEqual({ tesler: 3 });
+    expect(g.players[2]!.holdings.tesler).toBe(1);
+  });
+
   it("a lender landing on the borrower's city lowers the loan instead of paying", () => {
     let g = createGame(P, 1);
     g = ok(g, { type: "LOAN_OFFER", playerId: "a", borrowerId: "b", amount: 5000 });

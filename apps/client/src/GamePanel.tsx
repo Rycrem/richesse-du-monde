@@ -501,19 +501,58 @@ function DebtPanel({ game }: { game: GameState }) {
 function QuitLink({ game, you }: { game: GameState; you: string }) {
   const dispatch = useStore((s) => s.dispatch);
   const [sure, setSure] = useState(false);
-  if (game.players.find((p) => p.id === you)?.bankrupt) return null;
+  const [split, setSplit] = useState<Record<string, Record<string, number>>>({});
+  const me = game.players.find((p) => p.id === you);
+  if (!me || me.bankrupt) return null;
+  if (!sure)
+    return (
+      <p className="quit-link">
+        <a onClick={() => setSure(true)}>Déclarer faillite</a>
+      </p>
+    );
+  const heirs = activePlayers(game).filter((p) => p.id !== you);
+  const given = (c: string, except?: string) => heirs.reduce((a, h) => a + (h.id === except ? 0 : (split[h.id]?.[c] ?? 0)), 0);
+  const set = (id: string, c: string, n: number) => {
+    const max = (me.holdings[c] ?? 0) - given(c, id);
+    setSplit({ ...split, [id]: { ...split[id], [c]: Math.max(0, Math.min(max, Math.floor(n) || 0)) } });
+  };
   return (
-    <p className="quit-link">
-      {sure ? (
+    <div className="card quit-split">
+      <h3>Déclarer faillite</h3>
+      {Object.keys(me.holdings).length > 0 ? (
         <>
-          Tes actions seront réparties entre les autres joueurs.{" "}
-          <a onClick={() => dispatch({ type: "DECLARE_BANKRUPTCY", playerId: you })}>Confirmer la faillite</a> ·{" "}
-          <a onClick={() => setSure(false)}>Annuler</a>
+          <p className="muted">Choisis à qui donner tes actions. Ce que tu n'attribues pas est réparti automatiquement, 1 % à la fois, dans l'ordre du tour.</p>
+          {Object.entries(me.holdings).map(([c, pct]) => (
+            <div key={c} className="split-row">
+              <div className="row">
+                <span className="chip" style={{ background: companyById.get(c)!.color }}>
+                  <img src={`/logos/${c}.svg`} alt="" />
+                  {companyById.get(c)!.name} {pct} %
+                </span>
+                <span className="spacer" />
+                <small className="muted">reste {pct - given(c)} %</small>
+              </div>
+              <div className="split-heirs">
+                {heirs.map((h) => (
+                  <label key={h.id}>
+                    <span>{h.name}</span>
+                    <input type="number" min={0} max={pct} value={split[h.id]?.[c] ?? 0} onChange={(e) => set(h.id, c, Number(e.target.value))} />
+                  </label>
+                ))}
+              </div>
+            </div>
+          ))}
         </>
       ) : (
-        <a onClick={() => setSure(true)}>Déclarer faillite</a>
+        <p className="muted">Tu n'as plus d'actions à répartir.</p>
       )}
-    </p>
+      <div className="row">
+        <button className="danger" onClick={() => dispatch({ type: "DECLARE_BANKRUPTCY", playerId: you, split })}>
+          Confirmer la faillite
+        </button>
+        <button onClick={() => (setSure(false), setSplit({}))}>Annuler</button>
+      </div>
+    </div>
   );
 }
 

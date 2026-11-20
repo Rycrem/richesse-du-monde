@@ -22,7 +22,7 @@ export type Action =
   | { type: "ALLIANCE_LEAVE"; playerId: PlayerId }
   | { type: "DEBT_DEAL_OFFER"; playerId: PlayerId; shares: Record<CompanyId, number> }
   | { type: "DEBT_DEAL_ANSWER"; playerId: PlayerId; accept: boolean }
-  | { type: "DECLARE_BANKRUPTCY"; playerId: PlayerId }
+  | { type: "DECLARE_BANKRUPTCY"; playerId: PlayerId; split?: Record<PlayerId, Record<CompanyId, number>> }
   | { type: "LOAN_OFFER"; playerId: PlayerId; borrowerId: PlayerId; amount: number }
   | { type: "LOAN_ANSWER"; playerId: PlayerId; lenderId: PlayerId; accept: boolean }
   | { type: "END_GAME" }
@@ -751,6 +751,26 @@ export function applyAction(prev: GameState, action: Action): Result {
     case "DECLARE_BANKRUPTCY": {
       const p = player(state, action.playerId);
       if (!p || p.bankrupt) return { ok: false, error: "Joueur introuvable" };
+      // the player picks who gets what; anything left unassigned is dealt out in turn order
+      const split = Object.entries(action.split ?? {});
+      const given: Record<CompanyId, number> = {};
+      for (const [id, shares] of split) {
+        const heir = player(state, id);
+        if (!heir || heir.bankrupt || heir === p) return { ok: false, error: "Joueur introuvable" };
+        for (const [c, pct] of Object.entries(shares)) {
+          if (!Number.isInteger(pct) || pct < 0) return { ok: false, error: "Pourcentage invalide" };
+          given[c] = (given[c] ?? 0) + pct;
+        }
+      }
+      if (Object.entries(given).some(([c, pct]) => pct > (p.holdings[c] ?? 0))) return { ok: false, error: "Tu ne détiens pas autant d'actions" };
+      for (const [id, shares] of split) {
+        const heir = player(state, id)!;
+        for (const [c, pct] of Object.entries(shares)) {
+          if (!pct) continue;
+          removeHolding(p, c, pct);
+          heir.holdings[c] = (heir.holdings[c] ?? 0) + pct;
+        }
+      }
       bankrupt(state, p, `${p.name} déclare faillite et répartit ses actions`, true);
       if (state.phase !== "gameOver" && cur.id === p.id) nextTurn(state);
       return { ok: true, state };
