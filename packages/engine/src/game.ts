@@ -422,7 +422,7 @@ function landOn(state: GameState, p: Player, pips: number): void {
       state.auction = {
         chooserId: p.id,
         sellerId: null,
-        percentToSell: die * config.auctionPercentPerPip,
+        percentToSell: Math.min(die * config.auctionPercentPerPip, config.auctionMaxPercent),
         company: null,
         percent: 0,
         startPrice: 0,
