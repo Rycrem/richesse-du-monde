@@ -54,7 +54,7 @@ Le plateau a deux anneaux : un anneau extérieur de 48 cases (les 6 régions du 
 | Ville tech | 30 (5 par région, anneau extérieur) | Paiement + achat (voir "Tour de jeu") |
 | Hub tech | 18 (anneau intérieur) | Comme une ville (4 entreprises, 4 à 15 % chacune) |
 | Choix régional | 8 (1 par région, 2 pour les hubs) | Achat dans le stock de toutes les villes de la région, n'importe quelle entreprise, dès le premier tour |
-| Choix mondial | 1 | Pareil, dans le monde entier. Valable seulement après un premier tour complet |
+| Choix mondial | 1 | Pareil, dans le monde entier, dès le premier tour |
 | Enchères | 3 | Mise aux enchères forcée (voir "Enchères"). Valable seulement après un premier tour complet |
 | Atout | 4 | Une carte Atout tirée au hasard est à vendre (voir "Atouts") |
 | Actu Tech | 7 | On pioche une carte événement : on reçoit ou on paie une somme |

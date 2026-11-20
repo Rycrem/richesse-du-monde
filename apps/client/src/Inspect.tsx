@@ -5,7 +5,7 @@ import { useStore } from "./store";
 
 const SPECIAL: Record<string, string> = {
   depart: `Chaque passage rapporte ${config.lapBonus.toLocaleString("fr-FR")} k$.`,
-  mondial: "Achète jusqu'à 30 % dans n'importe quelle entreprise, partout dans le monde. Valable après un premier tour complet.",
+  mondial: "Achète jusqu'à 30 % dans n'importe quelle entreprise, partout dans le monde.",
   encheres: "Choisis un adversaire et une de ses actions : elle part aux enchères pendant 30 s. Tout le monde peut enchérir, sauf le vendeur.",
   atout: `Une carte Atout tirée au hasard est à vendre pour ${config.atoutPrice.toLocaleString("fr-FR")} k$ : ${ATOUTS.map((a) => a.name).join(", ")}.`,
   actu: "Une actualité tech tombe : gain ou perte pour le joueur, montré à tout le monde. Les pertes vont dans la cagnotte de la Bourse, que seule la carte Délit d'initié permet de rafler.",
