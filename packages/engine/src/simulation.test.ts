@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { companies, config } from "./data";
-import { activePlayers, applyAction, buyableStock, currentPlayer, type Action } from "./game";
+import { activePlayers, applyAction, buyableStock, buyCost, currentPlayer, type Action } from "./game";
 import { createGame } from "./game";
 import type { GameState } from "./state";
 
@@ -35,7 +35,9 @@ function botTurn(state: GameState): GameState {
   let budget = config.maxPurchasePercent;
   for (const [company, available] of Object.entries(buyableStock(g))) {
     const pricePer = companies.find((c) => c.id === company)!.pricePerPercent;
-    const pct = Math.min(available, budget, Math.floor((currentPlayer(g).cash - 1500) / pricePer));
+    const held = currentPlayer(g).holdings[company] ?? 0;
+    let pct = Math.min(available, budget, Math.floor((currentPlayer(g).cash - 1500) / pricePer));
+    while (pct > 0 && buyCost(company, held, pct) > currentPlayer(g).cash - 1500) pct--;
     if (pct <= 0) continue;
     g = step(g, { type: "BUY", playerId: self.id, purchases: { [company]: pct } });
     budget -= pct;
