@@ -77,8 +77,6 @@ export function skyscraper(tier: number, color: string, logo?: THREE.Texture) {
 // Tech hubs: start-up garage, offices, glass HQ, campus, then a ring HQ at 100 %
 export function campus(tier: number, color: string, logo?: THREE.Texture) {
   const g = new THREE.Group();
-  const lawn = std("#4f9a5a", { roughness: 0.9 });
-  mesh(g, new RoundedBoxGeometry(0.78, 0.04, 0.78, 2, 0.02), lawn, 0, 0.02, 0);
   if (tier === 0) {
     mesh(g, new THREE.BoxGeometry(0.34, 0.2, 0.3), std("#e9e1d0"), 0, 0.14, 0);
     const roof = mesh(g, new THREE.CylinderGeometry(0.01, 0.24, 0.14, 4), std(color), 0, 0.31, 0);
@@ -107,21 +105,12 @@ export function campus(tier: number, color: string, logo?: THREE.Texture) {
     const top = mesh(g, new THREE.TorusGeometry(0.27, 0.09, 16, 48), std(color), 0, 0.2, 0);
     top.rotation.x = Math.PI / 2;
     top.scale.z = 0.25;
-    mesh(g, new THREE.CylinderGeometry(0.16, 0.16, 0.02, 32), lawn, 0, 0.05, 0);
     mesh(g, new RoundedBoxGeometry(0.16, 0.62, 0.16, 2, 0.03), gold(), 0, 0.36, 0);
     logoPanel(g, logo, 0.13, 0, 0.55, 0.082);
     monopolyAura(g, 0.7);
   }
-  return g;
-}
-
-// Nobody holds the company yet: an empty lot with a "for sale" sign and the logo
-export function emptyLot(hub: boolean, color: string, logo?: THREE.Texture) {
-  const g = new THREE.Group();
-  mesh(g, new RoundedBoxGeometry(hub ? 0.78 : 0.44, 0.04, hub ? 0.78 : 0.44, 2, 0.02), std(hub ? "#4f9a5a" : "#b9b2a0", { roughness: 0.9 }), 0, 0.02, 0);
-  mesh(g, new THREE.CylinderGeometry(0.015, 0.015, 0.36, 8), std("#8b5a2b"), 0, 0.2, 0);
-  mesh(g, new RoundedBoxGeometry(0.26, 0.2, 0.03, 2, 0.01), std(color), 0, 0.34, 0);
-  logoPanel(g, logo, 0.16, 0, 0.34, 0.017);
+  // drawn for a 4 cm lawn that is gone: set everything down on the cell
+  for (const c of g.children) c.position.y -= 0.04;
   return g;
 }
 
