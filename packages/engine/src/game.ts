@@ -375,7 +375,7 @@ function landOn(state: GameState, p: Player, pips: number): void {
       state.buyScope = { kind: "region", region: cell.region };
       break;
     case "mondial":
-      if (p.laps >= 1) state.buyScope = { kind: "world" };
+      state.buyScope = { kind: "world" };
       break;
     case "levee": {
       const before = p.cash;

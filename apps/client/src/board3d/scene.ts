@@ -395,6 +395,7 @@ export function createBoardScene(host: HTMLElement, events: BoardEvents = {}): B
     g.position.set(p.x, p.y, p.z);
     g.rotation.y = p.rot;
     g.userData.cell = i;
+    g.userData.depth = p.d;
     cellGroups.push(g);
     scene.add(g);
     let tex: THREE.Texture;
@@ -456,7 +457,7 @@ export function createBoardScene(host: HTMLElement, events: BoardEvents = {}): B
   marker.rotation.x = Math.PI;
   scene.add(marker);
 
-  // logos are rasterized SVGs on a white rounded square
+  // logos are rasterized SVGs on a black rounded square, readable on every cell color
   const logos = new Map<string, THREE.CanvasTexture>();
   const logoTex = (id: string) => {
     let t = logos.get(id);
@@ -469,7 +470,7 @@ export function createBoardScene(host: HTMLElement, events: BoardEvents = {}): B
     const img = new Image();
     img.onload = () => {
       const g = c.getContext("2d")!;
-      g.fillStyle = "#ffffff";
+      g.fillStyle = "#111111";
       g.beginPath();
       g.roundRect(4, 4, 152, 152, 30);
       g.fill();
@@ -606,9 +607,11 @@ export function createBoardScene(host: HTMLElement, events: BoardEvents = {}): B
       const old = [...deco.children];
       // the logo lies flat on the cell, in front of the building
       if (!deco.userData.logo) {
-        const plate = new THREE.Mesh(new THREE.PlaneGeometry(0.26, 0.26), new THREE.MeshStandardMaterial({ map: logoTex(company.id), roughness: 0.5 }));
+        const tex = logoTex(company.id);
+        const plate = new THREE.Mesh(new THREE.PlaneGeometry(0.28, 0.28), new THREE.MeshStandardMaterial({ map: tex, emissive: "#ffffff", emissiveMap: tex, emissiveIntensity: 0.25, roughness: 0.5 }));
         plate.rotation.x = -Math.PI / 2;
-        plate.position.set(0, 0.168, 0.64);
+        // near the bottom edge, inside the cell on both rings
+        plate.position.set(0, 0.168, deco.parent!.userData.depth / 2 - 0.16);
         deco.parent!.add(plate);
         deco.userData.logo = true;
       }

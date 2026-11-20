@@ -431,3 +431,9 @@ button.danger { background: #ef476f; color: #fff; border-color: #ef476f; }
 .price-chart .cross { stroke: currentColor; opacity: 0.5; }
 .price-chart .ring { stroke: var(--card, #1b2438); stroke-width: 2; }
 .price-chart-read { font-size: 12px; min-height: 2.6em; }
+.emoji-picker { display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px; padding: 4px; border-radius: 10px; background: #00000033; max-height: 120px; overflow-y: auto; }
+.emoji-picker button { padding: 2px 0; font-size: 20px; background: none; border: none; box-shadow: none; line-height: 1.3; }
+.emoji-picker button:hover { background: #ffffff22; border-radius: 6px; }
+.chat-input .emoji-btn { padding: 4px 8px; font-size: 18px; line-height: 1; }
+.chat-input .emoji-btn.on { background: #ffffff33; }
+.chat-big { font-size: 26px; vertical-align: middle; }

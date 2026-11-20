@@ -5,9 +5,25 @@ import { useStore } from "./store";
 
 type Tab = "public" | "prive" | "groupe";
 
+const EMOJIS = ["😀", "😂", "🤣", "😅", "😎", "🤑", "🤔", "😏", "😱", "😭", "😡", "🥳", "🙄", "😴", "🤝", "👍", "👎", "👏", "🙏", "💪", "🔥", "💸", "💰", "📈", "📉", "🚀", "💎", "🏦", "🎲", "🏆", "⭐", "❤️", "💔", "😈", "🤡", "👀", "✅", "❌", "⏳"];
+// a message made only of emoji is shown bigger
+const onlyEmoji = (t: string) => /^(\p{Extended_Pictographic}|\p{Emoji_Modifier}|\u200d|\ufe0f|\s)+$/u.test(t);
+
 function Messages({ messages, room, onSend }: { messages: ChatMessage[]; room: RoomView; onSend: (text: string) => void }) {
   const [text, setText] = useState("");
+  const [picker, setPicker] = useState(false);
   const end = useRef<HTMLDivElement>(null);
+  const input = useRef<HTMLInputElement>(null);
+  const insert = (e: string) => {
+    const el = input.current;
+    const at = el?.selectionStart ?? text.length;
+    const next = (text.slice(0, at) + e + text.slice(el?.selectionEnd ?? at)).slice(0, 300);
+    setText(next);
+    requestAnimationFrame(() => {
+      el?.focus();
+      el?.setSelectionRange(at + e.length, at + e.length);
+    });
+  };
   useEffect(() => {
     end.current?.scrollIntoView({ block: "end" });
   }, [messages.length]);
@@ -24,12 +40,21 @@ function Messages({ messages, room, onSend }: { messages: ChatMessage[]; room: R
             </div>
           ) : (
             <div key={m.id} className="chat-line">
-              <strong style={{ color: color(m.from) }}>{name(m.from)}</strong> {m.text}
+              <strong style={{ color: color(m.from) }}>{name(m.from)}</strong> <span className={onlyEmoji(m.text) ? "chat-big" : undefined}>{m.text}</span>
             </div>
           ),
         )}
         <div ref={end} />
       </div>
+      {picker && (
+        <div className="emoji-picker">
+          {EMOJIS.map((e) => (
+            <button key={e} type="button" onClick={() => insert(e)}>
+              {e}
+            </button>
+          ))}
+        </div>
+      )}
       <form
         className="row chat-input"
         onSubmit={(e) => {
@@ -37,9 +62,13 @@ function Messages({ messages, room, onSend }: { messages: ChatMessage[]; room: R
           if (!text.trim()) return;
           onSend(text);
           setText("");
+          setPicker(false);
         }}
       >
-        <input value={text} maxLength={300} placeholder="Écrire un message" onChange={(e) => setText(e.target.value)} />
+        <button type="button" className={`emoji-btn ${picker ? "on" : ""}`} aria-label="Emoji" onClick={() => setPicker(!picker)}>
+          😀
+        </button>
+        <input ref={input} value={text} maxLength={300} placeholder="Écrire un message" onChange={(e) => setText(e.target.value)} />
         <button className="primary" disabled={!text.trim()}>
           Envoyer
         </button>

@@ -91,7 +91,6 @@ export function GamePanel({ game }: { game: GameState }) {
         <div className="card">
           <h3>{cell.name}</h3>
           {cell.type === "city" && <p>Redevance : {companyById.get(game.royalties[cell.id]!)!.name}</p>}
-          {cell.type === "mondial" && !game.buyScope && <p className="muted">Le Choix mondial s'ouvre après un premier tour complet.</p>}
         </div>
       )}
 
