@@ -148,7 +148,7 @@ Sur une case Atout, une carte est tirée au hasard et le joueur peut l'acheter (
 ## Faillite et victoire
 
 - Un joueur qui ne peut pas payer une dette est en faillite : la banque couvre la dette, ses parts retournent dans le stock des villes, il est éliminé.
-- Un joueur peut aussi déclarer faillite lui-même, à tout moment (lien en bas du panneau) : ses parts restantes sont réparties 1 % à la fois entre les joueurs encore en jeu, dans l'ordre du tour.
+- Un joueur peut aussi déclarer faillite lui-même, à tout moment (lien en bas du panneau) : il choisit à qui donner ses parts, et ce qu'il n'attribue pas est réparti 1 % à la fois entre les joueurs encore en jeu, dans l'ordre du tour.
 - **Classique** (par défaut) : le dernier joueur en jeu gagne. Les autres sont classés par ordre d'élimination.
 - **Chrono** (option, 45 à 60 min) : à la fin du temps, le plus grand patrimoine (argent + valeur des parts) gagne.
 
