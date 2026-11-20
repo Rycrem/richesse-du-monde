@@ -137,6 +137,13 @@ describe("buying", () => {
     g = at(g, "mondial-1");
     expect(buyableStock(g)).toEqual({});
   });
+
+  it("after a lap, world choice sells any company from every city", () => {
+    let g = createGame(P, 1);
+    g.players[0]!.laps = 1;
+    g = at(g, "mondial-1");
+    expect(Object.keys(buyableStock(g))).toHaveLength(companies.length);
+  });
   it("past 50 % held, each further % from the bank costs more and more", () => {
     const base = price("nvidio");
     expect(buyCost("nvidio", 0, 10)).toBe(10 * base);

@@ -34,7 +34,7 @@ const companyById = new Map(companies.map((c) => [c.id, c]));
 const cityStockOrigin = board.flatMap((c) => (c.type === "city" ? [c] : []));
 
 // Starting cash the host can pick before the game
-export const STARTING_CASH_OPTIONS = [20000, 30000, 40000, 50000, 75000, 100000];
+export const STARTING_CASH_OPTIONS = [15000, 20000, 25000, 30000, 40000, 50000];
 // a custom amount is allowed too, within these bounds
 export const isStartingCash = (v: number) => Number.isInteger(v) && v >= 1000 && v <= 1000000;
 
@@ -396,8 +396,6 @@ function availableStock(state: GameState, p: Player): Record<CompanyId, { cellId
     if (scope.kind === "region" && cell.region !== scope.region) continue;
     for (const [company, pct] of Object.entries(state.stocks[cell.id]!)) {
       if (pct <= 0) continue;
-      // world choice only tops up companies already held; a regional choice sells anything in the region
-      if (scope.kind === "world" && !(p.holdings[company] ?? 0)) continue;
       (out[company] ??= []).push({ cellId: cell.id, percent: pct });
     }
   }
