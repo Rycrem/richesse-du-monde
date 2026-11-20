@@ -6,7 +6,7 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { companyById, PLAYER_COLORS } from "../format";
 import { pawnDataUrl } from "../pawn";
-import { campus, emptyLot, ownerGlow, skyscraper, tierOf } from "./buildings";
+import { campus, ownerGlow, skyscraper, tierOf } from "./buildings";
 
 // Outer ring: 4 corners + 11 cells per side; inner raised ring of hubs: 4 corners + 7 per side.
 const W = 1.1, CORNER = 1.6, N = 11;
@@ -387,7 +387,7 @@ export function createBoardScene(host: HTMLElement, events: BoardEvents = {}): B
   const side = mat("#d9cfb8", { roughness: 0.7 });
   const decos: THREE.Group[] = [];
   const cellGroups: THREE.Group[] = [];
-  const marks: { fill: THREE.Mesh; frame: THREE.Mesh; top: THREE.MeshStandardMaterial; g: THREE.Group; rot: number; flipped: boolean }[] = [];
+  const marks: { fill: THREE.Mesh; frame: THREE.Mesh; top: THREE.MeshStandardMaterial; g: THREE.Group; rot: number; y: number; flipped: boolean; spin: number }[] = [];
   let marked = false;
   board.forEach((cell, i) => {
     const p = cellPose(i);
@@ -428,9 +428,10 @@ export function createBoardScene(host: HTMLElement, events: BoardEvents = {}): B
     frame.position.y = 0.18;
     frame.visible = false;
     g.add(frame);
-    marks.push({ fill, frame, top, g, rot: p.rot, flipped: false });
+    marks.push({ fill, frame, top, g, rot: p.rot, y: p.y, flipped: false, spin: 0 });
     const deco = new THREE.Group();
-    deco.position.set(0, 0.16, -p.d * 0.2);
+    // buildings stand at the top of the cell, above its name
+    deco.position.set(0, 0.16, -p.d / 2 + 0.38);
     g.add(deco);
     decos.push(deco);
     if (cell.type !== "city") icon(deco, cell.type);
@@ -613,7 +614,8 @@ export function createBoardScene(host: HTMLElement, events: BoardEvents = {}): B
       }
       // each company always gets the same kind of building, wherever its cell is
       const campusStyle = companies.findIndex((c) => c.id === company.id) % 2 === 1;
-      const b = !pct ? emptyLot(campusStyle, company.color) : campusStyle ? campus(tierOf(pct), company.color) : skyscraper(tierOf(pct), company.color);
+      // nobody holds it yet: the lot stays empty
+      const b = !pct ? new THREE.Group() : campusStyle ? campus(tierOf(pct), company.color) : skyscraper(tierOf(pct), company.color);
       const size = campusStyle ? (hub ? 0.9 : 0.75) : 0.8;
       if (pct && holder >= 0) ownerGlow(b, PLAYER_COLORS[holder]!);
       deco.add(b);
@@ -777,7 +779,15 @@ export function createBoardScene(host: HTMLElement, events: BoardEvents = {}): B
         const facing = (-Math.sin(m.rot) * fx - Math.cos(m.rot) * fz) / fl;
         if (facing < -0.2 !== m.flipped && Math.abs(facing) > 0.2) {
           m.flipped = !m.flipped;
-          m.g.rotation.y = m.rot + (m.flipped ? Math.PI : 0);
+          // a short half turn, lifted a little so the cell clears its neighbours
+          const from = m.g.rotation.y;
+          const to = m.rot + (m.flipped ? Math.PI : 0);
+          const id = ++m.spin;
+          tween(0.5, (k) => {
+            if (m.spin !== id) return;
+            m.g.rotation.y = from + (to - from) * k * k * (3 - 2 * k);
+            m.g.position.y = m.y + Math.sin(Math.PI * k) * 0.3;
+          });
         }
       }
       dirty = false;
