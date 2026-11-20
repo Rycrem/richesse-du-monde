@@ -1,6 +1,6 @@
 import { actuCards, board, companies, config, markets } from "./data";
 import { nextRandom, rollDie } from "./rng";
-import type { Deal, GameMode, GameState, NewGameEvent, Player, PlayerId } from "./state";
+import type { Deal, GameMode, GameState, Loan, NewGameEvent, Player, PlayerId } from "./state";
 import type { CompanyId } from "./types";
 
 export type Action =
@@ -133,14 +133,16 @@ function money(state: GameState, p: Player, kind: "actu" | "ipo" | "krach" | "la
 function earn(state: GameState, p: Player, amount: number): void {
   p.cash += amount;
   for (const loan of state.loans.filter((l) => l.borrowerId === p.id)) {
-    const cut = Math.min(Math.floor((amount * config.loanShare) / 100), Math.ceil((loan.amount * config.loanCap) / 100) - loan.repaid);
+    const cut = Math.min(Math.floor((amount * config.loanShare) / 100), loanLeft(loan));
     if (cut <= 0) continue;
     p.cash -= cut;
     player(state, loan.lenderId)!.cash += cut;
     loan.repaid += cut;
   }
-  state.loans = state.loans.filter((l) => l.repaid < Math.ceil((l.amount * config.loanCap) / 100));
+  state.loans = state.loans.filter((l) => loanLeft(l) > 0);
 }
+
+export const loanLeft = (l: Loan) => Math.ceil((l.amount * config.loanCap) / 100) - l.repaid;
 
 function shuffle<T>(arr: T[], seed: number): [number] {
   let s = seed;
@@ -244,6 +246,13 @@ function bankrupt(state: GameState, p: Player, message = `${p.name} fait faillit
   p.holdings = {};
   p.cash = 0;
   p.bankrupt = true;
+  // anything waiting on the player is cancelled
+  const a = state.auction;
+  if (a && [a.chooserId, a.sellerId, a.highestBidderId].includes(p.id)) {
+    state.auction = null;
+    state.phase = "act";
+  }
+  if (state.offer && [state.offer.buyerId, state.offer.ownerId].includes(p.id)) state.offer = null;
   leaveAlliance(state, p.id);
   state.allianceInvites = state.allianceInvites.filter((i) => i.from !== p.id && i.to !== p.id);
   state.loans = state.loans.filter((l) => l.lenderId !== p.id && l.borrowerId !== p.id);
@@ -300,9 +309,23 @@ function payRoyalty(state: GameState, payer: Player, cellId: string): void {
   if (payerMembers.reduce((a, p) => a + (p.holdings[company] ?? 0), 0) === max) return;
   for (const members of winners) {
     if ((allianceOf(state, members[0]!.id)?.id ?? members[0]!.id) === payerGroup) continue;
-    charge(state, payer, share);
-    // the bank covers a bankrupt player's debt, so holders are always paid in full
-    for (const m of members) earn(state, m, Math.floor((share * (m.holdings[company] ?? 0)) / max));
+    // a lender landing on the borrower's city lowers what is still owed instead of paying
+    let owed = share;
+    for (const m of members) {
+      let part = Math.floor((share * (m.holdings[company] ?? 0)) / max);
+      const loan = state.loans.find((l) => l.lenderId === payer.id && l.borrowerId === m.id);
+      if (loan) {
+        const off = Math.min(part, loanLeft(loan));
+        loan.repaid += off;
+        part -= off;
+        owed -= off;
+        if (off) state.log.push(`${payer.name} déduit ${off} k$ du prêt de ${m.name} au lieu de payer`);
+      }
+      // the bank covers a bankrupt player's debt, so holders are always paid in full
+      earn(state, m, part);
+    }
+    state.loans = state.loans.filter((l) => loanLeft(l) > 0);
+    charge(state, payer, owed);
     if (payer.cash < 0) {
       const creditor = [...members].sort((a, b) => (b.holdings[company] ?? 0) - (a.holdings[company] ?? 0))[0]!;
       state.debt = { debtorId: payer.id, creditorId: creditor.id, amount: share, offer: null };
@@ -687,10 +710,10 @@ export function applyAction(prev: GameState, action: Action): Result {
       return { ok: true, state };
     }
 
-    // Only when in debt; the shares left are dealt to the other players instead of the bank
+    // At any time; the shares left are dealt to the other players instead of the bank
     case "DECLARE_BANKRUPTCY": {
       const p = player(state, action.playerId);
-      if (!p || p.bankrupt || p.cash >= 0) return { ok: false, error: "Faillite possible seulement en cas de dette" };
+      if (!p || p.bankrupt) return { ok: false, error: "Joueur introuvable" };
       bankrupt(state, p, `${p.name} déclare faillite et répartit ses actions`, true);
       if (state.phase !== "gameOver" && cur.id === p.id) nextTurn(state);
       return { ok: true, state };
@@ -782,12 +805,6 @@ export function applyAction(prev: GameState, action: Action): Result {
     case "KICK": {
       const p = player(state, action.targetId);
       if (!p || p.bankrupt) return { ok: false, error: "Joueur introuvable" };
-      const a = state.auction;
-      if (a && [a.chooserId, a.sellerId, a.highestBidderId].includes(p.id)) {
-        state.auction = null;
-        state.phase = "act";
-      }
-      if (state.offer && [state.offer.buyerId, state.offer.ownerId].includes(p.id)) state.offer = null;
       bankrupt(state, p, `${p.name} est exclu de la partie`);
       if (state.phase !== "gameOver" && cur.id === p.id) nextTurn(state);
       return { ok: true, state };
