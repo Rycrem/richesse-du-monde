@@ -437,3 +437,5 @@ button.danger { background: #ef476f; color: #fff; border-color: #ef476f; }
 .chat-input .emoji-btn { padding: 4px 8px; font-size: 18px; line-height: 1; }
 .chat-input .emoji-btn.on { background: #ffffff33; }
 .chat-big { font-size: 26px; vertical-align: middle; }
+.chip.leader { box-shadow: 0 0 0 2px #e0b23a; }
+.chip.monopoly { box-shadow: 0 0 0 3px #ffcf4a, 0 0 12px #ffcf4acc; }
