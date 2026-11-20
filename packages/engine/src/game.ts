@@ -198,6 +198,16 @@ export function buyCost(company: CompanyId, held: number, percent: number): numb
   return Math.round(cost);
 }
 
+// Royalty for the biggest holder owning `percent`: past dominanceFrom each % earns dominanceGrowth times the previous one,
+// doubled at 100 %, then the market trend of the turn
+export function royaltyFor(company: CompanyId, percent: number, trend: number): number {
+  const base = companyById.get(company)!.royaltyPerPercent;
+  let sum = 0;
+  for (let k = 1; k <= percent; k++) sum += base * config.dominanceGrowth ** Math.max(0, k - config.dominanceFrom);
+  const multiplier = percent === 100 ? config.monopolyMultiplier : 1;
+  return Math.floor((sum * multiplier * (100 + trend)) / 100);
+}
+
 function bankPrice(company: CompanyId, percent: number): number {
   return Math.floor(percentPrice(company, percent) * config.bankBuybackRatio);
 }
@@ -312,8 +322,7 @@ export function royaltyQuote(state: GameState, company: CompanyId): { winners: P
   const max = Math.max(0, ...[...groups.values()].map(total));
   if (max === 0) return { winners: [], max: 0, share: 0 };
   const winners = [...groups.values()].filter((g) => total(g) === max);
-  const multiplier = max === 100 ? config.monopolyMultiplier : 1;
-  const amount = Math.floor((companyById.get(company)!.royaltyPerPercent * max * multiplier * (100 + trendOf(state, company))) / 100);
+  const amount = royaltyFor(company, max, trendOf(state, company));
   return { winners, max, share: Math.floor(amount / winners.length) };
 }
 

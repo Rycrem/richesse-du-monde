@@ -1,4 +1,4 @@
-import { activePlayers, allianceOf, atoutById, board, buyableStock, buyCost, config, currentPlayer, markets, netWorth, ranking, royaltyQuote, type GameEvent, type GameState } from "@stonks/engine";
+import { activePlayers, allianceOf, atoutById, board, buyableStock, buyCost, config, currentPlayer, markets, netWorth, ranking, royaltyFor, royaltyQuote, trendOf, type GameEvent, type GameState } from "@stonks/engine";
 import { useEffect, useState } from "react";
 import { companyById, money, PLAYER_COLORS } from "./format";
 import { AnimatedMoney } from "./Overlay";
@@ -322,7 +322,7 @@ function BuyPanel({ game }: { game: GameState }) {
             <small>
               {money(company.pricePerPercent)} / %{(me.holdings[c] ?? 0) + (wanted[c] ?? 0) > config.dominanceFrom && <b className="minus"> (plus cher au-delà de {config.dominanceFrom} % : {money(buyCost(c, me.holdings[c] ?? 0, wanted[c] ?? 0))} pour {wanted[c] ?? 0} %)</b>} · rapporte {money(company.royaltyPerPercent)} / % à chaque passage · tu en as <strong>{me.holdings[c] ?? 0} %</strong>
               {wanted[c]
-                ? ` · avec ${(me.holdings[c] ?? 0) + wanted[c]!} %, tu toucherais ${money(company.royaltyPerPercent * ((me.holdings[c] ?? 0) + wanted[c]!))} par passage en étant le plus gros détenteur`
+                ? ` · avec ${(me.holdings[c] ?? 0) + wanted[c]!} %, tu toucherais ${money(royaltyFor(c, (me.holdings[c] ?? 0) + wanted[c]!, trendOf(game, c)))} par passage en étant le plus gros détenteur`
                 : ""}
             </small>
           </div>
