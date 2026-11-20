@@ -424,3 +424,10 @@ button.danger { background: #ef476f; color: #fff; border-color: #ef476f; }
 .quit-split .split-heirs { display: flex; flex-wrap: wrap; gap: 8px; }
 .quit-split .split-heirs label { display: flex; align-items: center; gap: 6px; font-size: 13px; }
 .quit-split .split-heirs input { width: 4.5em; }
+.price-chart svg { width: 100%; height: auto; display: block; touch-action: none; }
+.price-chart text { font-size: 9px; fill: var(--muted, #9aa5b8); }
+.price-chart .grid { stroke: currentColor; opacity: 0.12; }
+.price-chart .threshold { stroke: currentColor; opacity: 0.35; stroke-dasharray: 3 3; }
+.price-chart .cross { stroke: currentColor; opacity: 0.5; }
+.price-chart .ring { stroke: var(--card, #1b2438); stroke-width: 2; }
+.price-chart-read { font-size: 12px; min-height: 2.6em; }
